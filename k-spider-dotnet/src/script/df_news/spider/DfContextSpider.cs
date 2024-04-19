@@ -133,6 +133,7 @@ public partial class DfContextSpider(IPlaywright playwright)
         return ans;
     }
 
+    // 下载图片信息
     private (string allDetailInfos, List<HtmlGetImgDownLoad.ImgInfo> allImgInfo) GetAllContextDetailAndImgInfoList(IReadOnlyList<DfContextDetailInfo> contextDetails)
     {
         var allDetailInfos = "";

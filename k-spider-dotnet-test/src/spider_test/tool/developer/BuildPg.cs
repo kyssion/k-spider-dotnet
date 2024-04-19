@@ -1,0 +1,18 @@
+using k_spider_dotnet.dal.db;
+using k_spider_dotnet.tool.resource;
+
+namespace k_spider_dotnet_test.spider_test.tool.developer;
+
+public class BuildPg
+{
+    public static void CreatePgModer()
+    {
+        var connect = Pg.Connection();
+        connect.DbFirst
+            .IsCreateAttribute()//创建sqlsugar自带特性
+            .FormatFileName(it => StringTools.UnderlineToCamelCase(it,true)+"Model") //格式化文件名（文件名和表名不一样情况）
+            .FormatClassName(it => StringTools.UnderlineToCamelCase(it,true)+"Model")//格式化类名 （类名和表名不一样的情况）
+            .FormatPropertyName(it => StringTools.UnderlineToCamelCase(it,true))//格式化属性名 （属性名和字段名不一样情况）
+            .CreateClassFile("/Users/bytedance/RiderProjects/k-spider-dotnet", "k_spider_dotnet.model");
+    }
+}

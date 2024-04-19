@@ -1,11 +1,13 @@
+using k_spider_dotnet_test.spider_test.tool.developer;
+
 namespace k_spider_dotnet_test.spider_test.db;
 
 [TestClass]
-public class DBTest
+public class DbTest
 {
     [TestMethod]
-    public void TestDB()
+    public void TestCreatePgModer()
     {
-        
+       BuildPg.CreatePgModer();
     }
 }
