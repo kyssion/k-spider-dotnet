@@ -2,7 +2,7 @@ using SqlSugar;
 
 namespace k_spider_dotnet.dal.db;
 
-public class Pg
+public static class Pg
 {
     private const string PgConnectionString =
         "PORT=5432;DATABASE=k_script_spider;HOST=39.100.86.193;PASSWORD=Javarustc++11.;USER ID=spider";
@@ -14,7 +14,7 @@ public class Pg
             {
                 ConnectionString = connectionString,
                 DbType = DbType.PostgreSQL,
-                IsAutoCloseConnection = isAutoCloseConnection
+                IsAutoCloseConnection = isAutoCloseConnection,
             },
             db => {
                 db.Aop.OnLogExecuting = (sql, pars) =>

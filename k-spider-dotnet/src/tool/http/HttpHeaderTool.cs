@@ -1,6 +1,6 @@
-namespace k_spider_dotnet.tool.html;
+namespace k_spider_dotnet.tool.http;
 
-public class HttpHeaderTool
+public static class HttpHeaderTool
 {
     public struct ContentTypeInfo
     {

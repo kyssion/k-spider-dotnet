@@ -1,8 +1,4 @@
-using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Mime;
-
-namespace k_spider_dotnet.tool.html;
+namespace k_spider_dotnet.tool.http;
 
 public static class HtmlGetImgDownLoad
 {

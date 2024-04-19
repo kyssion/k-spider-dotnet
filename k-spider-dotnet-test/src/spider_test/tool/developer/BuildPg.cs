@@ -3,7 +3,7 @@ using k_spider_dotnet.tool.resource;
 
 namespace k_spider_dotnet_test.spider_test.tool.developer;
 
-public class BuildPg
+public static class BuildPg
 {
     public static void CreatePgModer()
     {

@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using k_spider_dotnet.tool.http;
 using k_spider_dotnet.tool.resource;
 using Microsoft.Playwright;
 
@@ -13,27 +14,27 @@ public class DfListSpider(IPlaywright playwright)
 
     public struct DfListInfo
     {
-        public string? Url { get; set; }
-        public string? Title { get; set; }
-        public string? Summary { get; set; }
-        public string? NewsTime { get; set; }
-        public string FromMedia { get; set; }
-        public NewsFromType NewsDownloadFrom { get; set; }
-        public string NewDownLoadFromTime { get; set; }
+        public string NewsUrl { get; set; }
+        public string NewsTitle { get; set; }
+        public string NewsSummary { get; set; }
+        public string NewsTime { get; set; }
+        public string NewsFrom { get; set; }
+        public NewsFromType FromMedia { get; set; }
+        public DateTime NewsDownloadTime { get; set; }
     }
 
     public DfListSpider() : this(Playwright.CreateAsync().Result)
     {
     }
 
-    public async Task<List<List<DfListInfo>>> GetDfListInfoByUrl(int dfModelNumber, int pageStartNumber,
+    public async Task<List<DfListInfo>> GetDfListInfoByUrl(int dfModelNumber, int pageStartNumber,
         int pageEndNumber, int pageSize, DfListOrderType orderType)
     {
         var nowTime = DateTime.Now.Millisecond;
-        var ans = new List<List<DfListInfo>>();
+        var ans = new List<DfListInfo>();
         while (pageStartNumber <= pageEndNumber)
         {
-            ans.Add(await this.GetDfListInfoByUrl(dfModelNumber, pageStartNumber, pageSize, orderType));
+            ans.AddRange(await GetDfListInfoByUrl(dfModelNumber, pageStartNumber, pageSize, orderType));
             pageStartNumber++;
         }
         return ans;
@@ -45,7 +46,7 @@ public class DfListSpider(IPlaywright playwright)
     {
         var urlNow = string.Format(DfResource.RequestDfListUrl, dfModelNumber, (int)orderType, pageNumber, pageSize,
             DateTime.Now.Millisecond);
-        var responseString = await new HttpClient().GetStringAsync(urlNow);
+        var responseString = await HttpClientTool.Create(DfResource.ListResourceHost).GetStringAsync(urlNow);
 
         var forecastNode = JsonNode.Parse(responseString)!;
         var jsonData = forecastNode["data"];
@@ -59,13 +60,13 @@ public class DfListSpider(IPlaywright playwright)
         var ans = jsonDataList.OfType<JsonNode>()
             .Select(dataItem => new DfListInfo
             {
-                Url = dataItem["url"]!.ToString(),
-                Title = dataItem["title"]!.ToString(),
-                Summary = dataItem["summary"]!.ToString(),
-                NewsTime = dataItem["url"]!.ToString(),
-                FromMedia = dataItem["mediaName"]!.ToString(),
-                NewsDownloadFrom = NewsFromType.DfMedia,
-                NewDownLoadFromTime = dataItem["showTime"]!.ToString(),
+                NewsUrl = dataItem["url"]!.ToString(),
+                NewsTitle = dataItem["title"]!.ToString(),
+                NewsSummary = dataItem["summary"]!.ToString(),
+                NewsTime = dataItem["showTime"]!.ToString(),
+                FromMedia =NewsFromType.DfMedia,
+                NewsFrom = dataItem["mediaName"]!.ToString(),
+                NewsDownloadTime = DateTime.Now,
             })
             .ToList();
         return ans;
@@ -182,9 +183,9 @@ public class DfListSpider(IPlaywright playwright)
         return (from IDictionary<string, object>? item in pageInfos
             select new DfListInfo
             {
-                Url = item["url"].ToString(),
-                Title = item["title"].ToString(),
-                Summary = item["summary"].ToString(),
+                NewsUrl = item["url"].ToString(),
+                NewsTitle = item["title"].ToString(),
+                NewsSummary = item["summary"].ToString(),
                 NewsTime = item["time"].ToString(),
             }).ToList();
     }

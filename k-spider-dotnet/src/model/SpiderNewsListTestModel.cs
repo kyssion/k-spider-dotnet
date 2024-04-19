@@ -1,4 +1,7 @@
-﻿using SqlSugar;
+﻿using System;
+using System.Linq;
+using System.Text;
+using SqlSugar;
 
 namespace k_spider_dotnet.model
 {
@@ -15,22 +18,7 @@ namespace k_spider_dotnet.model
            /// </summary>           
            [SugarColumn(IsPrimaryKey=true,IsIdentity=true,ColumnName="id")]
            public long Id {get;set;}
-
-           /// <summary>
-           /// Desc:
-           /// Default:DateTime.Now
-           /// Nullable:False
-           /// </summary>
-           [SugarColumn(ColumnName="create_time")]           
-           public DateTime CreateTime {get;set;}
-
-           /// <summary>
-           /// Desc:
-           /// Default:DateTime.Now
-           /// Nullable:False
-           /// </summary>
-           [SugarColumn(ColumnName="update_time")]           
-           public DateTime UpdateTime {get;set;}
+           
 
            /// <summary>
            /// Desc:
@@ -62,7 +50,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_summary")]           
-           public string? NewsSummary {get;set;}
+           public string NewsSummary {get;set;}
 
            /// <summary>
            /// Desc:

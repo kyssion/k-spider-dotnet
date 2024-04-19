@@ -3,7 +3,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using k_spider_dotnet.tool.html;
+using k_spider_dotnet.tool.http;
 using k_spider_dotnet.tool.resource;
 using Microsoft.Playwright;
 using static System.Text.RegularExpressions.Regex;

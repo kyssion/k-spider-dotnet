@@ -4,12 +4,15 @@ public static class DfResource
 {
     // 列表页面请求数据的url地址
     public const string RequestDfListUrl = "https://np-listapi.eastmoney.com/comm/web/getNewsByColumns?client=web&biz=web_news_col&column={0}&order={1}&page_index={2}&page_size={3}&req_trace={4}&fields=code,showTime,title,mediaName,summary,image,url,uniqueUrl,Np_dst";
+
+    public const string ListResourceHost = "np-listapi.eastmoney.com";
+    public const string ContextResourceHost = "finance.eastmoney.com";
     public struct DfListUrlResource
     {
         public string ModuleName { get; set; }
         // 列表页面的地址数据全集地址
         public string Url { get; set; }
-        public int ListResourceNumber{ get; init; }
+        public int ListResourceNumber{ get; set; }
     }
 
     public static readonly DfListUrlResource[] DfListUrlResourceList = new DfListUrlResource[]
