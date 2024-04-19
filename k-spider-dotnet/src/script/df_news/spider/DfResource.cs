@@ -27,6 +27,7 @@ public static class DfResource
         {
             ModuleName = "时评",
             Url = "https://finance.eastmoney.com/a/cjjsp_{0}.html",
+            ListResourceNumber = 371
         },
         new DfListUrlResource()
         {

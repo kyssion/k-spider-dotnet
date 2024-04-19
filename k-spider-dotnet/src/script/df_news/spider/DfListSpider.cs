@@ -1,9 +1,9 @@
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using k_spider_dotnet.model;
 using k_spider_dotnet.tool.http;
 using k_spider_dotnet.tool.resource;
+using k_spider_dotnet.tool.time;
 using Microsoft.Playwright;
 
 namespace k_spider_dotnet.script.df_news.spider;
@@ -21,6 +21,20 @@ public class DfListSpider(IPlaywright playwright)
         public string NewsFrom { get; set; }
         public NewsFromType FromMedia { get; set; }
         public DateTime NewsDownloadTime { get; set; }
+
+        public  SpiderNewsListModel ToSpiderNewListModel()
+        {
+            return new SpiderNewsListModel
+            {
+                FromMedia = (int)NewsFromType.DfMedia,
+                NewsUrl = this.NewsUrl,
+                NewsTitle = this.NewsTitle,
+                NewsSummary = this.NewsSummary,
+                NewsFrom = this.NewsFrom,
+                NewsTime = TimeTools.GetDateByTimeStr(this.NewsTime ?? "", TimeTools.DfTimeFormat),
+                NewsDownloadTime = this.NewsDownloadTime,
+            };
+        }
     }
 
     public DfListSpider() : this(Playwright.CreateAsync().Result)

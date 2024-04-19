@@ -88,8 +88,7 @@ namespace k_spider_dotnet.model
            /// Default:
            /// Nullable:True
            /// </summary>
-           [SugarColumn(ColumnName="news_download_time")]           
-           public DateTime? NewsDownloadTime {get;set;}
-
+           [SugarColumn(ColumnName = "news_download_time")]
+           public DateTime? NewsDownloadTime { get; set; }
     }
 }
