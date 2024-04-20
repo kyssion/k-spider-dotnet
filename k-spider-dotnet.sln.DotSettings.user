@@ -2,5 +2,7 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=61005d16_002D336e_002D47ab_002D897a_002D8455673911c0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestGetDfListByUrl" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestGetDfListByUrl&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestDfListWithPlaywright&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.developer.TestFunction.TestTask&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

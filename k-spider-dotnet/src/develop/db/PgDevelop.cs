@@ -1,11 +1,12 @@
 using k_spider_dotnet.dal.db;
 using k_spider_dotnet.tool.resource;
 
-namespace k_spider_dotnet_test.spider_test.tool.developer;
+namespace k_spider_dotnet.develop.db;
 
-public static class BuildPg
+public static class PgDevelop
 {
-    public static void CreatePgModer()
+    // 更新 开发的表的信息
+    public static void InitPgTableModel()
     {
         var connect = Pg.Connection();
         connect.DbFirst

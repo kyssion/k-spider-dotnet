@@ -13,12 +13,20 @@ namespace k_spider_dotnet_test.spider_test.df_news;
 [TestClass]
 public class DfListSpiderTest
 {
+
+    [TestMethod]
+    public void TestDfListWithPlaywright()
+    {
+        int number = new DfListSpiderWithPlaywright(false,true).GetListResourceNumberInfo(
+            "https://finance.eastmoney.com/a/ccjdd_1.html").Result;
+    }
+    
     [TestMethod]
     public void TestGetDfList()
     {
         var startTime = DateTime.Now;
-        var dfListItem = new DfListSpider();
-        var list = dfListItem.GetDfListInfo("https://finance.eastmoney.com/a/ccjdd_{0}.html", 10, null, true, false)
+        var dfListItem = new DfListSpiderWithPlaywright(false,true);
+        var list = dfListItem.GetDfListInfo("https://finance.eastmoney.com/a/ccjdd_{0}.html", 10)
             .Result;
         Console.WriteLine(DateTime.Now.Subtract(startTime).TotalMilliseconds);
     }

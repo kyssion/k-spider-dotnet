@@ -8,38 +8,34 @@ using Microsoft.Playwright;
 
 namespace k_spider_dotnet.script.df_news.spider;
 
-public class DfListSpider(IPlaywright playwright)
+public struct DfListInfo
+{
+    public string NewsUrl { get; set; }
+    public string NewsTitle { get; set; }
+    public string NewsSummary { get; set; }
+    public string NewsTime { get; set; }
+    public string NewsFrom { get; set; }
+    public NewsFromType FromMedia { get; set; }
+    public DateTime NewsDownloadTime { get; set; }
+
+    public SpiderNewsListModel ToSpiderNewListModel()
+    {
+        return new SpiderNewsListModel
+        {
+            FromMedia = (int)NewsFromType.DfMedia,
+            NewsUrl = this.NewsUrl,
+            NewsTitle = this.NewsTitle,
+            NewsSummary = this.NewsSummary,
+            NewsFrom = this.NewsFrom,
+            NewsTime = TimeTools.GetDateByTimeStr(this.NewsTime ?? "", TimeTools.DfTimeFormat),
+            NewsDownloadTime = this.NewsDownloadTime,
+        };
+    }
+}
+
+public class DfListSpider
 {
     private static readonly Regex Regex = new Regex(".(png|jpg|css|aspx|ico)");
-
-    public struct DfListInfo
-    {
-        public string NewsUrl { get; set; }
-        public string NewsTitle { get; set; }
-        public string NewsSummary { get; set; }
-        public string NewsTime { get; set; }
-        public string NewsFrom { get; set; }
-        public NewsFromType FromMedia { get; set; }
-        public DateTime NewsDownloadTime { get; set; }
-
-        public  SpiderNewsListModel ToSpiderNewListModel()
-        {
-            return new SpiderNewsListModel
-            {
-                FromMedia = (int)NewsFromType.DfMedia,
-                NewsUrl = this.NewsUrl,
-                NewsTitle = this.NewsTitle,
-                NewsSummary = this.NewsSummary,
-                NewsFrom = this.NewsFrom,
-                NewsTime = TimeTools.GetDateByTimeStr(this.NewsTime ?? "", TimeTools.DfTimeFormat),
-                NewsDownloadTime = this.NewsDownloadTime,
-            };
-        }
-    }
-
-    public DfListSpider() : this(Playwright.CreateAsync().Result)
-    {
-    }
 
     public async Task<List<DfListInfo>> GetDfListInfoByUrl(int dfModelNumber, int pageStartNumber,
         int pageEndNumber, int pageSize, DfListOrderType orderType)
@@ -51,6 +47,7 @@ public class DfListSpider(IPlaywright playwright)
             ans.AddRange(await GetDfListInfoByUrl(dfModelNumber, pageStartNumber, pageSize, orderType));
             pageStartNumber++;
         }
+
         return ans;
     }
 
@@ -78,45 +75,87 @@ public class DfListSpider(IPlaywright playwright)
                 NewsTitle = dataItem["title"]!.ToString(),
                 NewsSummary = dataItem["summary"]!.ToString(),
                 NewsTime = dataItem["showTime"]!.ToString(),
-                FromMedia =NewsFromType.DfMedia,
+                FromMedia = NewsFromType.DfMedia,
                 NewsFrom = dataItem["mediaName"]!.ToString(),
                 NewsDownloadTime = DateTime.Now,
             })
             .ToList();
         return ans;
     }
+}
 
-    public async Task<List<List<DfListInfo>>> GetDfListInfo(string url, int pageNum, IBrowser? browser, bool useConsole,
-        bool headless)
+public class DfListSpiderWithPlaywright
+{
+    private static readonly Regex ImageRegex = new Regex(@".(\.png|\.jpg|\.css|\.aspx|\.ico)");
+
+    private readonly IBrowser _browser;
+    private readonly IBrowserContext _context;
+
+    public async Task Close()
+    {
+        await _context.CloseAsync();
+        await _browser.CloseAsync();
+    }
+    public DfListSpiderWithPlaywright(bool headless, bool useConsole) 
+    {
+        var playwright = Playwright.CreateAsync().Result;
+        _browser = playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless }).Result;
+        _context =  _browser.NewContextAsync().Result;
+        // context 终端能力支持
+        if (useConsole == true)
+        {
+            _context.Console += async (_, msg) =>
+            {
+                foreach (var arg in msg.Args)
+                {
+                    Console.WriteLine(await arg.JsonValueAsync<object>());
+                }
+            };
+        }
+    }
+
+    public async Task<int> GetListResourceNumberInfo(string url)
+    {
+        var page = await this._context.NewPageAsync();
+        try
+        {
+            await page.RouteAsync("**/*", async route =>
+            {
+                var routerUrl = route.Request.Url;
+                if (!ImageRegex.IsMatch(routerUrl))
+                {
+                    await route.ContinueAsync();
+                }
+                else
+                {
+                    await route.AbortAsync();
+                }
+            });
+            var waitForRequestTask = page.WaitForRequestAsync("**/getNewsByColumns*");
+            await page.GotoAsync(url);
+            var request = await waitForRequestTask;
+            var paramsList = HttpUrlTool.GetUrlParamInfo(request.Url, "column");
+            if (paramsList.Length == 0)
+            {
+                throw new Exception("getNewsByColumns , column not find");
+            }
+
+            return int.Parse(paramsList[0]);
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+    
+
+    public async Task<List<List<DfListInfo>>> GetDfListInfo(string url, int pageNum)
     {
         try
         {
-            var isUseOtherBrowser = true;
-            if (browser == null)
-            {
-                browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless });
-                isUseOtherBrowser = false;
-            }
 
-            var context = await browser.NewContextAsync();
-            // context 终端能力支持
-            if (useConsole == true)
-            {
-                context.Console += async (_, msg) =>
-                {
-                    foreach (var arg in msg.Args)
-                    {
-                        Console.WriteLine(await arg.JsonValueAsync<object>());
-                    }
-                };
-            }
-
-            var ansList = await this.GetListInfoWithPlaywright(url, pageNum, context);
-            await context.CloseAsync();
-            if (!isUseOtherBrowser)
-            {
-                await browser.CloseAsync();
-            }
+            var ansList = await this.GetListInfoWithPlaywright(url, pageNum, _context);
+            await _context.CloseAsync();
             return ansList;
         }
         catch (Exception e)
@@ -145,7 +184,7 @@ public class DfListSpider(IPlaywright playwright)
         await page.RouteAsync("**/*", async route =>
         {
             var routerUrl = route.Request.Url;
-            if (!DfListSpider.Regex.IsMatch(routerUrl))
+            if (!ImageRegex.IsMatch(routerUrl))
             {
                 await route.ContinueAsync();
             }

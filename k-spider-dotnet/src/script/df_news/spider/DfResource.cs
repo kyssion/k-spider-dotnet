@@ -15,14 +15,6 @@ public static class DfResource
         public int ListResourceNumber{ get; set; }
     }
 
-    public static void Test()
-    {
-        foreach (var item in DfListUrlResourceList)
-        {
-            Console.WriteLine(item.ModuleName + " " + item.Url.Replace("{0}", "1"));
-        }
-    }
-
     public static readonly DfListUrlResource[] DfListUrlResourceList = new DfListUrlResource[]
     {
         new DfListUrlResource()
