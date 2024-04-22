@@ -6,4 +6,5 @@ namespace k_spider_dotnet.service;
 public class SpiderNewsListService
 {
     private static readonly SpiderNewsListDao SpiderNewsListDao = new SpiderNewsListDao();
+    
 }
