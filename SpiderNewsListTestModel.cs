@@ -6,18 +6,38 @@ using SqlSugar;
 namespace k_spider_dotnet.model
 {
     ///<summary>
-    ///排重抓取信息信息列表
+    ///
     ///</summary>
-    [SugarTable("spider_news_list")]
-    public partial class SpiderNewsListModel
+    [SugarTable("spider_news_list_test")]
+    public partial class SpiderNewsListTestModel
     {
+           public SpiderNewsListTestModel(){
+
+
+           }
            /// <summary>
            /// Desc:
-           /// Default:nextval('spider_news_list_id_seq'::regclass)
+           /// Default:nextval('spider_news_list_test_id_seq'::regclass)
            /// Nullable:False
            /// </summary>           
            [SugarColumn(IsPrimaryKey=true,IsIdentity=true,ColumnName="id")]
            public long Id {get;set;}
+
+           /// <summary>
+           /// Desc:
+           /// Default:DateTime.Now
+           /// Nullable:False
+           /// </summary>
+           [SugarColumn(ColumnName="create_time")]           
+           public DateTime CreateTime {get;set;}
+
+           /// <summary>
+           /// Desc:
+           /// Default:DateTime.Now
+           /// Nullable:False
+           /// </summary>
+           [SugarColumn(ColumnName="update_time")]           
+           public DateTime UpdateTime {get;set;}
 
            /// <summary>
            /// Desc:
@@ -33,7 +53,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_url")]           
-           public string? NewsUrl {get;set;}
+           public string NewsUrl {get;set;}
 
            /// <summary>
            /// Desc:
@@ -41,7 +61,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_title")]           
-           public string? NewsTitle {get;set;}
+           public string NewsTitle {get;set;}
 
            /// <summary>
            /// Desc:
@@ -49,7 +69,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_summary")]           
-           public string? NewsSummary {get;set;}
+           public string NewsSummary {get;set;}
 
            /// <summary>
            /// Desc:
@@ -57,7 +77,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_from")]           
-           public string? NewsFrom {get;set;}
+           public string NewsFrom {get;set;}
 
            /// <summary>
            /// Desc:
@@ -76,7 +96,7 @@ namespace k_spider_dotnet.model
            public DateTime? NewsDownloadTime {get;set;}
 
            /// <summary>
-           /// Desc:新闻类型
+           /// Desc:新闻分类
            /// Default:0
            /// Nullable:True
            /// </summary>

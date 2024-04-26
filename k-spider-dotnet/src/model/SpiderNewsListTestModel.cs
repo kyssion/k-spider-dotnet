@@ -18,7 +18,6 @@ namespace k_spider_dotnet.model
            /// </summary>           
            [SugarColumn(IsPrimaryKey=true,IsIdentity=true,ColumnName="id")]
            public long Id {get;set;}
-           
 
            /// <summary>
            /// Desc:
@@ -34,7 +33,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_url")]           
-           public string NewsUrl {get;set;}
+           public string? NewsUrl {get;set;}
 
            /// <summary>
            /// Desc:
@@ -42,7 +41,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_title")]           
-           public string NewsTitle {get;set;}
+           public string? NewsTitle {get;set;}
 
            /// <summary>
            /// Desc:
@@ -50,7 +49,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_summary")]           
-           public string NewsSummary {get;set;}
+           public string? NewsSummary {get;set;}
 
            /// <summary>
            /// Desc:
@@ -58,7 +57,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_from")]           
-           public string NewsFrom {get;set;}
+           public string? NewsFrom {get;set;}
 
            /// <summary>
            /// Desc:
@@ -75,6 +74,14 @@ namespace k_spider_dotnet.model
            /// </summary>
            [SugarColumn(ColumnName="news_download_time")]           
            public DateTime? NewsDownloadTime {get;set;}
+
+           /// <summary>
+           /// Desc:新闻分类
+           /// Default:0
+           /// Nullable:True
+           /// </summary>
+           [SugarColumn(ColumnName="category")]           
+           public int? Category {get;set;}
 
     }
 }

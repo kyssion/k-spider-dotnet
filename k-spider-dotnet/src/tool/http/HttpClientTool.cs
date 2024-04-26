@@ -1,3 +1,5 @@
+using System.Net.Http;
+
 namespace k_spider_dotnet.tool.http;
 
 public static class HttpClientTool

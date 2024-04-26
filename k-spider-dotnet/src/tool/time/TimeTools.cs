@@ -1,3 +1,5 @@
+using System;
+
 namespace k_spider_dotnet.tool.time;
 
 public static class TimeTools

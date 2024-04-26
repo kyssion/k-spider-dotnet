@@ -1,18 +1,19 @@
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using k_spider_dotnet_test.spider_test.tool;
 using k_spider_dotnet.dal.db;
+using k_spider_dotnet.dao;
 using k_spider_dotnet.model;
 using k_spider_dotnet.script.df_news.spider;
+using k_spider_dotnet.tool.log;
 using k_spider_dotnet.tool.resource;
 using k_spider_dotnet.tool.time;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace k_spider_dotnet_test.spider_test.df_news;
 
 [TestClass]
 public class DfListSpiderTest
 {
+    private readonly ILogger _logger = LogFactory.GetLogger<DfListSpiderTest>();
 
     [TestMethod]
     public void TestDfListWithPlaywright()
@@ -28,17 +29,18 @@ public class DfListSpiderTest
         var dfListItem = new DfListSpiderWithPlaywright(false,true);
         var list = dfListItem.GetDfListInfo("https://finance.eastmoney.com/a/ccjdd_{0}.html", 10)
             .Result;
-        Console.WriteLine(DateTime.Now.Subtract(startTime).TotalMilliseconds);
+
+
     }
 
     [TestMethod]
     public void TestGetDfListByUrl()
     {
-        var needUrlInfo = DfResource.DfListUrlResourceList[0];
+        var needUrlInfo = DfResource.DfListUrlResourceList[5];
         var dfListItem = new DfListSpider()
-            .GetDfListInfoByUrl(needUrlInfo.ListResourceNumber, 1, 1, 10, DfListOrderType.ByTime).Result;
+            .GetDfListInfoByUrl(needUrlInfo, 25, 25, 200, DfListOrderType.ByTime).Result;
         var connection = Pg.Connection();
-        var itemList = dfListItem.Select(item => new SpiderNewsListTestModel
+        var itemList = dfListItem.Select(item => new SpiderNewsListModel()
             {
                 FromMedia = (int)NewsFromType.DfMedia,
                 NewsUrl = item.NewsUrl,
@@ -47,8 +49,12 @@ public class DfListSpiderTest
                 NewsFrom = item.NewsFrom,
                 NewsTime = TimeTools.GetDateByTimeStr(item.NewsTime ?? "", TimeTools.DfTimeFormat),
                 NewsDownloadTime = item.NewsDownloadTime,
-            })
+                Category = item.Category,
+            }).GroupBy(item =>  item.NewsUrl).Select(item=>item.First())
             .ToList();
-        Console.WriteLine(connection.Storageable(itemList).WhereColumns(it => it.NewsUrl).ExecuteCommand());
+
+        _logger.LogInformation("{}",SpiderNewsListDao.UpsertSpiderNewsList(connection, itemList,200));
+        // _logger.LogInformation("{}",connection.Storageable(itemList).WhereColumns(it => it.NewsUrl).ExecuteCommand());
+        _logger.LogInformation("{0}",DateTime.Now);
     }
 }

@@ -1,7 +1,7 @@
 using k_spider_dotnet.dal.db;
 using k_spider_dotnet.tool.resource;
 
-namespace k_spider_dotnet.develop.db;
+namespace k_spider_dotnet.tool.develop.db;
 
 public static class PgDevelop
 {

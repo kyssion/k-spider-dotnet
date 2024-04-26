@@ -1,6 +1,7 @@
 using System.Configuration;
 using k_spider_dotnet.tool.resource;
 using Microsoft.Data.SqlClient;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MySqlConnector;
 using NetTaste;
 using SqlSugar;
@@ -8,12 +9,12 @@ using SqlSugar;
 namespace k_spider_dotnet_test.spider_test.db;
 
 [TestClass]
-public class DbTest
+public class PgDbTest
 {
     [TestMethod]
     public  void TestSqlSurge()
     {
-        // jdbc url => postgresql://spider:Javarustc++11.@39.100.86.193:5432/k_script_spider
+        // jdbc url => postgresql://spider:Javarustc++11.@39.100.86.193:5432/k_script_spider  
         //无需配置任何东西
         SqlSugarClient db = new SqlSugarClient(new ConnectionConfig()
         {

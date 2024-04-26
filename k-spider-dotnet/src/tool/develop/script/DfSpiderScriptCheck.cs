@@ -1,10 +1,14 @@
 using k_spider_dotnet.script.df_news.spider;
+using k_spider_dotnet.tool.log;
+using Microsoft.Extensions.Logging;
 
-namespace k_spider_dotnet.develop.script;
+namespace k_spider_dotnet.tool.develop.script;
 
 // 东方财富信息抓去初始化信息check
-public static class DfSpiderScriptCheck
+public class DfSpiderScriptCheck
 {
+    private static readonly ILogger Log = LogFactory.GetLogger<DfSpiderScriptCheck>();
+
     // 使用playwrigth抓去页面信息check ResouceListNum 信息是否和当前配置的信息匹配
     public static void CheckDfListUrlResourceList()
     {
@@ -16,7 +20,7 @@ public static class DfSpiderScriptCheck
                 var numberInfo = await dfListSpider.GetListResourceNumberInfo(string.Format(resourceItem.Url, 1));
                 if (numberInfo != resourceItem.ListResourceNumber)
                 {
-                    throw new Exception($"module name : {resourceItem.ModuleName} . module number : " +
+                    throw new Exception($"module name : {resourceItem.CategoryInfo.CategoryNumber} . module number : " +
                                         $"{resourceItem.ListResourceNumber} . number : {numberInfo}");
                 }
 
@@ -26,7 +30,7 @@ public static class DfSpiderScriptCheck
                 // 处理所有异常
                 foreach (var ex in t.Exception.InnerExceptions)
                 {
-                    Console.WriteLine(ex.Message);
+                    Log.LogInformation(ex.Message);
                 }
             }).GetAwaiter().GetResult(); // todo 这里注意一个知识点 ， ContinueWith如果没有异常的话下一步会有问题 ，
                                          // todo task会是IsCanceled = true

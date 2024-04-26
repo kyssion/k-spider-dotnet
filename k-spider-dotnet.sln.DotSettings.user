@@ -1,8 +1,15 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/CustomBuildToolPath/@EntryValue">/usr/local/share/dotnet/sdk/8.0.203/MSBuild.dll</s:String>
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/DotNetCliExePath/@EntryValue">/usr/local/share/dotnet/dotnet</s:String>
+	<s:Boolean x:Key="/Default/Environment/Hierarchy/Build/BuildTool/RecentDotNetCliExePaths/=_002Fopt_002Fdotnet9_002Fdotnet/@EntryIndexedValue">True</s:Boolean>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=61005d16_002D336e_002D47ab_002D897a_002D8455673911c0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestGetDfListByUrl" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestGetDfListByUrl&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestDfListWithPlaywright&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.developer.TestFunction.TestTask&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.DemoTestMethod&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfContextSpiderTest.TestDfContextSpider&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+&lt;/SessionState&gt;</s:String>
+	
+	</wpf:ResourceDictionary>

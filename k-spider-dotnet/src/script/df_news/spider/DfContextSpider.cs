@@ -4,15 +4,17 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using k_spider_dotnet.tool.http;
+using k_spider_dotnet.tool.log;
 using k_spider_dotnet.tool.resource;
+using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
-using static System.Text.RegularExpressions.Regex;
 
 namespace k_spider_dotnet.script.df_news.spider;
 
 public partial class DfContextSpider(IPlaywright playwright)
 {
-    
+    private static readonly ILogger Log = LogFactory.GetLogger<DfListSpider>();
+
     [GeneratedRegex(".(html)")]
     private static partial Regex FillHtml();
     [GeneratedRegex(@"\s")]
@@ -48,24 +50,41 @@ public partial class DfContextSpider(IPlaywright playwright)
 
     public async Task<DfContextInfo> GetDfContextInfoByUrl(string url)
     {
-        var responseString = await new HttpClient().GetStringAsync(url);
-        return this.GetDfContextInfoByHtml(responseString);
+        try
+        {
+            var responseString = await new HttpClient().GetStringAsync(url);
+            return this.GetDfContextInfoByHtml(url ,responseString);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[GetDfContextInfoByUrl] 拉取详情失败 url : {} , err : {}", url, e);
+            throw;
+        }
     }
 
-    private DfContextInfo GetDfContextInfoByHtml(string responseString)
+    // todo 有一个特殊的文档  https://fund.eastmoney.com/a/1593,202404223054066289.html
+    private DfContextInfo GetDfContextInfoByHtml(string url , string responseString)
     {
-        var ans = new DfContextInfo();
+        var ans = new DfContextInfo
+        {
+            FromUrl = url
+        };
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(responseString);
         // 1. 获取 标题 , 信息来源 , 新闻时间
-        var titleNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='title']");
+        var nowHtmlNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='contentwrap']")??htmlDoc.DocumentNode.SelectSingleNode("//div[@class='newsContent']");
+        if (nowHtmlNode == null)
+        {
+            throw new Exception("新闻页面不符合 标准");
+        }
+        var titleNode = nowHtmlNode.SelectSingleNode("//div[@class='title']");
         ans.Title = titleNode.InnerText;
-        var tipBoxNodeChildrens = htmlDoc.DocumentNode.SelectNodes("//div[@class='tipbox']/div[@class='infos']/div");
+        var tipBoxNodeChildrens = nowHtmlNode.SelectNodes("//div[@class='tipbox']/div[@class='infos']/div");
         ans.NewsTime = FillWriteLine().Replace(tipBoxNodeChildrens[0].InnerText, "");
         ans.NewsFrom = FillWriteLine().Replace(tipBoxNodeChildrens[1].InnerText, "");
-        var abstractNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='abstract']/div[@class='txt']");
+        var abstractNode = nowHtmlNode.SelectSingleNode("//div[@class='abstract']/div[@class='txt']");
         ans.AbstractInfo = FillWriteLine().Replace(abstractNode.InnerText, "");
-        var txtInfosNodes = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='txtinfos']").ChildNodes;
+        var txtInfosNodes = nowHtmlNode.SelectSingleNode("//div[@class='txtinfos']").ChildNodes;
         var contextDetails = new List<DfContextDetailInfo>();
         var ti = CultureInfo.CurrentCulture.TextInfo;
         foreach (var infosNode in txtInfosNodes)
@@ -151,7 +170,7 @@ public partial class DfContextSpider(IPlaywright playwright)
             }
         }
         var taskList = imgUrlList.Select(keyValue => HtmlGetImgDownLoad.DownloadImgAsByte(keyValue.Value, "" + keyValue.Key)).ToList();
-        foreach (var task in taskList) Task.WaitAll(task);
+        foreach (var task in taskList) task.Wait();
         var allImgInfo = taskList.Select(itemTask => itemTask.Result).ToList();
         return (allDetailInfos, allImgInfo);
     }
