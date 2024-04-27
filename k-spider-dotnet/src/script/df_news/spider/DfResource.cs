@@ -1,3 +1,5 @@
+using k_spider_dotnet.tool.html;
+
 namespace k_spider_dotnet.script.df_news.spider;
 
 public static class DfResource

@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using k_spider_dotnet.model;
+using k_spider_dotnet.script.df_news.spider.model;
 using k_spider_dotnet.tool.http;
 using k_spider_dotnet.tool.log;
 using k_spider_dotnet.tool.resource;
@@ -13,33 +14,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 
 namespace k_spider_dotnet.script.df_news.spider;
-
-public struct DfListInfo
-{
-    public string NewsUrl { get; set; }
-    public string NewsTitle { get; set; }
-    public string NewsSummary { get; set; }
-    public string NewsTime { get; set; }
-    public string NewsFrom { get; set; }
-    public NewsFromType FromMedia { get; set; }
-    public DateTime NewsDownloadTime { get; set; }
-    
-    public int Category { get; set; }
-
-    public SpiderNewsListModel ToSpiderNewListModel()
-    {
-        return new SpiderNewsListModel
-        {
-            FromMedia = (int)NewsFromType.DfMedia,
-            NewsUrl = this.NewsUrl,
-            NewsTitle = this.NewsTitle,
-            NewsSummary = this.NewsSummary,
-            NewsFrom = this.NewsFrom,
-            NewsTime = TimeTools.GetDateByTimeStr(this.NewsTime ?? "", TimeTools.DfTimeFormat),
-            NewsDownloadTime = this.NewsDownloadTime,
-        };
-    }
-}
 
 public class DfListSpider
 {
@@ -102,165 +76,5 @@ public class DfListSpider
                 dfListResourceInfo.CategoryInfo.CategoryName ,dfListResourceInfo.ListResourceNumber,pageNumber,pageSize,urlNow, e);
             throw;
         }
-    }
-}
-
-public class DfListSpiderWithPlaywright
-{
-    private static readonly Regex ImageRegex = new Regex(@".(\.png|\.jpg|\.css|\.aspx|\.ico)");
-
-    private readonly IBrowser _browser;
-    private readonly IBrowserContext _context;
-
-    public async Task Close()
-    {
-        await _context.CloseAsync();
-        await _browser.CloseAsync();
-    }
-    public DfListSpiderWithPlaywright(bool headless, bool useConsole) 
-    {
-        var playwright = Playwright.CreateAsync().Result;
-        _browser = playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless }).Result;
-        _context =  _browser.NewContextAsync().Result;
-        // context 终端能力支持
-        if (useConsole == true)
-        {
-            _context.Console += async (_, msg) =>
-            {
-                foreach (var arg in msg.Args)
-                {
-                    Console.WriteLine(await arg.JsonValueAsync<object>());
-                }
-            };
-        }
-    }
-
-    public async Task<int> GetListResourceNumberInfo(string url)
-    {
-        var page = await this._context.NewPageAsync();
-        try
-        {
-            await page.RouteAsync("**/*", async route =>
-            {
-                var routerUrl = route.Request.Url;
-                if (!ImageRegex.IsMatch(routerUrl))
-                {
-                    await route.ContinueAsync();
-                }
-                else
-                {
-                    await route.AbortAsync();
-                }
-            });
-            var waitForRequestTask = page.WaitForRequestAsync("**/getNewsByColumns*");
-            await page.GotoAsync(url);
-            var request = await waitForRequestTask;
-            var paramsList = HttpUrlTool.GetUrlParamInfo(request.Url, "column");
-            if (paramsList.Length == 0)
-            {
-                throw new Exception("getNewsByColumns , column not find");
-            }
-
-            return int.Parse(paramsList[0]);
-        }
-        finally
-        {
-            await page.CloseAsync();
-        }
-    }
-    
-
-    public async Task<List<List<DfListInfo>>> GetDfListInfo(string url, int pageNum)
-    {
-        try
-        {
-
-            var ansList = await this.GetListInfoWithPlaywright(url, pageNum, _context);
-            await _context.CloseAsync();
-            return ansList;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    private async Task<List<List<DfListInfo>>> GetListInfoWithPlaywright(string baseUrl, int pageNum,
-        IBrowserContext context)
-    {
-        var ans = new List<List<DfListInfo>>();
-        for (var i = 0; i < pageNum; i++)
-        {
-            var urlNow = string.Format(baseUrl, i + 1);
-            ans.Add(await this.GetListContentDataInfo(urlNow, context));
-        }
-
-        return ans;
-    }
-
-    private async Task<List<DfListInfo>> GetListContentDataInfo(string urlNow, IBrowserContext context)
-    {
-        var page = await context.NewPageAsync();
-        await page.RouteAsync("**/*", async route =>
-        {
-            var routerUrl = route.Request.Url;
-            if (!ImageRegex.IsMatch(routerUrl))
-            {
-                await route.ContinueAsync();
-            }
-            else
-            {
-                await route.AbortAsync();
-            }
-        });
-        await page.GotoAsync(urlNow);
-        await page.WaitForLoadStateAsync();
-        var evaluateResult = await page.EvaluateAsync<object>("""
-                                                                      () =>{
-                                                                          let ans = [];
-                                                                          let item = document.querySelector("#newsListContent")
-                                                                          if (item == null) {
-                                                                              return ans
-                                                                          }
-                                                                          let childLi = item.getElementsByTagName("li")
-                                                                          if (childLi) {
-                                                                              for (let li of childLi) {
-                                                                                  let textDiv = li.getElementsByClassName("text")[0];
-                                                                                  if (textDiv) {
-                                                                                      let title = textDiv.getElementsByClassName("title")[0];
-                                                                                      let info = textDiv.getElementsByClassName("info")[0];
-                                                                                      let timeNode = textDiv.getElementsByClassName("time")[0];
-                                                                                      if (title && info) {
-                                                                                          let titleA = title.getElementsByTagName("a")[0];
-                                                                                          let dataUrl = titleA.href;
-                                                                                          let dataTitle = titleA.innerHTML;
-                                                                                          let dataInfo = info.getAttribute("title") ?? "";
-                                                                                          let dataTime = timeNode.innerHTML
-                                                                                          if (dataTitle) {
-                                                                                              ans.push({
-                                                                                                  url: dataUrl,
-                                                                                                  title: dataTitle,
-                                                                                                  summary: dataInfo,
-                                                                                                  time: dataTime
-                                                                                              })
-                                                                                          }
-                                                                                      }
-                                                                                  }
-                                                                              }
-                                                                          }
-                                                                          return ans
-                                                                      }
-                                                              """);
-        await page.CloseAsync();
-        var pageInfos = (object[])evaluateResult;
-        return (from IDictionary<string, object>? item in pageInfos
-            select new DfListInfo
-            {
-                NewsUrl = item["url"].ToString()??"",
-                NewsTitle = item["title"].ToString()??"",
-                NewsSummary = item["summary"].ToString()??"",
-                NewsTime = item["time"].ToString()??"",
-            }).ToList();
     }
 }

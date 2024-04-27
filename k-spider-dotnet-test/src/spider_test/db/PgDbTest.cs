@@ -28,5 +28,11 @@ public class PgDbTest
             .FormatClassName(it =>StringTools.UnderlineToCamelCase(it,true)+"Model")//格式化类名 （类名和表名不一样的情况）
             .FormatPropertyName(it => StringTools.UnderlineToCamelCase(it,true))//格式化属性名 （属性名和字段名不一样情况）
             .StringNullable().CreateClassFile("/Users/bytedance/RiderProjects/k-spider-dotnet", "Models");
-    } 
+    }
+
+    [TestMethod]
+    public void TestConsole()
+    {
+        Console.WriteLine("{0,10} {1,10} {2} {3} {4} {5} {6}","1","2","3","4", "5", "6","7");
+    }
 }

@@ -18,4 +18,5 @@ public enum HtmlTagName{
     Div = 1,
     Center = 2,
     P = 3,
+    H1=4,
 }

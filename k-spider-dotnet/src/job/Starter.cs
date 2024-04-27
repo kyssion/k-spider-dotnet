@@ -24,6 +24,5 @@ public class Starter
         scheduler.ListenerManager.AddJobListener(new SpiderJobListener("df_job"), GroupMatcher<JobKey>.AnyGroup());
         //将job和trigger注册到scheduler中
         scheduler.ScheduleJob(newJobDetail,newJobTrigger).Wait();
-        Console.ReadKey();
     }
 }
