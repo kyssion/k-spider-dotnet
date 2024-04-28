@@ -9,6 +9,6 @@ public class StringToolsTest
     [TestMethod]
     public void Test()
     {
-        Console.WriteLine(        StringTools.UnderlineToCamelCase("qwe_qwe_qwe_",true));
+        Console.WriteLine(StringTools.UnderlineToCamelCase("qwe_qwe_qwe_", true));
     }
 }

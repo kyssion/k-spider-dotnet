@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using k_spider_dotnet.tool.http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,12 +8,6 @@ namespace k_spider_dotnet_test.spider_test.tool;
 [TestClass]
 public class HttpTest
 {
-    [TestMethod]
-    public void TestHttpDownloadImg()
-    {
-
-        var item = HtmlGetImgDownLoad.DownloadImgToFilePath("","https://np-newspic.dfcfw.com/download/D25742678450563462865_w1200h900.jpg","testImg").Result;
-    }
 
     [TestMethod]
     public void StartNewWebServer()
@@ -26,22 +21,22 @@ public class HttpTest
             }
 
             // Create a listener.
-            HttpListener listener = new HttpListener();
+            var listener = new HttpListener();
             listener.Prefixes.Add("http://+:8080/");
             listener.Start();
             Console.WriteLine("Listening...");
             // Note: The GetContext method blocks while waiting for a request.
-            HttpListenerContext context = listener.GetContext();
-            HttpListenerRequest request = context.Request;
+            var context = listener.GetContext();
+            var request = context.Request;
             // Obtain a response object.
-            HttpListenerResponse response = context.Response;
+            var response = context.Response;
             response.AddHeader("this-sfsfsf", "12345");
             // Construct a response.
-            string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+            var responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
+            var buffer = Encoding.UTF8.GetBytes(responseString);
             // Get a response stream and write the response to it.
             response.ContentLength64 = buffer.Length;
-            System.IO.Stream output = response.OutputStream;
+            var output = response.OutputStream;
             output.Write(buffer, 0, buffer.Length);
             // You must close the output stream.
             output.Close();

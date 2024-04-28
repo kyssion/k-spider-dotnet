@@ -15,27 +15,23 @@ public class StringTools
                 firstIsCapitalized = true;
                 continue;
             }
+
             builder.Append(firstIsCapitalized ? ChatToUpper(i) : i);
             firstIsCapitalized = false;
         }
+
         return builder.ToString();
     }
-    
+
     public static char ChatToLower(char i)
     {
-        if (i is >= 'a' and <= 'z')  
-        {
-            return (char)('A' + i - 'a');
-        }
+        if (i is >= 'a' and <= 'z') return (char)('A' + i - 'a');
         return i;
     }
 
     public static char ChatToUpper(char i)
     {
-        if (i is >= 'a' and <= 'z')  
-        {
-            return (char)('A' + i - 'a');
-        }
+        if (i is >= 'a' and <= 'z') return (char)('A' + i - 'a');
         return i;
     }
 }

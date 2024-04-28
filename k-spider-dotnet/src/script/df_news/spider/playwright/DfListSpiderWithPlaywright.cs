@@ -7,59 +7,48 @@ namespace k_spider_dotnet.script.df_news.spider.playwright;
 
 public class DfListSpiderWithPlaywright
 {
-    private static readonly Regex ImageRegex = new Regex(@".(\.png|\.jpg|\.css|\.aspx|\.ico)");
+    private static readonly Regex ImageRegex = new(@".(\.png|\.jpg|\.css|\.aspx|\.ico)");
 
     private readonly IBrowser _browser;
     private readonly IBrowserContext _context;
+
+    public DfListSpiderWithPlaywright(bool headless, bool useConsole)
+    {
+        var playwright = Playwright.CreateAsync().Result;
+        _browser = playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless }).Result;
+        _context = _browser.NewContextAsync().Result;
+        // context 终端能力支持
+        if (useConsole)
+            _context.Console += async (_, msg) =>
+            {
+                foreach (var arg in msg.Args) Console.WriteLine(await arg.JsonValueAsync<object>());
+            };
+    }
 
     public async Task Close()
     {
         await _context.CloseAsync();
         await _browser.CloseAsync();
     }
-    public DfListSpiderWithPlaywright(bool headless, bool useConsole) 
-    {
-        var playwright = Playwright.CreateAsync().Result;
-        _browser = playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless }).Result;
-        _context =  _browser.NewContextAsync().Result;
-        // context 终端能力支持
-        if (useConsole == true)
-        {
-            _context.Console += async (_, msg) =>
-            {
-                foreach (var arg in msg.Args)
-                {
-                    Console.WriteLine(await arg.JsonValueAsync<object>());
-                }
-            };
-        }
-    }
 
     public async Task<int> GetListResourceNumberInfo(string url)
     {
-        var page = await this._context.NewPageAsync();
+        var page = await _context.NewPageAsync();
         try
         {
             await page.RouteAsync("**/*", async route =>
             {
                 var routerUrl = route.Request.Url;
                 if (!ImageRegex.IsMatch(routerUrl))
-                {
                     await route.ContinueAsync();
-                }
                 else
-                {
                     await route.AbortAsync();
-                }
             });
             var waitForRequestTask = page.WaitForRequestAsync("**/getNewsByColumns*");
             await page.GotoAsync(url);
             var request = await waitForRequestTask;
             var paramsList = HttpUrlTool.GetUrlParamInfo(request.Url, "column");
-            if (paramsList.Length == 0)
-            {
-                throw new Exception("getNewsByColumns , column not find");
-            }
+            if (paramsList.Length == 0) throw new Exception("getNewsByColumns , column not find");
 
             return int.Parse(paramsList[0]);
         }
@@ -68,14 +57,13 @@ public class DfListSpiderWithPlaywright
             await page.CloseAsync();
         }
     }
-    
+
 
     public async Task<List<List<DfListInfo>>> GetDfListInfo(string url, int pageNum)
     {
         try
         {
-
-            var ansList = await this.GetListInfoWithPlaywright(url, pageNum, _context);
+            var ansList = await GetListInfoWithPlaywright(url, pageNum, _context);
             await _context.CloseAsync();
             return ansList;
         }
@@ -93,7 +81,7 @@ public class DfListSpiderWithPlaywright
         for (var i = 0; i < pageNum; i++)
         {
             var urlNow = string.Format(baseUrl, i + 1);
-            ans.Add(await this.GetListContentDataInfo(urlNow, context));
+            ans.Add(await GetListContentDataInfo(urlNow, context));
         }
 
         return ans;
@@ -106,13 +94,9 @@ public class DfListSpiderWithPlaywright
         {
             var routerUrl = route.Request.Url;
             if (!ImageRegex.IsMatch(routerUrl))
-            {
                 await route.ContinueAsync();
-            }
             else
-            {
                 await route.AbortAsync();
-            }
         });
         await page.GotoAsync(urlNow);
         await page.WaitForLoadStateAsync();
@@ -157,10 +141,10 @@ public class DfListSpiderWithPlaywright
         return (from IDictionary<string, object>? item in pageInfos
             select new DfListInfo
             {
-                NewsUrl = item["url"].ToString()??"",
-                NewsTitle = item["title"].ToString()??"",
-                NewsSummary = item["summary"].ToString()??"",
-                NewsTime = item["time"].ToString()??"",
+                NewsUrl = item["url"].ToString() ?? "",
+                NewsTitle = item["title"].ToString() ?? "",
+                NewsSummary = item["summary"].ToString() ?? "",
+                NewsTime = item["time"].ToString() ?? ""
             }).ToList();
     }
 }

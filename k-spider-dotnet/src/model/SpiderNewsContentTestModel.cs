@@ -3,27 +3,19 @@
 namespace k_spider_dotnet.model;
 
 /// <summary>
-///     排重抓取信息信息列表
+///     新闻信息详情表
 /// </summary>
-[SugarTable("spider_news_list_test")]
-public class SpiderNewsListTestModel
+[SugarTable("spider_news_content_test")]
+public class SpiderNewsContentTestModel
 {
     /// <summary>
     ///     Desc:
-    ///     Default:nextval('spider_news_list_test_id_seq'::regclass)
+    ///     Default:nextval('spider_news_content_id_seq'::regclass)
     ///     Nullable:False
     /// </summary>
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "id")]
     public long Id { get; set; }
     
-    /// <summary>
-    ///     Desc:
-    ///     Default:
-    ///     Nullable:True
-    /// </summary>
-    [SugarColumn(ColumnName = "from_media")]
-    public int? FromMedia { get; set; }
-
     /// <summary>
     ///     Desc:
     ///     Default:
@@ -69,22 +61,22 @@ public class SpiderNewsListTestModel
     ///     Default:
     ///     Nullable:True
     /// </summary>
-    [SugarColumn(ColumnName = "news_download_time")]
-    public DateTime? NewsDownloadTime { get; set; }
+    [SugarColumn(ColumnName = "news_keyword")]
+    public string? NewsKeyword { get; set; }
+    
+    /// <summary>
+    /// Desc:
+    /// Default:
+    /// Nullable:True
+    /// </summary>
+    [SugarColumn(ColumnName="news_content_json")]           
+    public string? NewsContentJson {get;set;}
 
     /// <summary>
-    ///     Desc:新闻类型
-    ///     Default:0
-    ///     Nullable:True
+    /// Desc:
+    /// Default:
+    /// Nullable:True
     /// </summary>
-    [SugarColumn(ColumnName = "category")]
-    public int? Category { get; set; }
-
-    /// <summary>
-    ///     Desc:详情数据是否下载 0 没有下载 1 已下载
-    ///     Default:0
-    ///     Nullable:True
-    /// </summary>
-    [SugarColumn(ColumnName = "is_download_detail")]
-    public int? IsDownloadDetail { get; set; }
+    [SugarColumn(ColumnName="news_content_text")]           
+    public string? NewsContentText {get;set;}
 }

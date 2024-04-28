@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SqlSugar;
 
 namespace k_spider_dotnet_test;
 
@@ -14,7 +13,7 @@ public class DemoTest
         var list = new List<StringBuilder>();
         for (var a = 0; a < 10_000_000; a++)
         {
-            StringBuilder item = new StringBuilder(100);
+            var item = new StringBuilder(100);
             item.Append("hello world" + a);
             list.Add(item);
         }

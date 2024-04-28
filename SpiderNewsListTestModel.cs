@@ -6,7 +6,7 @@ using SqlSugar;
 namespace k_spider_dotnet.model
 {
     ///<summary>
-    ///
+    ///排重抓取信息信息列表
     ///</summary>
     [SugarTable("spider_news_list_test")]
     public partial class SpiderNewsListTestModel
@@ -69,7 +69,7 @@ namespace k_spider_dotnet.model
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="news_summary")]           
-           public string NewsSummary {get;set;}
+           public string? NewsSummary {get;set;}
 
            /// <summary>
            /// Desc:
@@ -96,12 +96,20 @@ namespace k_spider_dotnet.model
            public DateTime? NewsDownloadTime {get;set;}
 
            /// <summary>
-           /// Desc:新闻分类
+           /// Desc:新闻类型
            /// Default:0
            /// Nullable:True
            /// </summary>
            [SugarColumn(ColumnName="category")]           
            public int? Category {get;set;}
+
+           /// <summary>
+           /// Desc:详情数据是否下载 0 没有下载 1 已下载
+           /// Default:0
+           /// Nullable:True
+           /// </summary>
+           [SugarColumn(ColumnName="is_download_detail")]           
+           public int? IsDownloadDetail {get;set;}
 
     }
 }

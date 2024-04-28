@@ -9,20 +9,11 @@ public class TestFunction
     public void TestTask()
     {
         var tasksList = new List<Task>();
-        tasksList.Add(Task.Run(() =>
-        {
-            Thread.Sleep(1000);
-        }));
-        tasksList.Add(Task.Run(() =>
-        {
-            Thread.Sleep(1000);
-        }));
-        var t = Task.WhenAll(tasksList.ToArray()).ContinueWith((t) =>
-        {
-            Console.WriteLine(t);
-        });
+        tasksList.Add(Task.Run(() => { Thread.Sleep(1000); }));
+        tasksList.Add(Task.Run(() => { Thread.Sleep(1000); }));
+        var t = Task.WhenAll(tasksList.ToArray()).ContinueWith(t => { Console.WriteLine(t); });
         var w = t.GetAwaiter();
         w.GetResult();
-        Console.WriteLine($"end CheckDfListUrlResourceList");
+        Console.WriteLine("end CheckDfListUrlResourceList");
     }
 }

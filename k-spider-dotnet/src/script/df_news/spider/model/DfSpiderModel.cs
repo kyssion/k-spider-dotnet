@@ -1,6 +1,10 @@
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 using k_spider_dotnet.model;
-using k_spider_dotnet.tool.html;
 using k_spider_dotnet.tool.http;
+using k_spider_dotnet.tool.Json;
 using k_spider_dotnet.tool.resource;
 using k_spider_dotnet.tool.time;
 
@@ -8,23 +12,40 @@ namespace k_spider_dotnet.script.df_news.spider.model;
 
 public class DfSpiderModel
 {
-    
 }
 
-public struct DfContextInfo
+public struct DfContentInfo
 {
-    public string? Title { get; set; } // 标题
+    public string? NewsTitle { get; set; } // 标题 
 
-    public string? AbstractInfo { get; set; } // 摘要
+    public string? NewsSummary { get; set; } // 摘要
 
     // 新闻添加时间
     public string? NewsTime { get; set; } // 新闻添加时间
     public string? NewsFrom { get; set; } // 新闻原始来源
-    public List<DfContextDetailInfo> DataContext { get; set; } // DataContext 内容序列化结构
-    public string? DataContextAll { get; set; } // DataContextAll 内容文本序列化结构
-    public string? FromUrl { get; set; } // 新闻原始url
-        
+    public List<DfContextDetailInfo> NewsDataContent { get; set; } // DataContext 内容序列化结构
+    public string? NewsDataContentText { get; set; } // DataContextAll 内容文本序列化结构
+    public string? NewsUrl { get; set; } // 新闻原始url
+    
+    public string? NewsKeyword { get; set; } // 新闻关键字
+
     public List<HtmlGetImgDownLoad.ImgInfo> ImgInfos { get; set; } // 新闻原始图片信息
+    
+    public SpiderNewsContentTestModel ToSpiderNewsContentTestModel()
+    {
+        var model =  new SpiderNewsContentTestModel
+        {
+            NewsUrl = this.NewsUrl,
+            NewsTitle = this.NewsTitle,
+            NewsSummary = this.NewsSummary,
+            NewsFrom = this.NewsFrom,
+            NewsTime = TimeTools.GetDateByTimeStrForFormat(this.NewsTime ?? "", TimeTools.TimeFormatForBackSlash),
+            NewsKeyword = this.NewsKeyword,
+            NewsContentText = this.NewsDataContentText,
+            NewsContentJson = JsonUtil.GetJson(this.NewsDataContent)
+        };
+        return model;
+    }
 }
 
 public struct DfContextDetailInfo
@@ -45,7 +66,7 @@ public struct DfListInfo
     public string NewsFrom { get; set; }
     public NewsFromType FromMedia { get; set; }
     public DateTime NewsDownloadTime { get; set; }
-    
+
     public int Category { get; set; }
 
     public SpiderNewsListModel ToSpiderNewListModel()
@@ -57,8 +78,9 @@ public struct DfListInfo
             NewsTitle = this.NewsTitle,
             NewsSummary = this.NewsSummary,
             NewsFrom = this.NewsFrom,
-            NewsTime = TimeTools.GetDateByTimeStr(this.NewsTime ?? "", TimeTools.DfTimeFormat),
+            NewsTime = TimeTools.GetDateByTimeStrForFormat(this.NewsTime ?? "", TimeTools.TimeFormatForStrikethrough),
             NewsDownloadTime = this.NewsDownloadTime,
+            Category = this.Category
         };
     }
 }

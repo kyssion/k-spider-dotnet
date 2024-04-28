@@ -20,21 +20,15 @@ public class DfSpiderScriptCheck
             {
                 var numberInfo = await dfListSpider.GetListResourceNumberInfo(string.Format(resourceItem.Url, 1));
                 if (numberInfo != resourceItem.ListResourceNumber)
-                {
                     throw new Exception($"module name : {resourceItem.CategoryInfo.CategoryNumber} . module number : " +
                                         $"{resourceItem.ListResourceNumber} . number : {numberInfo}");
-                }
-
             })).ToArray()).ContinueWith(t =>
             {
                 if (t.Exception == null) return;
                 // 处理所有异常
-                foreach (var ex in t.Exception.InnerExceptions)
-                {
-                    Log.LogInformation(ex.Message);
-                }
+                foreach (var ex in t.Exception.InnerExceptions) Log.LogInformation(ex.Message);
             }).GetAwaiter().GetResult(); // todo 这里注意一个知识点 ， ContinueWith如果没有异常的话下一步会有问题 ，
-                                         // todo task会是IsCanceled = true
+            // todo task会是IsCanceled = true
         }
         finally
         {
