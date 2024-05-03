@@ -25,8 +25,23 @@ public class Pg
             {
                 db.Aop.OnError = exp => //SQL报错
                 {
-                    UtilMethods.GetSqlString(DbType.SqlServer, exp.Sql, exp.Parametres as SugarParameter[]);
+                    // Log.LogError("sql error : {}",UtilMethods.GetSqlString(DbType.SqlServer, exp.Sql, exp.Parametres as SugarParameter[]));
                 };
+                // db.Aop.OnLogExecuting = (sql, pars) => //SQL执行前
+                // {
+                //     //获取原生SQL推荐 5.1.4.63  性能OK
+                //     //UtilMethods.GetNativeSql(sql,pars)
+                //
+                //     //获取无参数化SQL 影响性能只适合调试
+                //     Log.LogInformation("sql info : {}",UtilMethods.GetSqlString(DbType.SqlServer, sql, pars));
+                // };
+
+                //SQL执行完
+                // db.Aop.OnLogExecuted = (sql, pars) => 
+                // {
+                //     //执行完了可以输出SQL执行时间 (OnLogExecutedDelegate) 
+                //     Console.Write("time:" + db.Ado.SqlExecutionTime.ToString()); 
+                // };
             });
     }
 }

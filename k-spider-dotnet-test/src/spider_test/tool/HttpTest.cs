@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using k_spider_dotnet.tool.http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace k_spider_dotnet_test.spider_test.tool;
@@ -8,7 +7,6 @@ namespace k_spider_dotnet_test.spider_test.tool;
 [TestClass]
 public class HttpTest
 {
-
     [TestMethod]
     public void StartNewWebServer()
     {

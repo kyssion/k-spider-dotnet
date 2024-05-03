@@ -47,7 +47,7 @@ public class DfListSpiderWithPlaywright
             var waitForRequestTask = page.WaitForRequestAsync("**/getNewsByColumns*");
             await page.GotoAsync(url);
             var request = await waitForRequestTask;
-            var paramsList = HttpUrlTool.GetUrlParamInfo(request.Url, "column");
+            var paramsList = HttpUrlTools.GetUrlParamInfo(request.Url, "column");
             if (paramsList.Length == 0) throw new Exception("getNewsByColumns , column not find");
 
             return int.Parse(paramsList[0]);

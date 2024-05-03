@@ -2,7 +2,7 @@ using System.Web;
 
 namespace k_spider_dotnet.tool.http;
 
-public class HttpUrlTool
+public class HttpUrlTools
 {
     public static string[] GetUrlParamInfo(string url, string paramKey)
     {

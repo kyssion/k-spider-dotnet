@@ -1,6 +1,6 @@
 namespace k_spider_dotnet.tool.http;
 
-public static class HttpClientTool
+public static class HttpClientTools
 {
     public static HttpClient Create(string host)
     {

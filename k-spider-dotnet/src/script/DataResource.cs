@@ -1,9 +1,7 @@
 namespace k_spider_dotnet.script;
 
-
 public struct NewsCategory
 {
-
     public static readonly NewsCategory CategoryIntroduction = new()
     {
         CategoryName = "导读",
@@ -128,7 +126,31 @@ public struct NewsCategory
     public int CategoryNumber { get; set; }
 }
 
-public static class DataResource
+
+// 记录从哪个渠道抓取的新闻
+public enum FromTypeOfNews
 {
-    public const string MaxOsImagePath = "/Users/bytedance/RiderProjects/k-spider-dotnet/newsImg/";
+    // 东方财富
+    DfMedia = 1
+}
+
+public enum NewsDownloadStatusCode
+{
+    NoDownload = 0,
+    SuccessSyncDetailInfo = 1,
+    FailedSyncDetailInfo = 2,
+    SuccessDownloadOriginInfo = 3,
+    FailedDownloadOriginInfo = 4,
+}
+
+public enum NewsContentOriginType
+{
+    Json = 1,
+    Xml = 2, 
+}
+
+public enum NewsContentOriginStatus
+{
+    Success= 1,
+    Failed = 2,
 }

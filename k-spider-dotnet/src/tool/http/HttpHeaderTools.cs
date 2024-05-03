@@ -1,6 +1,6 @@
 namespace k_spider_dotnet.tool.http;
 
-public static class HttpHeaderTool
+public static class HttpHeaderTools
 {
     public static readonly ContentTypeInfo Jpg = new() { TypeString = "image/jpeg" };
     public static readonly ContentTypeInfo Jp2 = new() { TypeString = "image/jp2" };

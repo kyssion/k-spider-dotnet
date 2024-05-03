@@ -15,7 +15,23 @@ public class SpiderNewsListModel
     /// </summary>
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "id")]
     public long Id { get; set; }
-    
+
+    /// <summary>
+    ///     Desc:
+    ///     Default:DateTime.Now
+    ///     Nullable:False
+    /// </summary>
+    [SugarColumn(ColumnName = "create_time")]
+    public DateTime CreateTime { get; set; }
+
+    /// <summary>
+    ///     Desc:
+    ///     Default:DateTime.Now
+    ///     Nullable:False
+    /// </summary>
+    [SugarColumn(ColumnName = "update_time")]
+    public DateTime UpdateTime { get; set; }
+
     /// <summary>
     ///     Desc:
     ///     Default:
@@ -75,16 +91,16 @@ public class SpiderNewsListModel
     /// <summary>
     ///     Desc:新闻类型
     ///     Default:0
-    ///     Nullable:True
+    ///     Nullable:False
     /// </summary>
     [SugarColumn(ColumnName = "category")]
-    public int? Category { get; set; }
+    public int Category { get; set; }
 
     /// <summary>
     ///     Desc:详情数据是否下载 0 没有下载 1 已下载
     ///     Default:0
-    ///     Nullable:True
+    ///     Nullable:False
     /// </summary>
-    [SugarColumn(ColumnName = "is_download_detail")]
-    public int? IsDownloadDetail { get; set; }
+    [SugarColumn(ColumnName = "download_status_code")]
+    public int DownloadStatusCode { get; set; }
 }

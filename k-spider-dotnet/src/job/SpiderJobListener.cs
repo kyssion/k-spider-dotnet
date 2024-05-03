@@ -14,8 +14,7 @@ public class SpiderJobListener(string name) : IJobListener
         return Task.Run(
             () =>
             {
-                Log.LogInformation("{namespace} to be executed , job name : {jobName} start time : {startTime}",
-                    nameof(SpiderJobListener), Name, DateTime.Now);
+                Log.LogInformation("{namespace} to be executed , start time : {startTime}", context.JobDetail.JobType, DateTime.Now);
             }, cancellationToken);
     }
 
@@ -25,8 +24,7 @@ public class SpiderJobListener(string name) : IJobListener
         return Task.Run(
             () =>
             {
-                Log.LogInformation("{namespace} is vetoed , job name : {jobName} start time : {startTime}",
-                    nameof(SpiderJobListener), Name, DateTime.Now);
+                Log.LogInformation("{namespace} is vetoed , start time : {startTime}", context.JobDetail.JobType,  DateTime.Now);
             }, cancellationToken);
     }
 
@@ -37,8 +35,7 @@ public class SpiderJobListener(string name) : IJobListener
         return Task.Run(
             () =>
             {
-                Log.LogInformation("{namespace} was executed , job name : {jobName} end time : {startTime}",
-                    nameof(SpiderJobListener), Name, DateTime.Now);
+                Log.LogInformation("{namespace} was executed , end time : {startTime}", context.JobDetail.JobType, DateTime.Now);
             }, cancellationToken);
     }
 

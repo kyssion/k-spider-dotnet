@@ -2,32 +2,27 @@ using k_spider_dotnet.script;
 
 namespace k_spider_dotnet.tool.http;
 
-public static class HtmlGetImgDownLoad
+public static class HtmlImageTools
 {
-    public static async Task<ImgInfo> DownloadImgAsByte(string url)
+    public const string MaxOsImagePath = "/Users/bytedance/RiderProjects/k-spider-dotnet/newsImg/";
+    public static async Task<ImgInfo> DownloadImgAsByteInto(ImgInfo imgInfo)
     {
-        var ans = new ImgInfo();
-        var httpResponse = await new HttpClient().GetAsync(url);
+        var httpResponse = await new HttpClient().GetAsync(imgInfo.ResourceUrl);
         var dataByte = await httpResponse.Content.ReadAsByteArrayAsync();
-        ans.ImgName =  HttpUrlTool.GetUrlLastPath(url);
-        ans.Data = dataByte;
-        ans.ResourceUrl = url;
-        return ans;
+        imgInfo.Data = dataByte;
+        return imgInfo;
     }
-    
+
 
     public static void AddImgInfoIntoDirectory(ImgInfo imgInfo, string baseDirectory)
     {
         var directory = Environment.OSVersion.Platform switch
         {
-            PlatformID.Unix => DataResource.MaxOsImagePath + baseDirectory,
-            PlatformID.MacOSX => DataResource.MaxOsImagePath + baseDirectory,
+            PlatformID.Unix => MaxOsImagePath + baseDirectory,
+            PlatformID.MacOSX => MaxOsImagePath + baseDirectory,
             _ => throw new Exception($"os not support  : {Environment.OSVersion.Platform}")
         };
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
         var file = new FileStream(directory + "/" + imgInfo.ImgName, FileMode.Create);
         var w = new BinaryWriter(file);
         try
@@ -43,22 +38,22 @@ public static class HtmlGetImgDownLoad
 
     private static string GetImageSuffixByContentType(string ansContextType)
     {
-        if (ansContextType == HttpHeaderTool.Jpg.TypeString) return ".jpg";
+        if (ansContextType == HttpHeaderTools.Jpg.TypeString) return ".jpg";
 
-        if (ansContextType == HttpHeaderTool.Png.TypeString) return ".jpg";
+        if (ansContextType == HttpHeaderTools.Png.TypeString) return ".jpg";
 
-        if (ansContextType == HttpHeaderTool.Webp.TypeString) return ".webp";
+        if (ansContextType == HttpHeaderTools.Webp.TypeString) return ".webp";
 
-        if (ansContextType == HttpHeaderTool.Gif.TypeString) return ".gif";
+        if (ansContextType == HttpHeaderTools.Gif.TypeString) return ".gif";
 
-        if (ansContextType == HttpHeaderTool.Jp2.TypeString) return ".jp2";
+        if (ansContextType == HttpHeaderTools.Jp2.TypeString) return ".jp2";
 
         throw new Exception("not find content type img");
     }
 
     private static string GetImgNameFromUrl(string url)
     {
-        var fileName = HttpUrlTool.GetUrlLastPath(url);
+        var fileName = HttpUrlTools.GetUrlLastPath(url);
         return fileName.Split('.', 2)[0];
     }
 
@@ -67,5 +62,7 @@ public static class HtmlGetImgDownLoad
         public string ResourceUrl { get; set; }
         public string ImgName { get; set; }
         public byte[] Data { get; set; }
+
+        public string NewsUrl { get; set; }
     }
 }

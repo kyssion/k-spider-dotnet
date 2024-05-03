@@ -2,7 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using k_spider_dotnet.script.df_news.spider.model;
-using k_spider_dotnet.tool.resource;
+using k_spider_dotnet.tool.http;
 using Microsoft.Playwright;
 
 namespace k_spider_dotnet.script.df_news.spider.playwright;

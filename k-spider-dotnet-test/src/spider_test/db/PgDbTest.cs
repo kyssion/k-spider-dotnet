@@ -1,5 +1,6 @@
 using k_spider_dotnet.tool.resource;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Npgsql;
 using SqlSugar;
 
 namespace k_spider_dotnet_test.spider_test.db;
@@ -12,13 +13,14 @@ public class PgDbTest
     {
         // jdbc url => postgresql://spider:Javarustc++11.@39.100.86.193:5432/k_script_spider  
         //无需配置任何东西
-        var db = new SqlSugarClient(new ConnectionConfig
+        using var db = new SqlSugarClient(new ConnectionConfig
         {
             DbType = DbType.PostgreSQL,
             ConnectionString =
                 "PORT=5432;DATABASE=k_script_spider;HOST=39.100.86.193;PASSWORD=Javarustc++11.;USER ID=spider",
             IsAutoCloseConnection = true
         });
+        db.Open();
         db.DbFirst.IsCreateAttribute()
             .IsCreateAttribute() //创建sqlsugar自带特性
             .FormatFileName(it => StringTools.UnderlineToCamelCase(it, true) + "Model") //格式化文件名（文件名和表名不一样情况）
@@ -30,6 +32,8 @@ public class PgDbTest
     [TestMethod]
     public void TestConsole()
     {
-        Console.WriteLine("{0,10} {1,10} {2} {3} {4} {5} {6}", "1", "2", "3", "4", "5", "6", "7");
+        NpgsqlConnection conn = new NpgsqlConnection("");
+        conn.Open();
+        NpgsqlTransaction transaction = conn.BeginTransaction();
     }
 }
