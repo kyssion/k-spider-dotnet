@@ -45,18 +45,24 @@ public class DfNewsContentJob : SpiderJob
                 SpiderNewsDao.UpdateSpiderNewsListInfo(connection, newsItem);
                 connection.Ado.CommitTran();
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                switch (e.InnerException)
+                var needUpdateDb = false;
+                switch (e)
                 {
                     case DownloadHttpRequestException:
                         Logger.LogError("[DfNewsContentJob] download  err  : {} , url : {} ", e, newsItem.NewsUrl);
                         newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedSyncDetailInfo;
+                        needUpdateDb = true;
                         break;
                     case HtmlFormException:
                         Logger.LogError("[DfNewsContentJob] content  html form err : {} ,  url : {}", e,
                             newsItem.NewsUrl);
                         newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedSyncDetailInfo;
+                        needUpdateDb = true;
+                        break;
+                    case DbException:
+                        Logger.LogError("[DfNewsContentJob] content  db err : {} ,  url : {}", e, newsItem.NewsUrl);
                         break;
                     default:
                         Logger.LogError("[DfNewsContentJob] content  unknow other err : {} ,  url : {}", e,
@@ -65,22 +71,17 @@ public class DfNewsContentJob : SpiderJob
                         break;
                 }
 
-                try
+                if (needUpdateDb)
                 {
-                    SpiderNewsDao.UpdateSpiderNewsListInfo(connection, newsItem);
+                    try
+                    {
+                        SpiderNewsDao.UpdateSpiderNewsListInfo(connection, newsItem);
+                    }
+                    catch (Exception exception)
+                    {
+                        Logger.LogError("[DfNewsContentJob] UpdateSpiderNewsListInfo err  : {} ,  url : {}", exception, newsItem.NewsUrl);
+                    }   
                 }
-                catch (Exception exception)
-                {
-                    Logger.LogError("[DfNewsContentJob] UpdateSpiderNewsListInfo err  : {}", exception);
-                }
-            }
-            catch (DbException e)
-            {
-                Logger.LogError("[DfNewsContentJob] content  db err : {} ,  url : {}", e, newsItem.NewsUrl);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError("[DfNewsContentJob] system err : {} , listInfo : {}", e, newsItem);
             }
             finally
             {

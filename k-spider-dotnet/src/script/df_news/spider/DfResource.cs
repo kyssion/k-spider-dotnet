@@ -56,13 +56,13 @@ public static class DfResource
         },
         new()
         {
-            CategoryInfo = NewsCategory.CategoryAShareCompanies,
+            CategoryInfo = NewsCategory.CategoryAShare,
             Url = "https://finance.eastmoney.com/a/cssgs_{0}.html",
             ListResourceNumber = 349
         },
         new()
         {
-            CategoryInfo = NewsCategory.CategoryHkStockCompanies,
+            CategoryInfo = NewsCategory.CategoryHkStock,
             Url = "https://hk.eastmoney.com/a/cgsbd_{0}.html",
             ListResourceNumber = 535
         },
@@ -74,7 +74,7 @@ public static class DfResource
         },
         new()
         {
-            CategoryInfo = NewsCategory.CategoryEaCompanies,
+            CategoryInfo = NewsCategory.CategoryEa,
             Url = "https://stock.eastmoney.com/a/cmgpj_{0}.html",
             ListResourceNumber = 440
         },
@@ -126,15 +126,104 @@ public static class DfResource
             Url = "https://finance.eastmoney.com/a/csygc_{0}.html",
             ListResourceNumber = 373
         },
-        // todo 东方财富其实各种
         new()
         {
             CategoryInfo = NewsCategory.CategoryEntrepreneurshipStudies,
             Url = "https://enterprise.eastmoney.com/a/ccyyj_{0}.html",
             ListResourceNumber = 683
-        }
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryHkStock,
+            Url = "https://stock.eastmoney.com/a/cdpfx_{0}.html",
+            ListResourceNumber = 407
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryHkStock,
+            Url = "https://stock.eastmoney.com/a/cbkjj_{0}.html",
+            ListResourceNumber = 408
+        },
+       new()
+        {
+            CategoryInfo = NewsCategory.CategoryHkStock,
+            Url = "https://stock.eastmoney.com/a/cggdj_{0}.html",
+            ListResourceNumber = 415
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryHkStock,
+            Url = "https://stock.eastmoney.com/a/czldt_{0}.html",
+            ListResourceNumber = 423
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryNewStocksSectorsFutures,
+            Url = "https://stock.eastmoney.com/a/cxgyw_{0}.html",
+            ListResourceNumber = 448
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryNewStocksSectorsFutures,
+            Url = "https://stock.eastmoney.com/a/cxgcl_{0}.html",
+            ListResourceNumber = 449
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryNewStocksSectorsFutures,
+            Url = "https://stock.eastmoney.com/a/cxgpl_{0}.html",
+            ListResourceNumber = 450
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryNewStocksSectorsFutures,
+            Url = "https://stock.eastmoney.com/a/czrzgsyw_{0}.html",
+            ListResourceNumber = 628
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryNewStocksSectorsFutures,
+            Url = "https://stock.eastmoney.com/a/czrzdt_{0}.html",
+            ListResourceNumber = 627
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryNewStocksSectorsFutures,
+            Url = "https://stock.eastmoney.com/a/cqzdd_{0}.html",
+            ListResourceNumber = 830
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryHkStock,
+            Url = "https://hk.eastmoney.com/a/cggyw_{0}.html",
+            ListResourceNumber = 532
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryYtStock,
+            Url = "https://global.eastmoney.com/a/cytsc_{0}.html",
+            ListResourceNumber = 782
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryEa,
+            Url = "https://stock.eastmoney.com/a/cmgyw_{0}.html",
+            ListResourceNumber = 436
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryEa,
+            Url = "https://global.eastmoney.com/a/cozsc_{0}.html",
+            ListResourceNumber = 781
+        },
+        new()
+        {
+            CategoryInfo = NewsCategory.CategoryWealthWatch,
+            Url = "https://money.eastmoney.com/a/clczx_{0}.html",
+            ListResourceNumber = 583
+        },
+        
     };
-
     public struct DfListUrlResource
     {
         public NewsCategory CategoryInfo { get; set; }

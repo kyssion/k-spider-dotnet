@@ -44,27 +44,27 @@ public struct NewsCategory
         CategoryNumber = 7
     };
 
-    public static readonly NewsCategory CategoryAShareCompanies = new()
+    public static readonly NewsCategory CategoryAShare = new()
     {
-        CategoryName = "沪深公司",
+        CategoryName = "沪深股",
         CategoryNumber = 8
     };
 
-    public static readonly NewsCategory CategoryHkStockCompanies = new()
+    public static readonly NewsCategory CategoryHkStock = new()
     {
-        CategoryName = "港股公司",
+        CategoryName = "港股",
         CategoryNumber = 9
     };
 
     public static readonly NewsCategory CategoryChineseConceptStocks = new()
     {
-        CategoryName = "中概股",
+        CategoryName = "中概股市",
         CategoryNumber = 10
     };
 
-    public static readonly NewsCategory CategoryEaCompanies = new()
+    public static readonly NewsCategory CategoryEa = new()
     {
-        CategoryName = "欧美公司",
+        CategoryName = "欧美股市",
         CategoryNumber = 11
     };
 
@@ -121,7 +121,17 @@ public struct NewsCategory
         CategoryName = "创业研究",
         CategoryNumber = 20
     };
-
+    public static readonly NewsCategory CategoryNewStocksSectorsFutures = new()
+    {
+        CategoryName = "新股版块期货",
+        CategoryNumber = 21
+    };
+    
+    public static readonly NewsCategory CategoryYtStock = new()
+    {
+        CategoryName = "亚太",
+        CategoryNumber = 22
+    };
     public string CategoryName { get; set; }
     public int CategoryNumber { get; set; }
 }

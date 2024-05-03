@@ -20,7 +20,7 @@ public class DfNewsListJob : SpiderJob
         return Task.Run(() =>
         {
             const int startNumber = 1;
-            const int endNumber = 10;
+            const int endNumber = 5;
             const int pageSize = 200;
             var allNumber = 0;
             const DfListOrderType orderType = DfListOrderType.ByTime;
