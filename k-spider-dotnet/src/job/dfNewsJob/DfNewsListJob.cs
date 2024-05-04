@@ -38,6 +38,7 @@ public class DfNewsListJob : SpiderJob
                 {
                     Logger.LogError("[DfNewsJob Execute]  run error : {}", e);
                 }
+
             Logger.LogInformation("[DfNewsJob Execute] success news url number : {}", allNumber);
         });
     }

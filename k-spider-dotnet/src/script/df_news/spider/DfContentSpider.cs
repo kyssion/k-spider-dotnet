@@ -108,10 +108,7 @@ public partial class DfContentSpider
         foreach (var infosNode in txtInfNodes)
         {
             // todo 非法标签。。 后续可以增加非法字符check
-            if (ti.ToTitleCase(infosNode.Name) == "Strong<")
-            {
-                continue;
-            }
+            if (ti.ToTitleCase(infosNode.Name) == "Strong<") continue;
             if (infosNode.NodeType == HtmlNodeType.Text)
             {
                 detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
@@ -179,7 +176,7 @@ public partial class DfContentSpider
                         });
                         break;
                     case HtmlTagName.Table:
-                        List<List<string>> tableValue = new List<List<string>>();
+                        var tableValue = new List<List<string>>();
                         var tableChildNodes = infosNode.SelectNodes("tbody/tr") ?? infosNode.SelectNodes("tr");
                         var tableDataList = (from trNode in tableChildNodes
                             select trNode.SelectNodes("td") ?? trNode.SelectNodes("th")
@@ -353,7 +350,7 @@ public partial class DfContentSpider
         htmlNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='newsContent']");
         if (htmlNode != null) return GetDfContextInfoByOldHtml(url, htmlNode);
         htmlNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='content_text']");
-        if (htmlNode != null) return  GetDetailInfoByHtml(htmlNode, new DfContentInfo());
+        if (htmlNode != null) return GetDetailInfoByHtml(htmlNode, new DfContentInfo());
         throw new HtmlFormException(url, $"html form err ， url {url}");
     }
 
@@ -388,5 +385,3 @@ public partial class DfContentSpider
         return GetDetailInfoByHtml(nowHtmlNode.SelectSingleNode("//div[@id='ContentBody']"), ans);
     }
 }
-
-

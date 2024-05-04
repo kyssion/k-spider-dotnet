@@ -18,7 +18,7 @@ public class DfSpiderScriptCheck
         {
             foreach (var resourceItem in DfResource.DfListUrlResourceList)
             {
-                var numberInfo =  dfListSpider.GetListResourceNumberInfo(string.Format(resourceItem.Url, 1)).Result;
+                var numberInfo = dfListSpider.GetListResourceNumberInfo(string.Format(resourceItem.Url, 1)).Result;
                 if (numberInfo != resourceItem.ListResourceNumber)
                     throw new Exception($"module name : {resourceItem.CategoryInfo.CategoryNumber} . module number : " +
                                         $"{resourceItem.ListResourceNumber} . number : {numberInfo}");

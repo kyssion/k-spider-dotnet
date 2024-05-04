@@ -213,7 +213,8 @@ public class SpiderNewsDao
         }
     }
 
-    public static int UpsetSpiderNewsImageList(SqlSugarClient connection, List<SpiderNewsImageListModel> spiderNewsImageList)
+    public static int UpsetSpiderNewsImageList(SqlSugarClient connection,
+        List<SpiderNewsImageListModel> spiderNewsImageList)
     {
         try
         {
@@ -267,7 +268,7 @@ public class SpiderNewsDao
             throw new DbException("[UpdateSpiderNewsListInfo] err : {e}", e);
         }
     }
-    
+
     public static int UpsetSpiderNewsListInfo(SqlSugarClient connection, List<SpiderNewsListModel> newsListItem)
     {
         try
@@ -277,8 +278,10 @@ public class SpiderNewsDao
 
             var storageAble = connection.Storageable(newsListItem).WhereColumns(it => it.NewsUrl)
                 .ToStorage();
-            return storageAble.AsInsertable.IgnoreColumns("id", "create_time", "update_time", "download_status_code").ExecuteCommand() +
-                   storageAble.AsUpdateable.IgnoreColumns("id", "create_time", "update_time" , "download_status_code").ExecuteCommand();
+            return storageAble.AsInsertable.IgnoreColumns("id", "create_time", "update_time", "download_status_code")
+                       .ExecuteCommand() +
+                   storageAble.AsUpdateable.IgnoreColumns("id", "create_time", "update_time", "download_status_code")
+                       .ExecuteCommand();
         }
         catch (Exception e)
         {

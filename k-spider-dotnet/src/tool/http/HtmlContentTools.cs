@@ -2,8 +2,8 @@ namespace k_spider_dotnet.tool.http;
 
 public class HtmlContentTools
 {
-    
 }
+
 public enum HtmlTagName
 {
     Div = 1,
@@ -19,7 +19,7 @@ public enum HtmlTagName
     Table = 11,
     Ul = 12,
     Strong = 13,
-    Span=14,
+    Span = 14,
     Pre = 15,
-    Br =16,
+    Br = 16
 }

@@ -32,8 +32,8 @@ public class PgDbTest
     [TestMethod]
     public void TestConsole()
     {
-        NpgsqlConnection conn = new NpgsqlConnection("");
+        var conn = new NpgsqlConnection("");
         conn.Open();
-        NpgsqlTransaction transaction = conn.BeginTransaction();
+        var transaction = conn.BeginTransaction();
     }
 }

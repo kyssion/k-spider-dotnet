@@ -144,7 +144,7 @@ public static class DfResource
             Url = "https://stock.eastmoney.com/a/cbkjj_{0}.html",
             ListResourceNumber = 408
         },
-       new()
+        new()
         {
             CategoryInfo = NewsCategory.CategoryHkStock,
             Url = "https://stock.eastmoney.com/a/cggdj_{0}.html",
@@ -221,9 +221,9 @@ public static class DfResource
             CategoryInfo = NewsCategory.CategoryWealthWatch,
             Url = "https://money.eastmoney.com/a/clczx_{0}.html",
             ListResourceNumber = 583
-        },
-        
+        }
     };
+
     public struct DfListUrlResource
     {
         public NewsCategory CategoryInfo { get; set; }

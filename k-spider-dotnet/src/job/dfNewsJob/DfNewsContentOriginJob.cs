@@ -20,6 +20,7 @@ public class DfNewsContentOriginJob : SpiderJob
         "{\"data\":null,\"errorcode\":0,\"id\":\"-1\",\"message\":\"未获取到文章信息..\",\"success\":0}";
 
     private static readonly ILogger Logger = LogFactory.GetLogger<DfNewsContentJob>();
+
     // 直接通过newslist db 拉取数据， 落origin db 中
     public void SyncDfContentInfoOriginInfoByBatch(int pageSize, List<int> newsStatus)
     {
@@ -39,15 +40,12 @@ public class DfNewsContentOriginJob : SpiderJob
                 var dfNewsContentOrigin =
                     spiderContextOrigin.GetDfContentOriginInfoByInterface(newsItem.NewsUrl ?? "").Result;
                 if (dfNewsContentOrigin.Status == NewsContentOriginStatus.Success)
-                {
                     newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.SuccessDownloadOriginInfo;
-                }
                 else
-                {
                     newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedDownloadOriginInfo;
-                }
                 connection.Ado.BeginTran();
-                SpiderNewsDao.UpsetSpiderNewsContentOrigin(connection, dfNewsContentOrigin.ToSpiderNewsContentOriginModel());
+                SpiderNewsDao.UpsetSpiderNewsContentOrigin(connection,
+                    dfNewsContentOrigin.ToSpiderNewsContentOriginModel());
                 SpiderNewsDao.UpdateSpiderNewListDownloadStatus(connection, newsItem);
                 connection.Ado.CommitTran();
             }
@@ -67,14 +65,14 @@ public class DfNewsContentOriginJob : SpiderJob
             }
         }
     }
-    
+
     public override Task Execute(IJobExecutionContext context)
     {
         return Task.Run(() =>
         {
             SyncDfContentInfoOriginInfoByBatch(5000,
             [
-                (int)NewsDownloadStatusCode.NoDownload,
+                (int)NewsDownloadStatusCode.NoDownload
             ]);
         });
     }

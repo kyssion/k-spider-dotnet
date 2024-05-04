@@ -18,7 +18,7 @@ public class DfNewsContentJob : SpiderJob
 
     private static readonly ILogger Logger = LogFactory.GetLogger<DfNewsContentJob>();
 
-        // 直接通过newslist db 拉去数据， 不落 origin db 中
+    // 直接通过newslist db 拉去数据， 不落 origin db 中
     public void SyncDfContentInfoFromOriginInfo(int pageSize, List<int> newsStatus)
     {
         using var connection = Pg.Connection();
@@ -33,8 +33,9 @@ public class DfNewsContentJob : SpiderJob
 
                 var spiderOriginInfo = connection.Queryable<SpiderNewsContentOriginModel>()
                     .Where(it => it.NewsUrl == newsItem.NewsUrl).First();
-                
-                var dfContentInfo = spiderContent.GetContentInfoByJson(spiderOriginInfo.NewsOriginContent??"", spiderOriginInfo.NewsUrl??"");
+
+                var dfContentInfo = spiderContent.GetContentInfoByJson(spiderOriginInfo.NewsOriginContent ?? "",
+                    spiderOriginInfo.NewsUrl ?? "");
                 var imgDbList = dfContentInfo.ImgInfos.Select(item => new SpiderNewsImageListModel
                         { NewsUrl = item.NewsUrl, ImageResourceUrl = item.ResourceUrl, ImageName = item.ImgName })
                     .ToList();
@@ -72,16 +73,15 @@ public class DfNewsContentJob : SpiderJob
                 }
 
                 if (needUpdateDb)
-                {
                     try
                     {
                         SpiderNewsDao.UpdateSpiderNewsListInfo(connection, newsItem);
                     }
                     catch (Exception exception)
                     {
-                        Logger.LogError("[DfNewsContentJob] UpdateSpiderNewsListInfo err  : {} ,  url : {}", exception, newsItem.NewsUrl);
-                    }   
-                }
+                        Logger.LogError("[DfNewsContentJob] UpdateSpiderNewsListInfo err  : {} ,  url : {}", exception,
+                            newsItem.NewsUrl);
+                    }
             }
             finally
             {
@@ -89,7 +89,7 @@ public class DfNewsContentJob : SpiderJob
             }
     }
 
-    
+
     // 直接通过newslist db 拉去数据， 不落 origin db 中
     public void SyncDfContentInfoFromNewsList(int pageSize, List<int> newsStatus)
     {
@@ -102,7 +102,7 @@ public class DfNewsContentJob : SpiderJob
             try
             {
                 if (newsListItem.NewsUrl == "") continue;
-                var dfContentInfo =spiderContent.GetDfContextInfoByUrlInterface(newsListItem.NewsUrl ?? "")
+                var dfContentInfo = spiderContent.GetDfContextInfoByUrlInterface(newsListItem.NewsUrl ?? "")
                     .Result;
                 var imgDbList = dfContentInfo.ImgInfos.Select(item => new SpiderNewsImageListModel
                         { NewsUrl = item.NewsUrl, ImageResourceUrl = item.ResourceUrl, ImageName = item.ImgName })
@@ -159,7 +159,10 @@ public class DfNewsContentJob : SpiderJob
 
     public override Task Execute(IJobExecutionContext context)
     {
-        return Task.Run(() => { SyncDfContentInfoFromOriginInfo(1000, [(int)NewsDownloadStatusCode.SuccessDownloadOriginInfo]); });
+        return Task.Run(() =>
+        {
+            SyncDfContentInfoFromOriginInfo(1000, [(int)NewsDownloadStatusCode.SuccessDownloadOriginInfo]);
+        });
         // return Task.Run(() => { SyncDfContentInfoFromNewsList(1000, [(int)NewsDownloadStatusCode.NoDownload]); });
     }
 

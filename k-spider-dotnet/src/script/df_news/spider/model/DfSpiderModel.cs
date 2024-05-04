@@ -1,5 +1,4 @@
 using k_spider_dotnet.model;
-using k_spider_dotnet.model.ressource;
 using k_spider_dotnet.tool.http;
 using k_spider_dotnet.tool.Json;
 using k_spider_dotnet.tool.time;
@@ -84,8 +83,8 @@ public struct DfListInfo
 public struct DfNewsContentOrigin
 {
     public string NewsUrl { get; set; }
-    public NewsContentOriginType OriginType{ get; set; }
-    public string NewsOriginContent{ get; set; }
+    public NewsContentOriginType OriginType { get; set; }
+    public string NewsOriginContent { get; set; }
     public NewsContentOriginStatus Status { get; set; }
     public string Message { get; set; }
 
@@ -93,11 +92,11 @@ public struct DfNewsContentOrigin
     {
         return new SpiderNewsContentOriginModel
         {
-            NewsUrl = this.NewsUrl,
-            NewsOriginContent = this.NewsOriginContent,
-            NewsOriginType = (int)this.OriginType,
-            Status = (int)this.Status,
-            Message =this.Message,
+            NewsUrl = NewsUrl,
+            NewsOriginContent = NewsOriginContent,
+            NewsOriginType = (int)OriginType,
+            Status = (int)Status,
+            Message = Message
         };
     }
 }

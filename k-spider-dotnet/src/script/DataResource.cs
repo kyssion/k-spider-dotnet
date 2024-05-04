@@ -121,21 +121,22 @@ public struct NewsCategory
         CategoryName = "创业研究",
         CategoryNumber = 20
     };
+
     public static readonly NewsCategory CategoryNewStocksSectorsFutures = new()
     {
         CategoryName = "新股版块期货",
         CategoryNumber = 21
     };
-    
+
     public static readonly NewsCategory CategoryYtStock = new()
     {
         CategoryName = "亚太",
         CategoryNumber = 22
     };
+
     public string CategoryName { get; set; }
     public int CategoryNumber { get; set; }
 }
-
 
 // 记录从哪个渠道抓取的新闻
 public enum FromTypeOfNews
@@ -150,17 +151,17 @@ public enum NewsDownloadStatusCode
     SuccessSyncDetailInfo = 1,
     FailedSyncDetailInfo = 2,
     SuccessDownloadOriginInfo = 3,
-    FailedDownloadOriginInfo = 4,
+    FailedDownloadOriginInfo = 4
 }
 
 public enum NewsContentOriginType
 {
     Json = 1,
-    Xml = 2, 
+    Xml = 2
 }
 
 public enum NewsContentOriginStatus
 {
-    Success= 1,
-    Failed = 2,
+    Success = 1,
+    Failed = 2
 }

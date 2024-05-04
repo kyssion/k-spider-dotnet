@@ -1,10 +1,9 @@
-using k_spider_dotnet.script;
-
 namespace k_spider_dotnet.tool.http;
 
 public static class HtmlImageTools
 {
     public const string MaxOsImagePath = "/Users/bytedance/RiderProjects/k-spider-dotnet/newsImg/";
+
     public static async Task<ImgInfo> DownloadImgAsByteInto(ImgInfo imgInfo)
     {
         var httpResponse = await new HttpClient().GetAsync(imgInfo.ResourceUrl);

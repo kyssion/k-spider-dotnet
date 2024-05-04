@@ -1,7 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using k_spider_dotnet.exception;
-using k_spider_dotnet.model.ressource;
 using k_spider_dotnet.script.df_news.spider.model;
 using k_spider_dotnet.tool.http;
 using k_spider_dotnet.tool.log;
@@ -14,8 +13,7 @@ public class DfListSpider
     private static readonly Regex Regex = new(".(png|jpg|css|aspx|ico)");
     private static readonly ILogger Log = LogFactory.GetLogger<DfListSpider>();
 
-    
-    
+
     public async Task<List<DfListInfo>> GetDfListInfoByUrl(DfResource.DfListUrlResource dfListResourceInfo,
         int pageStartNumber,
         int pageEndNumber, int pageSize, DfListOrderType orderType)
@@ -70,7 +68,7 @@ public class DfListSpider
                 dfListResourceInfo.CategoryInfo.CategoryName, dfListResourceInfo.ListResourceNumber, pageNumber,
                 pageSize, urlNow, e);
             Log.LogError(message);
-            throw new HtmlFormException(urlNow,message,e);
+            throw new HtmlFormException(urlNow, message, e);
         }
     }
 }

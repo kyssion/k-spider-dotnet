@@ -9,14 +9,16 @@ public class Starter
 {
     private const string NewsListGroup = "new_list_group";
     private static readonly StdSchedulerFactory SchedulerFactory = new();
-    private IScheduler _scheduler;
+    private readonly IScheduler _scheduler;
 
     public Starter()
     {
-        this._scheduler = SchedulerFactory.GetScheduler().Result;
-        this._scheduler.Start();
-        _scheduler.ListenerManager.AddJobListener(new SpiderJobListener("StarterJobListener"), GroupMatcher<JobKey>.AnyGroup());
+        _scheduler = SchedulerFactory.GetScheduler().Result;
+        _scheduler.Start();
+        _scheduler.ListenerManager.AddJobListener(new SpiderJobListener("StarterJobListener"),
+            GroupMatcher<JobKey>.AnyGroup());
     }
+
     public void StartDfListNewsJob()
     {
         //调度器,生成实例的时候线程已经开启了，不过是在等待状态
@@ -29,7 +31,7 @@ public class Starter
         //将job和trigger注册到scheduler中
         _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
     }
-    
+
     public void StartDfContentNewsJob()
     {
         //调度器,生成实例的时候线程已经开启了，不过是在等待状态
@@ -41,8 +43,8 @@ public class Starter
         //将job和trigger注册到scheduler中
         _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
     }
-    
-    
+
+
     public void StartDfContentNewsOriginJob()
     {
         //调度器,生成实例的时候线程已经开启了，不过是在等待状态
