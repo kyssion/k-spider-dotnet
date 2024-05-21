@@ -14,8 +14,8 @@ public class SpiderJobListener(string name) : IJobListener
         return Task.Run(
             () =>
             {
-                Log.LogInformation("{namespace} to be executed , start time : {startTime}", context.JobDetail.JobType,
-                    DateTime.Now);
+                // Log.LogInformation("{namespace} to be executed , start time : {startTime}", context.JobDetail.JobType,
+                //     DateTime.Now);
             }, cancellationToken);
     }
 
@@ -25,8 +25,8 @@ public class SpiderJobListener(string name) : IJobListener
         return Task.Run(
             () =>
             {
-                Log.LogInformation("{namespace} is vetoed , start time : {startTime}", context.JobDetail.JobType,
-                    DateTime.Now);
+                // Log.LogInformation("{namespace} is vetoed , start time : {startTime}", context.JobDetail.JobType,
+                //     DateTime.Now);
             }, cancellationToken);
     }
 
