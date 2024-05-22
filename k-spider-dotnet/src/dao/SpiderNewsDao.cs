@@ -52,7 +52,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
         }
     }
 
@@ -94,7 +94,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
         }
     }
 
@@ -137,7 +137,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
         }
     }
 
@@ -175,7 +175,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
         }
     }
 }
@@ -194,7 +194,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsContent] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsContent] err : {e}", e);
         }
     }
 
@@ -209,7 +209,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsContent] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsContent] err : {e}", e);
         }
     }
 
@@ -228,7 +228,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
         }
     }
 
@@ -241,7 +241,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpdateSpiderNewsListInfo] err : {e}", e);
+            throw new KDbException("[UpdateSpiderNewsListInfo] err : {e}", e);
         }
     }
 
@@ -253,7 +253,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpdateSpiderNewsListInfo] err : {e}", e);
+            throw new KDbException("[UpdateSpiderNewsListInfo] err : {e}", e);
         }
     }
 
@@ -265,7 +265,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpdateSpiderNewsListInfo] err : {e}", e);
+            throw new KDbException("[UpdateSpiderNewsListInfo] err : {e}", e);
         }
     }
 
@@ -285,7 +285,7 @@ public class SpiderNewsDao
         }
         catch (Exception e)
         {
-            throw new DbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
         }
     }
 }

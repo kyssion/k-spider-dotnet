@@ -9,4 +9,8 @@ public static class TimeTools
     {
         return DateTime.ParseExact(timeStr, format, null);
     }
+    public static double GetDiffInSeconds(DateTime item1, DateTime item2)
+    {
+        return (item1 - item2).TotalSeconds;
+    }
 }

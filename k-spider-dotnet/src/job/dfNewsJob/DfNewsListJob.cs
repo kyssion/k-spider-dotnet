@@ -1,5 +1,6 @@
 using k_spider_dotnet.dal.db;
 using k_spider_dotnet.dao;
+using k_spider_dotnet.script;
 using k_spider_dotnet.script.df_news.spider;
 using k_spider_dotnet.tool.log;
 using Microsoft.Extensions.Logging;
@@ -20,8 +21,8 @@ public class DfNewsListJob : SpiderJob
         return Task.Run(() =>
         {
             const int startNumber = 1;
-            const int endNumber = 5;
-            const int pageSize = 200;
+            const int endNumber = 3;
+            const int pageSize = 20;
             var allNumber = 0;
             const DfListOrderType orderType = DfListOrderType.ByTime;
             using var connection = Pg.Connection();
@@ -36,10 +37,13 @@ public class DfNewsListJob : SpiderJob
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError("[DfNewsJob Execute]  run error : {}", e);
+                    Logger.LogError("[DfNewsListJob Execute]  run error : {}", e);
                 }
-
-            Logger.LogInformation("[DfNewsJob Execute] success news url number : {}", allNumber);
+            Logger.LogInformation("[DfNewsListJob Execute] success news url number : {}", allNumber);
+            new DfNewsContentOriginJob().SyncDfContentInfoOriginInfoByBatch(5000,
+            [
+                (int)NewsDownloadStatusCode.NoDownload
+            ]);
         });
     }
 
@@ -47,7 +51,7 @@ public class DfNewsListJob : SpiderJob
     {
         return TriggerBuilder.Create().ForJob(jobDetail)
             .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever().Build())
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(3).RepeatForever().Build())
             .Build();
     }
 

@@ -3,11 +3,12 @@ using System.Text.Json;
 
 namespace k_spider_dotnet.tool.Json;
 
-public class JsonUtil
+public static class JsonUtil
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        IncludeFields = true
     };
 
     public static string GetJson(object item)

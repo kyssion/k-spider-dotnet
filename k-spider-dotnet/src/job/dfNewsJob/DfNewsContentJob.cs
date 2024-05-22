@@ -62,7 +62,7 @@ public class DfNewsContentJob : SpiderJob
                         newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedSyncDetailInfo;
                         needUpdateDb = true;
                         break;
-                    case DbException:
+                    case KDbException:
                         Logger.LogError("[DfNewsContentJob] content  db err : {} ,  url : {}", e, newsItem.NewsUrl);
                         break;
                     default:
@@ -143,7 +143,7 @@ public class DfNewsContentJob : SpiderJob
                     Logger.LogError("[DfNewsContentJob] UpdateSpiderNewsListInfo err  : {}", exception);
                 }
             }
-            catch (DbException e)
+            catch (KDbException e)
             {
                 Logger.LogError("[DfNewsContentJob] content  db err : {} ,  url : {}", e, newsListItem.NewsUrl);
             }

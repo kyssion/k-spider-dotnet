@@ -49,7 +49,7 @@ public class DfNewsContentOriginJob : SpiderJob
                 SpiderNewsDao.UpdateSpiderNewListDownloadStatus(connection, newsItem);
                 connection.Ado.CommitTran();
             }
-            catch (DbException e)
+            catch (KDbException e)
             {
                 Logger.LogError("[SyncDfContentInfoOriginInfoByBatch] db err : {}", e);
             }

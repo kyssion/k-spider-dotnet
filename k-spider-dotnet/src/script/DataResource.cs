@@ -165,3 +165,12 @@ public enum NewsContentOriginStatus
     Success = 1,
     Failed = 2
 }
+
+public enum StockExchangeChannel
+{
+    ShangHStockExchangeChannel = 0,
+    ShenzhenStockExchangeChannel = 1,
+    BeijingStockExchangeChannel = 2,
+    UsaStockExchangeChannel = 3,
+    HkStockExchangeChannel = 4
+}

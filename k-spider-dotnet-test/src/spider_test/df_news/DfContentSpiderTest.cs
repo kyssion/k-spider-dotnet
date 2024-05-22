@@ -57,7 +57,7 @@ public class DfContentSpiderTest
                     newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedSyncDetailInfo;
                     needUpdateDb = true;
                     break;
-                case DbException:
+                case KDbException:
                     Logger.LogError("[DfNewsContentJob] content  db err : {} ,  url : {}", e, newsItem.NewsUrl);
                     break;
                 default:
