@@ -21,8 +21,8 @@ public class DfNewsListJob : SpiderJob
         return Task.Run(() =>
         {
             const int startNumber = 1;
-            const int endNumber = 3;
-            const int pageSize = 20;
+            const int endNumber = 2;
+            const int pageSize = 200;
             var allNumber = 0;
             const DfListOrderType orderType = DfListOrderType.ByTime;
             using var connection = Pg.Connection();
@@ -51,7 +51,7 @@ public class DfNewsListJob : SpiderJob
     {
         return TriggerBuilder.Create().ForJob(jobDetail)
             .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(3).RepeatForever().Build())
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
             .Build();
     }
 

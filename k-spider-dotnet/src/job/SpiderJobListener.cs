@@ -37,8 +37,8 @@ public class SpiderJobListener(string name) : IJobListener
         return Task.Run(
             () =>
             {
-                Log.LogInformation("{namespace} was executed , end time : {startTime}", context.JobDetail.JobType,
-                    DateTime.Now);
+                // Log.LogInformation("{namespace} was executed , end time : {startTime}", context.JobDetail.JobType,
+                //     DateTime.Now);
             }, cancellationToken);
     }
 
