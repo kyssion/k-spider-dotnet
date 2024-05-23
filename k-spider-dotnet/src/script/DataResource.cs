@@ -170,6 +170,6 @@ public enum StockExchangeChannel
 {
     SzBjStockExchangeChannel = 0,
     ShangHStockExchangeChannel = 1,
-    UsaStockExchangeChannel = 2,
-    HkStockExchangeChannel = 3
+    HkStockExchangeChannel = 2,
+    UsaStockExchangeChannel = 3,
 }

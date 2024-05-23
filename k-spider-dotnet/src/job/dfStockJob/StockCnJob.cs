@@ -13,8 +13,8 @@ namespace k_spider_dotnet.job.dfStockJob;
 
 public class StockCnJob : SpiderJob
 {
-    private const string JobName = "DfShangHAndShenZStockJob";
-    private const string JobDescription = "沪股股票信息同步";
+    private const string JobName = "StockCnJob";
+    private const string JobDescription = "A股信息同步";
 
     private static readonly ILogger Logger = LogFactory.GetLogger<StockCnJob>();
     private static readonly ChinaStockSpider ShangHSpider = new ShStockSpider();
@@ -23,7 +23,10 @@ public class StockCnJob : SpiderJob
     public void SyncCnStock()
     {
         using var connection = Pg.Connection();
-        var stockCnIntroductionList = connection.Queryable<StockCnIntroductionModel>().Where(it=>new int[]{}).ToList();
+        var stockCnIntroductionList = connection.Queryable<StockCnIntroductionModel>()
+            .Where(it=>it.ExchangeChannel ==(int) StockExchangeChannel.SzBjStockExchangeChannel || 
+                       it.ExchangeChannel == (int)StockExchangeChannel.ShangHStockExchangeChannel)
+            .ToList();
         var date = DateTime.Today;
         foreach (var cnStockItem in stockCnIntroductionList)
         {
@@ -81,7 +84,7 @@ public class StockCnJob : SpiderJob
 
     public override IJobDetail GetJobDetail(string jobGroup)
     {
-        return JobBuilder.Create<DfNewsListJob>().WithIdentity(JobName + ".Job", jobGroup + ".Job")
+        return JobBuilder.Create<StockCnJob>().WithIdentity(JobName + ".Job", jobGroup + ".Job")
             .DisallowConcurrentExecution() // 禁止并发执行
             .WithDescription(JobDescription).Build();
     }

@@ -11,7 +11,6 @@ public class RefreshAStockInfo
 {
     private const string Url =
         "https://12.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=9999999&po=0&np=1&&fltt=2&invt=2&fid=f12&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f12,f14";
-
     private static readonly ILogger Logger = LogFactory.GetLogger<RefreshAStockInfo>();
 
     public static void RefreshExchangeChannel()
@@ -52,7 +51,7 @@ public class RefreshAStockInfo
 public class RefreshHkStockInfo
 {
     private const string Url =
-        "http://56.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=9999999&po=0&np=1&&fltt=2&invt=2&wbp2u=|0|0|0|web&fid=f12&fs=m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2&fields=f12,f13";
+        "http://56.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=9999999&po=0&np=1&&fltt=2&invt=2&wbp2u=|0|0|0|web&fid=f12&fs=m:128+t:3,m:128+t:4,m:128+t:1,m:128+t:2&fields=f12,f14";
 
     private static readonly ILogger Logger = LogFactory.GetLogger<RefreshAStockInfo>();
 
@@ -82,12 +81,9 @@ public class RefreshHkStockInfo
             {
                 StockId = stockId,
                 StockName = nodeItem?["f14"]?.ToString() ?? "",
-                ExchangeChannel = (int)(stockId.StartsWith("8") || stockId.StartsWith("4")
-                    ? StockExchangeChannel.ShangHStockExchangeChannel
-                    : StockExchangeChannel.SzBjStockExchangeChannel)
+                ExchangeChannel = (int)StockExchangeChannel.HkStockExchangeChannel
             });
         }
-
         using var connection = Pg.Connection();
         StockDao.UpsetStockCnIntroduction(connection, stockList);
     }
