@@ -40,11 +40,7 @@ public class RefreshAStockInfo
             {
                 StockId = stockId,
                 StockName = nodeItem?["f14"]?.ToString() ?? "",
-                ExchangeChannel = (int)(stockId.StartsWith("8") || stockId.StartsWith("4")
-                    ? StockExchangeChannel.BeijingStockExchangeChannel
-                    : stockId.StartsWith("6")
-                        ? StockExchangeChannel.ShangHStockExchangeChannel
-                        : StockExchangeChannel.ShenzhenStockExchangeChannel)
+                ExchangeChannel = (int)(stockId.StartsWith("6") ? StockExchangeChannel.ShangHStockExchangeChannel : StockExchangeChannel.SzBjStockExchangeChannel)
             });
         }
 
@@ -87,10 +83,8 @@ public class RefreshHkStockInfo
                 StockId = stockId,
                 StockName = nodeItem?["f14"]?.ToString() ?? "",
                 ExchangeChannel = (int)(stockId.StartsWith("8") || stockId.StartsWith("4")
-                    ? StockExchangeChannel.BeijingStockExchangeChannel
-                    : stockId.StartsWith("6")
-                        ? StockExchangeChannel.ShangHStockExchangeChannel
-                        : StockExchangeChannel.ShenzhenStockExchangeChannel)
+                    ? StockExchangeChannel.ShangHStockExchangeChannel
+                    : StockExchangeChannel.SzBjStockExchangeChannel)
             });
         }
 

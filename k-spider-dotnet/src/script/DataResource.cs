@@ -168,9 +168,8 @@ public enum NewsContentOriginStatus
 
 public enum StockExchangeChannel
 {
-    ShangHStockExchangeChannel = 0,
-    ShenzhenStockExchangeChannel = 1,
-    BeijingStockExchangeChannel = 2,
-    UsaStockExchangeChannel = 3,
-    HkStockExchangeChannel = 4
+    SzBjStockExchangeChannel = 0,
+    ShangHStockExchangeChannel = 1,
+    UsaStockExchangeChannel = 2,
+    HkStockExchangeChannel = 3
 }

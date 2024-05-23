@@ -17,42 +17,52 @@ public class StockCnJob : SpiderJob
     private const string JobDescription = "沪股股票信息同步";
 
     private static readonly ILogger Logger = LogFactory.GetLogger<StockCnJob>();
-    private static readonly ChinaStockSpider ShangHSpider = new ShangHStockSpider();
-    private static readonly ChinaStockSpider ShenZSpider = new ShenZStockSpider();
-    private static readonly ChinaStockSpider BeijingSpider = new BeijingStockSpider();
+    private static readonly ChinaStockSpider ShangHSpider = new ShStockSpider();
+    private static readonly ChinaStockSpider ShenZSpider = new SzBjStockSpider();
 
     public void SyncCnStock()
     {
         using var connection = Pg.Connection();
-        var stockCnIntroductionList = connection.Queryable<StockCnIntroductionModel>().ToList();
+        var stockCnIntroductionList = connection.Queryable<StockCnIntroductionModel>().Where(it=>new int[]{}).ToList();
         var date = DateTime.Today;
         foreach (var cnStockItem in stockCnIntroductionList)
         {
             var ans = "";
-            switch (cnStockItem.ExchangeChannel)
+            try
             {
-                case (int)StockExchangeChannel.ShenzhenStockExchangeChannel:
-                    ans = ShenZSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
-                    break;
-                case (int)StockExchangeChannel.ShangHStockExchangeChannel:
-                    ans = ShangHSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
-                    break;
-                case (int)StockExchangeChannel.BeijingStockExchangeChannel:
-                    ans = BeijingSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
-                    break;
-                default:
-                    break;    
+                switch (cnStockItem.ExchangeChannel)
+                {
+                    case (int)StockExchangeChannel.SzBjStockExchangeChannel:
+                        ans = ShenZSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
+                        break;
+                    case (int)StockExchangeChannel.ShangHStockExchangeChannel:
+                        ans = ShangHSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
+                        break;
+                    default:
+                        Logger.LogError("[SyncCnStock] ExchangeChannel not find : {}", cnStockItem.ExchangeChannel);
+                        continue;    
+                }
             }
-
-            if (ans == "") continue;
-            StockDao.UpsetCnLevel1ArchivedDaily(connection, new StockCnLevel1ArchivedDailyOriginModel
+            catch (Exception e)
             {
-                StockId = cnStockItem.StockId??"",
-                ExchangeChannel = (int)(cnStockItem.ExchangeChannel??-1),
-                Date = date,
-                Archived = ans
-            });
-            break;
+                Logger.LogError("[SyncCnStock] GetLevel1DailyArchived stock id : {}, Exception : {}" ,cnStockItem.StockId , e);
+                continue;
+            }
+            try
+            {
+                StockDao.UpsetCnLevel1ArchivedDaily(connection, new StockCnLevel1ArchivedDailyOriginModel
+                {
+                    StockId = cnStockItem.StockId??"",
+                    ExchangeChannel = cnStockItem.ExchangeChannel??-1,
+                    Date = date,
+                    Archived = ans,
+                    DataFrom = (int)FromTypeOfNews.DfMedia
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("[SyncCnStock] UpsetCnLevel1ArchivedDaily stock id : {}, Exception : {}" ,cnStockItem.StockId , e);
+            }
         }
     }
     

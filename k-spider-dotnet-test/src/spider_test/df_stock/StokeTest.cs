@@ -11,8 +11,6 @@ public class StokeTest
     [TestMethod]
     public void FindCnStokeInfo()
     {
-        var connection = Pg.Connection();
-        var  items = connection.Queryable<StockCnLevel1ArchivedDailyOriginModel>().ToList();
         new StockCnJob().SyncCnStock();
     }
 }
