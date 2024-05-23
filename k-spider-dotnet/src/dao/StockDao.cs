@@ -10,7 +10,7 @@ public class StockDao
 {
     private static readonly ILogger Log = LogFactory.GetLogger<StockDao>();
 
-    public static int UpsetSpiderNewsContentOrigin(SqlSugarClient connection, List<StockIntroductionModel> stockLists)
+    public static int UpsetStockCnIntroduction(SqlSugarClient connection, List<StockCnIntroductionModel> stockLists)
     {
         try
         {
@@ -25,11 +25,25 @@ public class StockDao
     }
 
     public static int UpsetCnLevel1ArchivedDaily(SqlSugarClient connection,
-        List<StockCnLevel1ArchivedDaliyModel> stockCnLevelModels)
+        List<StockCnLevel1ArchivedDailyOriginModel> stockCnLevelModels)
     {
         try
         {
             var storageAble = connection.Storageable(stockCnLevelModels).WhereColumns(it => new {it.StockId, it.Date}).ToStorage();
+            return storageAble.AsInsertable.IgnoreColumns("id", "create_time", "update_time").ExecuteCommand() +
+                   storageAble.AsUpdateable.IgnoreColumns("id", "create_time", "update_time").ExecuteCommand();
+        }
+        catch (Exception e)
+        {
+            throw new KDbException("[UpsetSpiderNewsContentOrigin] err : {e}", e);
+        }
+    }
+    public static int UpsetCnLevel1ArchivedDaily(SqlSugarClient connection,
+        StockCnLevel1ArchivedDailyOriginModel stockCnLevelModel)
+    {
+        try
+        {
+            var storageAble = connection.Storageable(stockCnLevelModel).WhereColumns(it => new {it.StockId, it.Date}).ToStorage();
             return storageAble.AsInsertable.IgnoreColumns("id", "create_time", "update_time").ExecuteCommand() +
                    storageAble.AsUpdateable.IgnoreColumns("id", "create_time", "update_time").ExecuteCommand();
         }

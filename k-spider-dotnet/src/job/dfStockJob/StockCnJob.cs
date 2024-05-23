@@ -1,0 +1,78 @@
+using k_spider_dotnet.dal.db;
+using k_spider_dotnet.dao;
+using k_spider_dotnet.job.dfNewsJob;
+using k_spider_dotnet.model;
+using k_spider_dotnet.script;
+using k_spider_dotnet.script.df_news.spider;
+using k_spider_dotnet.script.df_stoke.china;
+using k_spider_dotnet.tool.log;
+using Microsoft.Extensions.Logging;
+using Quartz;
+
+namespace k_spider_dotnet.job.dfStockJob;
+
+public class StockCnJob : SpiderJob
+{
+    private const string JobName = "DfShangHAndShenZStockJob";
+    private const string JobDescription = "沪股股票信息同步";
+
+    private static readonly ILogger Logger = LogFactory.GetLogger<StockCnJob>();
+    private static readonly ChinaStockSpider ShangHSpider = new ShangHStockSpider();
+    private static readonly ChinaStockSpider ShenZSpider = new ShenZStockSpider();
+    private static readonly ChinaStockSpider BeijingSpider = new BeijingStockSpider();
+
+    public void SyncCnStock()
+    {
+        using var connection = Pg.Connection();
+        var stockCnIntroductionList = connection.Queryable<StockCnIntroductionModel>().ToList();
+        var date = DateTime.Today;
+        foreach (var cnStockItem in stockCnIntroductionList)
+        {
+            var ans = "";
+            switch (cnStockItem.ExchangeChannel)
+            {
+                case (int)StockExchangeChannel.ShenzhenStockExchangeChannel:
+                    ans = ShenZSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
+                    break;
+                case (int)StockExchangeChannel.ShangHStockExchangeChannel:
+                    ans = ShangHSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
+                    break;
+                case (int)StockExchangeChannel.BeijingStockExchangeChannel:
+                    ans = BeijingSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
+                    break;
+                default:
+                    break;    
+            }
+
+            if (ans == "") continue;
+            StockDao.UpsetCnLevel1ArchivedDaily(connection, new StockCnLevel1ArchivedDailyOriginModel
+            {
+                StockId = cnStockItem.StockId??"",
+                ExchangeChannel = (int)(cnStockItem.ExchangeChannel??-1),
+                Date = date,
+                Archived = ans
+            });
+            break;
+        }
+    }
+    
+    public override Task Execute(IJobExecutionContext context)
+    {
+        return Task.Run(SyncCnStock);
+    }
+
+    public override ITrigger GetTrigger(string jobGroup, IJobDetail jobDetail)
+    {
+        return TriggerBuilder.Create().ForJob(jobDetail)
+            .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
+            .Build();
+    }
+
+    public override IJobDetail GetJobDetail(string jobGroup)
+    {
+        return JobBuilder.Create<DfNewsListJob>().WithIdentity(JobName + ".Job", jobGroup + ".Job")
+            .DisallowConcurrentExecution() // 禁止并发执行
+            .WithDescription(JobDescription).Build();
+    }
+}

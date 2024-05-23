@@ -4,8 +4,8 @@ namespace k_spider_dotnet.model;
 
 /// <summary>
 /// </summary>
-[SugarTable("stock_introduction")]
-public class StockIntroductionModel
+[SugarTable("stock_cn_introduction")]
+public class StockCnIntroductionModel
 {
     /// <summary>
     ///     Desc:

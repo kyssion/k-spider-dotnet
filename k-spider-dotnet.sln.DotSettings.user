@@ -8,5 +8,7 @@
     &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::Testjson.Test&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::Testjson.TestIdidi&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.lark.LarkTest.TestSendMessageByJob&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.db.PgDbTest.TestSqlSurge&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

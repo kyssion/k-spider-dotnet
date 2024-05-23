@@ -11,12 +11,12 @@ public abstract class ChinaStockSpider : IStockSpider
 
     private static readonly ILogger Logger = LogFactory.GetLogger<ChinaStockSpider>();
 
-    public Task<string> Listening(string stockId)
+    public Task<string> Level1Listening(string stockId)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<string> DownloadArchived(string stockId)
+    public async Task<string> GetLevel1DailyArchived(string stockId)
     {
         var listeningUrl = string.Format(Url, GetExchangeChannel(), stockId);
         using var client = new HttpClient();

@@ -17,7 +17,7 @@ public static class PgDevelop
             .FormatFileName(it => StringTools.UnderlineToCamelCase(it, true) + "Model") //格式化文件名（文件名和表名不一样情况）
             .FormatClassName(it => StringTools.UnderlineToCamelCase(it, true) + "Model") //格式化类名 （类名和表名不一样的情况）
             .FormatPropertyName(it => StringTools.UnderlineToCamelCase(it, true)) //格式化属性名 （属性名和字段名不一样情况）
-            // .CreateClassFile("/Users/bytedance/RiderProjects/k-spider-dotnet", "k_spider_dotnet.model");
-            .CreateClassFile("/home/kyssion/project/dotnet/k-spider-dotnet", "k_spider_dotnet.model");
+            .CreateClassFile("/Users/bytedance/RiderProjects/k-spider-dotnet", "k_spider_dotnet.model");
+            // .CreateClassFile("/home/kyssion/project/dotnet/k-spider-dotnet", "k_spider_dotnet.model");
     }
 }

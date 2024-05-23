@@ -3,14 +3,14 @@
 namespace k_spider_dotnet.model;
 
 /// <summary>
-///     中国股市信息天级别表归档
+///     香港股市信息天级别level1原始数据
 /// </summary>
-[SugarTable("stock_cn_level1_archived_daliy")]
-public class StockCnLevel1ArchivedDaliyModel
+[SugarTable("stock_hk_level1_archived_daily_origin")]
+public class StockHkLevel1ArchivedDailyOriginModel
 {
     /// <summary>
     ///     Desc:
-    ///     Default:nextval('stock_cn_level1_archived_daliy_id_seq'::regclass)
+    ///     Default:nextval('stock_hk_level1_archived_daliy_id_seq'::regclass)
     ///     Nullable:False
     /// </summary>
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "id")]
@@ -63,4 +63,12 @@ public class StockCnLevel1ArchivedDaliyModel
     /// </summary>
     [SugarColumn(ColumnName = "archived")]
     public string? Archived { get; set; }
+
+    /// <summary>
+    ///     Desc:
+    ///     Default:
+    ///     Nullable:True
+    /// </summary>
+    [SugarColumn(ColumnName = "data_from")]
+    public int? DataFrom { get; set; }
 }

@@ -5,7 +5,7 @@ using k_spider_dotnet.model;
 using k_spider_dotnet.tool.log;
 using Microsoft.Extensions.Logging;
 
-namespace k_spider_dotnet.script.df_stoke;
+namespace k_spider_dotnet.script.df_stoke._12345;
 
 public class RefreshAStockInfo
 {
@@ -26,7 +26,7 @@ public class RefreshAStockInfo
         if (jsonData?["diff"] == null) throw new Exception("not find date");
 
         var jsonDataList = (JsonArray)jsonData["diff"]!;
-        var stockList = new List<StockIntroductionModel>();
+        var stockList = new List<StockCnIntroductionModel>();
         foreach (var nodeItem in jsonDataList)
         {
             var stockId = nodeItem?["f12"]?.ToString() ?? "";
@@ -36,7 +36,7 @@ public class RefreshAStockInfo
                 continue;
             }
 
-            stockList.Add(new StockIntroductionModel
+            stockList.Add(new StockCnIntroductionModel
             {
                 StockId = stockId,
                 StockName = nodeItem?["f14"]?.ToString() ?? "",
@@ -49,7 +49,7 @@ public class RefreshAStockInfo
         }
 
         using var connection = Pg.Connection();
-        StockDao.UpsetSpiderNewsContentOrigin(connection, stockList);
+        StockDao.UpsetStockCnIntroduction(connection, stockList);
     }
 }
 
@@ -72,7 +72,7 @@ public class RefreshHkStockInfo
         if (jsonData?["diff"] == null) throw new Exception("not find date");
 
         var jsonDataList = (JsonArray)jsonData["diff"]!;
-        var stockList = new List<StockIntroductionModel>();
+        var stockList = new List<StockCnIntroductionModel>();
         foreach (var nodeItem in jsonDataList)
         {
             var stockId = nodeItem?["f12"]?.ToString() ?? "";
@@ -82,7 +82,7 @@ public class RefreshHkStockInfo
                 continue;
             }
 
-            stockList.Add(new StockIntroductionModel
+            stockList.Add(new StockCnIntroductionModel
             {
                 StockId = stockId,
                 StockName = nodeItem?["f14"]?.ToString() ?? "",
@@ -95,6 +95,6 @@ public class RefreshHkStockInfo
         }
 
         using var connection = Pg.Connection();
-        StockDao.UpsetSpiderNewsContentOrigin(connection, stockList);
+        StockDao.UpsetStockCnIntroduction(connection, stockList);
     }
 }
