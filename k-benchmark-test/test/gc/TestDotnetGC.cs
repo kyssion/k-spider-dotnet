@@ -13,17 +13,7 @@ public class TestDotnetGc
     [TestMethod]
     public void TestCreateObjectGc()
     {
-        var sw = Stopwatch.StartNew();
-        StringBuilder builder = new();
-        var span = "hello world".AsSpan();
-        sw.Start();
-        for (var i = 0; i <= 100000000; i++)
-        {
-            builder.Append(span);
-            builder.Append(i);
-        }
-
-        sw.Stop();
-        Console.WriteLine(sw.ElapsedMilliseconds);
+       
+        
     }
 }
