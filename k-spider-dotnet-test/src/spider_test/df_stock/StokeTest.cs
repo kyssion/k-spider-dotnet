@@ -1,6 +1,4 @@
-using k_spider_dotnet.dal.db;
 using k_spider_dotnet.job.dfStockJob;
-using k_spider_dotnet.model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace k_spider_dotnet_test.spider_test.df_stock;
@@ -12,10 +10,10 @@ public class StokeTest
     public void FindCnStokeInfo()
     {
         new StockCnJob().SyncCnStock();
+        new StockHkJob().SyncCnStock();
     }
     [TestMethod]
     public void FindHkStokeInfo()
     {
-        new StockHkJob().SyncCnStock();
     }
-}
+} 

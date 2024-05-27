@@ -24,7 +24,7 @@ public abstract class AbsStockSpider : IStockSpider
         }
         if (result == null || result.EndsWith("\"data\":null}"))
         {
-            return "";
+             return "";
         }
         return result;
     }
