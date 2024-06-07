@@ -1,4 +1,4 @@
-namespace k_spider_dotnet.script.df_stoke;
+namespace k_spider_dotnet.script.df_stoke.usa;
 
 public class UsaStockSpider
 {
