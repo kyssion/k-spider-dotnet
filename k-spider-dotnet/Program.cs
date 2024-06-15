@@ -15,7 +15,8 @@ public static class Program
         start.StartDfListNewsJob();
         start.StartDfContentNewsJob();
         start.StartSendLarkNewsMessageJob();
-        // start.StartDfContentNewsOriginJob();
+        start.StartStockHkJob();
+        start.StartStockCnJob();
         Console.CancelKeyPress += (sender, e) =>
         {
             e.Cancel = true;

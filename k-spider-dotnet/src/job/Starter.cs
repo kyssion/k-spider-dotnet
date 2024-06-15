@@ -1,4 +1,5 @@
 using k_spider_dotnet.job.dfNewsJob;
+using k_spider_dotnet.job.dfStockJob;
 using k_spider_dotnet.job.larkJob;
 using k_spider_dotnet.tool.log;
 using Microsoft.Extensions.Logging;
@@ -48,6 +49,30 @@ public class Starter
         //将job和trigger注册到scheduler中
         _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
         Logger.LogInformation("[StartDfContentNewsJob] job is start , DfContentNewsJob");
+    }
+
+    public void StartStockCnJob()
+    {
+        var jobBase = new StockCnJob();
+        //创建一个Job,绑定MyJob
+        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
+        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
+        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
+        //将job和trigger注册到scheduler中
+        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
+        Logger.LogInformation("[StartStockCnJob] job is start , StartStockCnJob");
+    }
+
+    public void StartStockHkJob()
+    {
+        var jobBase = new StockHkJob();
+        //创建一个Job,绑定MyJob
+        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
+        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
+        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
+        //将job和trigger注册到scheduler中
+        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
+        Logger.LogInformation("[StartStockHkJob] job is start , StartStockHkJob");   
     }
 
 

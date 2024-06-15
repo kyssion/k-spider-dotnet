@@ -10,7 +10,7 @@ public class StokeTest
     public void FindCnStokeInfo()
     {
         new StockCnJob().SyncCnStock();
-        new StockHkJob().SyncCnStock();
+        new StockHkJob().SyncHkStock();
     }
     [TestMethod]
     public void FindHkStokeInfo()

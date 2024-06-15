@@ -78,7 +78,9 @@ public class StockCnJob : SpiderJob
     {
         return TriggerBuilder.Create().ForJob(jobDetail)
             .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
+            // .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
+            .WithCronSchedule("0 0 13 * * ?") 
+            // .WithCronSchedule("0 0 20 ? * MON-FRI") // 每周一到周五晚上8点执行
             .Build();
     }
 

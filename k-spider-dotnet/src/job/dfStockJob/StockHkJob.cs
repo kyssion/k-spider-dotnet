@@ -19,7 +19,7 @@ public class StockHkJob : SpiderJob
     private static readonly ILogger Logger = LogFactory.GetLogger<StockHkJob>();
     private static readonly IStockSpider HkSpider = new HkStockSpider();
 
-    public void SyncCnStock()
+    public void SyncHkStock()
     {
         using var connection = Pg.Connection();
         var stockCnIntroductionList = connection.Queryable<StockCnIntroductionModel>()
@@ -58,14 +58,16 @@ public class StockHkJob : SpiderJob
     
     public override Task Execute(IJobExecutionContext context)
     {
-        return Task.Run(SyncCnStock);
+        return Task.Run(SyncHkStock);
     }
 
     public override ITrigger GetTrigger(string jobGroup, IJobDetail jobDetail)
     {
         return TriggerBuilder.Create().ForJob(jobDetail)
             .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
+            // .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
+            .WithCronSchedule("0 0 13 * * ?") 
+            // .WithCronSchedule("0 0 20 ? * MON-FRI") // 每周一到周五晚上8点执行
             .Build();
     }
 
