@@ -39,7 +39,6 @@ public class DfNewsListJob : SpiderJob
                 {
                     Logger.LogError("[DfNewsListJob Execute]  run error : {}", e);
                 }
-            Logger.LogInformation("[DfNewsListJob Execute] success news url number : {}", allNumber);
             new DfNewsContentOriginJob().SyncDfContentInfoOriginInfoByBatch(5000,
             [
                 (int)NewsDownloadStatusCode.NoDownload

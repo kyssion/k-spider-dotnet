@@ -26,24 +26,24 @@ public class StockHkJob : SpiderJob
             .Where(it=>it.ExchangeChannel == (int)StockExchangeChannel.HkStockExchangeChannel)
             .ToList();
         var date = DateTime.Today;
-        foreach (var cnStockItem in stockCnIntroductionList)
+        foreach (var hkStockItem in stockCnIntroductionList)
         {
             var ans = "";
             try
             {
-                ans =HkSpider.GetLevel1DailyArchived(cnStockItem.StockId??"").Result;
+                ans =HkSpider.GetLevel1DailyArchived(hkStockItem.StockId??"").Result;
             }
             catch (Exception e)
             {
-                Logger.LogError("[SyncCnStock] GetLevel1DailyArchived stock id : {}, Exception : {}" ,cnStockItem.StockId , e);
+                Logger.LogError("[SyncCnStock] GetLevel1DailyArchived stock id : {}, Exception : {}" ,hkStockItem.StockId , e);
                 continue;
             }
             try
             {
                 StockDao.UpsetHkLevel1ArchivedDaily(connection, new StockHkLevel1ArchivedDailyOriginModel()
                 {
-                    StockId = cnStockItem.StockId??"",
-                    ExchangeChannel = cnStockItem.ExchangeChannel??-1,
+                    StockId = hkStockItem.StockId??"",
+                    ExchangeChannel = hkStockItem.ExchangeChannel??-1,
                     Date = date,
                     Archived = ans,
                     DataFrom = (int)FromTypeOfNews.DfMedia
@@ -51,7 +51,7 @@ public class StockHkJob : SpiderJob
             }
             catch (Exception e)
             {
-                Logger.LogError("[SyncCnStock] UpsetCnLevel1ArchivedDaily stock id : {}, Exception : {}" ,cnStockItem.StockId , e);
+                Logger.LogError("[SyncCnStock] UpsetCnLevel1ArchivedDaily stock id : {}, Exception : {}" ,hkStockItem.StockId , e);
             }
         }
     }
@@ -66,8 +66,8 @@ public class StockHkJob : SpiderJob
         return TriggerBuilder.Create().ForJob(jobDetail)
             .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
             // .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever().Build())
-            .WithCronSchedule("0 0 13 * * ?") 
-            // .WithCronSchedule("0 0 20 ? * MON-FRI") // 每周一到周五晚上8点执行
+            // .WithCronSchedule("0 0 13 * * ?") 
+            .WithCronSchedule("0 0 20 ? * MON-FRI") // 每周一到周五晚上8点执行
             .Build();
     }
 

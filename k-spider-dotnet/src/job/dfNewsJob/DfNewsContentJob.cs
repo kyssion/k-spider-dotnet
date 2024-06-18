@@ -23,7 +23,8 @@ public class DfNewsContentJob : SpiderJob
     {
         using var connection = Pg.Connection();
         var newsListInfos = connection.Queryable<SpiderNewsListModel>()
-            .Where(it => newsStatus.Contains(it.DownloadStatusCode) && it.FromMedia == (int)FromTypeOfNews.DfMedia)
+            .Where(it => newsStatus.Contains(it.DownloadStatusCode) && 
+                         it.FromMedia == (int)FromTypeOfNews.DfMedia)
             .OrderBy(item => item.NewsTime, OrderByType.Desc).Take(pageSize).ToList();
         var spiderContent = new DfContentSpider();
         foreach (var newsItem in newsListInfos)

@@ -22,13 +22,13 @@ public abstract class ChinaStockSpider : AbsStockSpider
             var ans = await base.GetLevel1DailyArchived(Url, GetExchangeChannel(), stockId);
             if (ans == "")
             {
-                Logger.LogError("[HkStockSpider] result failed , stock id : {}", stockId);
+                Logger.LogError("[ChinaStockSpider] result failed , stock id : {}", stockId);
             }
             return ans;
         }
         catch (Exception e)
         {
-            Logger.LogError("[HkStockSpider] result Exception , stock id : {} , exception : {}", stockId,e);
+            Logger.LogError("[ChinaStockSpider] result Exception , stock id : {} , exception : {}", stockId,e);
             return "";
         }
     }
