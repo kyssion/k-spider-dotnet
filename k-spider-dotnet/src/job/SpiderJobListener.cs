@@ -1,4 +1,4 @@
-using k_spider_dotnet.tool.log;
+using k_spider_dotnet_lib.logger;
 using Microsoft.Extensions.Logging;
 using Quartz;
 

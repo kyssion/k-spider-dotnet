@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using k_spider_dotnet_lib.logger;
 using k_spider_dotnet.exception;
 using k_spider_dotnet.script.df_news.spider.model;
 using k_spider_dotnet.tool.http;
-using k_spider_dotnet.tool.log;
 using Microsoft.Extensions.Logging;
 
 namespace k_spider_dotnet.script.df_news.spider;

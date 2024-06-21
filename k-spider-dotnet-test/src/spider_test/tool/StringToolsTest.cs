@@ -1,4 +1,4 @@
-using k_spider_dotnet.tool.resource;
+using k_spider_dotnet_lib.@string;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace k_spider_dotnet_test.spider_test.tool;

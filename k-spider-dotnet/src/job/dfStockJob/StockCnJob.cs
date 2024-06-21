@@ -1,3 +1,4 @@
+using k_spider_dotnet_lib.logger;
 using k_spider_dotnet.dal.db;
 using k_spider_dotnet.dao;
 using k_spider_dotnet.job.dfNewsJob;
@@ -5,7 +6,6 @@ using k_spider_dotnet.model;
 using k_spider_dotnet.script;
 using k_spider_dotnet.script.df_news.spider;
 using k_spider_dotnet.script.df_stoke.china;
-using k_spider_dotnet.tool.log;
 using Microsoft.Extensions.Logging;
 using Quartz;
 

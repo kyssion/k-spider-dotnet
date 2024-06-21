@@ -1,0 +1,6 @@
+@k_spider_dotnet_web_api_HostAddress = http://localhost:5145
+
+GET {{k_spider_dotnet_web_api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

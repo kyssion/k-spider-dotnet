@@ -1,5 +1,5 @@
-﻿using k_spider_dotnet.job;
-using k_spider_dotnet.tool.log;
+﻿using k_spider_dotnet_lib.logger;
+using k_spider_dotnet.job;
 using Microsoft.Extensions.Logging;
 
 namespace k_spider_dotnet;

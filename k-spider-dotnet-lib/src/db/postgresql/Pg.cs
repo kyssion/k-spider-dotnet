@@ -2,7 +2,7 @@ using k_spider_dotnet_lib.logger;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 
-namespace k_spider_dotnet.dal.db;
+namespace k_spider_dotnet_lib.db.postgresql;
 
 public class Pg
 {
