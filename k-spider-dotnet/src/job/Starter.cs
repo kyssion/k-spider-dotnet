@@ -90,7 +90,6 @@ public class Starter
     }
 
 
-    [Obsolete]
     public void StartDfContentNewsOriginJob()
     {
         //调度器,生成实例的时候线程已经开启了，不过是在等待状态

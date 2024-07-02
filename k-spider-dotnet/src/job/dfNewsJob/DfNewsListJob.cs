@@ -23,7 +23,6 @@ public class DfNewsListJob : SpiderJob
             const int startNumber = 1;
             const int endNumber = 3;
             const int pageSize = 200;
-            var allNumber = 0;
             const DfListOrderType orderType = DfListOrderType.ByTime;
             using var connection = Pg.Connection();
             foreach (var resourceItem in DfResource.DfListUrlResourceList)
@@ -33,16 +32,12 @@ public class DfNewsListJob : SpiderJob
                         .GetDfListInfoByUrl(resourceItem, startNumber, endNumber, pageSize, orderType).Result;
                     var dbDfListInfos = dfListInfos.Select(item => item.ToSpiderNewListModel())
                         .ToList();
-                    allNumber += SpiderNewsDao.UpsetSpiderNewsListInfo(connection, dbDfListInfos);
+                    SpiderNewsDao.UpsetSpiderNewsListInfo(connection, dbDfListInfos);
                 }
                 catch (Exception e)
                 {
                     Logger.LogError("[DfNewsListJob Execute]  run error : {}", e);
                 }
-            new DfNewsContentOriginJob().SyncDfContentInfoOriginInfoByBatch(5000,
-            [
-                (int)NewsDownloadStatusCode.NoDownload
-            ]);
         });
     }
 

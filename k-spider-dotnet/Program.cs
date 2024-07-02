@@ -14,6 +14,7 @@ public static class Program
         var start = new Starter();
         start.StartDfListNewsJob();
         start.StartDfContentNewsJob();
+        start.StartDfContentNewsOriginJob();
         start.StartStockHkJob();
         start.StartStockCnJob();
         Console.CancelKeyPress += (sender, e) =>

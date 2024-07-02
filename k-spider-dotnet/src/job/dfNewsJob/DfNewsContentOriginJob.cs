@@ -81,7 +81,7 @@ public class DfNewsContentOriginJob : SpiderJob
     {
         return TriggerBuilder.Create().ForJob(jobDetail)
             .WithIdentity(JobName + ".Trigger", jobGroup + ".Trigger").StartNow()
-            .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever().Build())
+            .WithSimpleSchedule(x => x.WithIntervalInSeconds(3).RepeatForever().Build())
             .Build();
     }
 
