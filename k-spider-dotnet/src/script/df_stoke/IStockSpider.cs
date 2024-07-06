@@ -1,3 +1,5 @@
+using k_spider_dotnet.tool.http;
+
 namespace k_spider_dotnet.script.df_stoke;
 
 public interface IStockSpider
@@ -11,7 +13,7 @@ public abstract class AbsStockSpider : IStockSpider
     public async Task<string> GetLevel1DailyArchived(string url , string channelId ,string stockId)
     {
         var listeningUrl = string.Format(url, channelId, stockId);
-        using var client = new HttpClient();
+        using var client = HttpClientTools.GetHttpClient();
         var response = client.GetStreamAsync(listeningUrl).Result;
         var result = "";
         using (var reader = new StreamReader(response))

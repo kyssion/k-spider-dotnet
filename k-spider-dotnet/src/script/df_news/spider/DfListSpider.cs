@@ -38,7 +38,7 @@ public class DfListSpider
             DateTime.Now.Millisecond);
         try
         {
-            var responseString = await HttpClientTools.Create(DfResource.ListResourceHost).GetStringAsync(urlNow);
+            var responseString = await HttpClientTools.CreateByHost(DfResource.ListResourceHost).GetStringAsync(urlNow);
 
             var forecastNode = JsonNode.Parse(responseString)!;
             var jsonData = forecastNode["data"];
