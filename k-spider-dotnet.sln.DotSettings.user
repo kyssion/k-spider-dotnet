@@ -1,35 +1,49 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1083c52c_002D2cd0_002D4564_002Da4b2_002D295a1a28432d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestPython #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AAttributeTargets_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F45ada8c418664ff394ffd30455aab498c90910_003F2e_003Fa2115b84_003FAttributeTargets_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AAttributeUsageAttribute_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F45ada8c418664ff394ffd30455aab498c90910_003Fc4_003Fd8a19b62_003FAttributeUsageAttribute_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AEncoding_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F45ada8c418664ff394ffd30455aab498c90910_003F68_003F0eb59a49_003FEncoding_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AFile_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F45ada8c418664ff394ffd30455aab498c90910_003F43_003Fbb95b759_003FFile_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AHttpUtility_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003Fdd957bb345264e8d83b985212b8240ace918_003F73_003Fd47f0379_003FHttpUtility_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AIComparer_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F45ada8c418664ff394ffd30455aab498c90910_003F47_003Faddb873b_003FIComparer_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ANameValueCollection_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003Fdea146860ca74ac79d3fe8d75087a15f19910_003Ffc_003F95508b8a_003FNameValueCollection_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ASafeFileHandle_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F45ada8c418664ff394ffd30455aab498c90910_003F81_003F50020e6f_003FSafeFileHandle_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ATestClassAttribute_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F502bb580f1844bd9a57c7182b3d3890f17198_003F0f_003F7141d429_003FTestClassAttribute_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ATestMethodAttribute_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F502bb580f1844bd9a57c7182b3d3890f17198_003F02_003F42f28b41_003FTestMethodAttribute_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AUri_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003Fc2a22a6d92e344439383dbcd78b7ce173f918_003F56_003F35c73561_003FUri_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1083c52c_002D2cd0_002D4564_002Da4b2_002D295a1a28432d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestPython #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=166affa8_002D5fb1_002D46fb_002Dbbcd_002D8cfdf27c9eac/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestDfContentJobSync" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestNewsResourceForDfcf&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfContentSpiderTest.TestOnePageDownload&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::DbTest.TestThread&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.lark.LarkTest.Test&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::Testjson.Test&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::Testjson.TestIdidi&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.lark.LarkTest.TestSendMessageByJob&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.db.PgDbTest.TestSqlSurge&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindHkStokeInfo&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=166affa8_002D5fb1_002D46fb_002Dbbcd_002D8cfdf27c9eac/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestDfContentJobSync" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestNewsResourceForDfcf&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfContentSpiderTest.TestOnePageDownload&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::DbTest.TestThread&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.lark.LarkTest.Test&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::Testjson.Test&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::BAB83512-657A-4F88-BBDB-60CFD77F629E::net8.0::Testjson.TestIdidi&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.tool.lark.LarkTest.TestSendMessageByJob&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.db.PgDbTest.TestSqlSurge&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindHkStokeInfo&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=187f24e4_002D62e0_002D4f2f_002Db679_002D06c58bf832df/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestPython #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestNewsResourceForDfcf&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=187f24e4_002D62e0_002D4f2f_002Db679_002D06c58bf832df/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestPython #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestNewsResourceForDfcf&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.GetImgInfo.GetTextInfo&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.GetImgInfo.GetImgeInfo&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e05c2cfe_002D00b1_002D41b1_002D92a4_002D9c567c74cce4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestPython" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;
-    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestNewsResourceForDfcf&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e05c2cfe_002D00b1_002D41b1_002D92a4_002D9c567c74cce4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestPython" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.DemoTest.TestPython&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_stock.StokeTest.FindCnStokeInfo&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.spider_test.df_news.DfListSpiderTest.TestNewsResourceForDfcf&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::F52706C9-02CB-4E8D-8750-48EA509AB943::net8.0::k_spider_dotnet_test.GetImgInfo.GetTextInfo&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
