@@ -19,7 +19,7 @@ public class GetImgInfo
 
         var result = new List<Dictionary<string, string>>();
 
-        var items = htmlDoc.DocumentNode.SelectNodes("//div[@class='paragraph-editor-container-item']");
+        var items = htmlDoc.DocumentNode.SelectNodes("//div[@class='paragraph-editor-container-item' or @class='paragraph paragraph--portrait paragraph--selected']");
         foreach (var item in items)
         {
             var noNode = item.SelectSingleNode(".//div[@class='paragraph-editor-container-item-order']");
@@ -64,6 +64,7 @@ public class GetImgInfo
         var result = new List<Dictionary<string, string>>();
 
         var items = htmlDoc.DocumentNode.SelectNodes("//div[@class='paragraph paragraph--portrait']");
+       
         foreach (var item in items)
         {
             var noNode = item.SelectSingleNode(".//div[@class='paragraph-header']");
