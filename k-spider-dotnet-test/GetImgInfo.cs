@@ -4,9 +4,37 @@ using Newtonsoft.Json;
 
 namespace k_spider_dotnet_test;
 
+class Mmmm
+{
+    public static Mmmm Iiii = new Mmmm(){ iiii = "123",Item = null};
+    public required Mmmm? Item { get; init; }
+    public string iiii
+    {
+        get;
+        set;
+    }
+    
+    public void show()
+    {
+                
+    }
+}
+
 [TestClass]
 public class GetImgInfo
 {
+
+    [TestMethod]
+
+    public void TestMain()
+    {
+        var iiiis = new Mmmm
+        {
+            iiii = "123",
+            Item = null
+        };
+        Console.WriteLine(iiiis.Item?.iiii??"is null");
+    } 
     public static string BashPath =
         "C:\\Users\\14099\\Documents\\project\\dotnet\\k-spider-dotnet\\k-spider-dotnet-test";
     [TestMethod]

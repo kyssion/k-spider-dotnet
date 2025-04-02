@@ -17,16 +17,4 @@
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Remove="Models\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Remove="Models\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="Models\**" />
-    </ItemGroup>
-
 </Project>
