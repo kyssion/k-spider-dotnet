@@ -1,3 +1,4 @@
+using System.Data;
 using k_spider_dotnet_lib.logger;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
@@ -18,7 +19,7 @@ public class Pg
         return new SqlSugarClient(new ConnectionConfig
             {
                 ConnectionString = connectionString,
-                DbType = DbType.PostgreSQL,
+                DbType = SqlSugar.DbType.PostgreSQL,
                 IsAutoCloseConnection = isAutoCloseConnection
             },
             db =>
