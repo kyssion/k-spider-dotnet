@@ -30,6 +30,7 @@ public static class TransferSpiderData
         await SyncSpiderNewsContentOrigin(remoteFactory, locationFactory);
         await SyncSpiderNewsContent(remoteFactory, locationFactory);
         await SyncSpiderNewsImage(remoteFactory,locationFactory);
+        Logger.LogInformation("[DoTransfer] transfer success");
     }
 
     private static async Task SyncSpiderNewsContentOrigin(PooledDbContextFactory<KScriptSpiderContext> remoteFactory,
