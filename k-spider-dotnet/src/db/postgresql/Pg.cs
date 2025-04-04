@@ -1,9 +1,8 @@
-using System.Data;
 using k_spider_dotnet_lib.logger;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 
-namespace k_spider_dotnet_lib.db.postgresql;
+namespace k_spider_dotnet.db.postgresql;
 
 public class Pg
 {

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace k_spirder_script.models;
+namespace k_spider_script.models;
 
 /// <summary>
 /// 美股股市信息天级别level1归档原始数据

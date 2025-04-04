@@ -2,7 +2,7 @@ using k_spider_dotnet_lib.logger;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
-namespace k_spider_dotnet.job;
+namespace k_spider_dotnet_lib.job;
 
 public class SpiderJobListener(string name) : IJobListener
 {

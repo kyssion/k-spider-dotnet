@@ -1,8 +1,6 @@
-
-using k_spider_dotnet_lib.db.postgresql;
 using k_spider_dotnet_lib.@string;
 
-namespace k_spider_dotnet_lib.develop.db;
+namespace k_spider_dotnet.db.postgresql;
 
 public static class PgDevelop
 {

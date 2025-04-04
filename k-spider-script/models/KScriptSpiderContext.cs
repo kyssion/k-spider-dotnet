@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace k_spirder_script.models;
+namespace k_spider_script.models;
 
 public partial class KScriptSpiderContext : DbContext
 {

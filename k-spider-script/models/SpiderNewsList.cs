@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace k_spirder_script.models;
+namespace k_spider_script.models;
 
 /// <summary>
 /// 排重抓取信息信息列表

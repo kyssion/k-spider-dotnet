@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace k_spirder_script.models;
+namespace k_spider_script.models;
 
 [Table("stock_cn_introduction")]
 [Index("StockId", Name = "uk_stock_cn_introduction", IsUnique = true)]

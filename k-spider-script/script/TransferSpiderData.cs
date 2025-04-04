@@ -1,27 +1,35 @@
-﻿using System.Threading.Channels;
-using k_spirder_script.models;
+﻿using k_spider_dotnet_lib.logger;
+using k_spider_script.job;
+using k_spider_script.models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-namespace k_spirder_script.script;
+using Microsoft.Extensions.Logging;
 
-public class TransferSiderData
+namespace k_spider_script.script;
+
+public static class TransferSpiderData
 {
+    private static readonly ILogger Logger = LogFactory.GetLogger<Starter>();
     // 同步远程数据库脚本到本子
-    public static void DoTransfer()
+    public static async Task DoTransfer()
     {
         var remoteOtions = new DbContextOptionsBuilder<KScriptSpiderContext>().UseNpgsql("PORT=5432;DATABASE=k_script_spider;HOST=39.100.86.193;PASSWORD=Javarustc++11.;USER ID=spider ;Include Error Detail=true;Pooling=true;MaxPoolSize=100").Options;
         var remoteFactory = new PooledDbContextFactory<KScriptSpiderContext>(remoteOtions,100);
         var locationOtions = new DbContextOptionsBuilder<KScriptSpiderContext>().UseNpgsql("PORT=5432;DATABASE=k_script_spider;HOST=192.168.0.102;PASSWORD=Javarustc++11.;USER ID=spider ;Include Error Detail=true;Pooling=true;MaxPoolSize=100").Options;
         var locationFactory = new PooledDbContextFactory<KScriptSpiderContext>(locationOtions, 100);
-        var taskNewsList = SyncSpiderNewsList(remoteFactory, locationFactory);
+        // var taskNewsList = SyncSpiderNewsList(remoteFactory, locationFactory);
         // Task.WhenAll(taskNewsList).GetAwaiter().GetResult();
-        var taskNewsContentOrigin =SyncSpiderNewsContentOrigin(remoteFactory, locationFactory);
+        // var taskNewsContentOrigin =SyncSpiderNewsContentOrigin(remoteFactory, locationFactory);
         // Task.WhenAll(taskNewsContentOrigin).GetAwaiter().GetResult();
-        var taskNewsContent =SyncSpiderNewsContent(remoteFactory, locationFactory);
+        // var taskNewsContent =SyncSpiderNewsContent(remoteFactory, locationFactory);
         // Task.WhenAll(taskNewsContent).GetAwaiter().GetResult();
-        var taskNewsImage =SyncSpiderNewsImage(remoteFactory,locationFactory);
+        // var taskNewsImage =SyncSpiderNewsImage(remoteFactory,locationFactory);
         // Task.WhenAll(taskNewsImage).GetAwaiter().GetResult();
-        Task.WhenAll(taskNewsList,taskNewsContentOrigin,taskNewsContent,taskNewsImage).GetAwaiter().GetResult();
+        // Task.WhenAll(taskNewsList,taskNewsContentOrigin,taskNewsContent,taskNewsImage);
+        await SyncSpiderNewsList(remoteFactory, locationFactory);
+        await SyncSpiderNewsContentOrigin(remoteFactory, locationFactory);
+        await SyncSpiderNewsContent(remoteFactory, locationFactory);
+        await SyncSpiderNewsImage(remoteFactory,locationFactory);
     }
 
     private static async Task SyncSpiderNewsContentOrigin(PooledDbContextFactory<KScriptSpiderContext> remoteFactory,
@@ -50,11 +58,11 @@ public class TransferSiderData
                 locationContext.SpiderNewsContentOrigins.AddRange(batch);
                 await locationContext.SaveChangesAsync();
             }
-            Console.WriteLine("SyncSpiderNewsContentOrigin is end ~~~");
 
         }
         catch (Exception e)
         {
+            Logger.LogError("[SyncSpiderNewsContentOrigin] error :{}",e);
             throw; // TODO 处理异常
         }
     }
@@ -84,11 +92,11 @@ public class TransferSiderData
                 locationContext.SpiderNewsContents.AddRange(batch);
                 await locationContext.SaveChangesAsync();
             }
-            Console.WriteLine("SyncSpiderNewsContent is end ~~~");
 
         }
         catch (Exception e)
         {
+            Logger.LogError("[SyncSpiderNewsContentOrigin] error :{}",e);
             throw; // TODO 处理异常
         }
     }
@@ -120,11 +128,11 @@ public class TransferSiderData
                 locationContext.SpiderNewsImageLists.AddRange(batch);
                 await locationContext.SaveChangesAsync();
             }
-            Console.WriteLine("SyncSpiderNewsImage is end ~~~");
 
         }
         catch (Exception e)
         {
+            Logger.LogError("[SyncSpiderNewsImage] error :{}",e);
             throw; // TODO 处理异常
         }
     }
@@ -153,10 +161,10 @@ public class TransferSiderData
                 await locationContext.SaveChangesAsync();
             }
 
-            Console.WriteLine("SyncSpiderNewsList is end ~~~");
         }
         catch (Exception e)
         {
+            Logger.LogError("[SyncSpiderNewsList] error :{}",e);
             throw; // TODO 处理异常
         }
     }

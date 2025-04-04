@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace k_spider_dotnet.job;
+namespace k_spider_dotnet_lib.job;
 
 public abstract class SpiderJob : IJob
 {

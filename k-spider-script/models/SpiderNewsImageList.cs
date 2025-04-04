@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace k_spirder_script.models;
+namespace k_spider_script.models;
 
 /// <summary>
 /// 爬虫详情中的图片信息记录

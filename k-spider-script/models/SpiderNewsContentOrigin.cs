@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace k_spirder_script.models;
+namespace k_spider_script.models;
 
 [Table("spider_news_content_origin")]
 [Index("NewsUrl", Name = "uk_news_content_origin_url", IsUnique = true)]

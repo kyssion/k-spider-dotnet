@@ -1,3 +1,4 @@
+using k_spider_dotnet_lib.job;
 using k_spider_dotnet_lib.logger;
 using k_spider_dotnet.job.dfNewsJob;
 using k_spider_dotnet.job.dfStockJob;
@@ -11,7 +12,7 @@ namespace k_spider_dotnet.job;
 
 public class Starter
 {
-    private const string NewsListGroup = "new_list_group";
+    private const string NewsListGroup = "k-spider-news-group";
     private static readonly StdSchedulerFactory SchedulerFactory = new();
     private static readonly ILogger Logger = LogFactory.GetLogger<Starter>();
     private readonly IScheduler _scheduler;

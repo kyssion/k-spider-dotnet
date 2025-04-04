@@ -1,3 +1,4 @@
+using k_spider_dotnet_lib.job;
 using k_spider_dotnet_lib.logger;
 using k_spider_dotnet.dal.db;
 using k_spider_dotnet.dao;
