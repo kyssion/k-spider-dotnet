@@ -4,3 +4,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .idea
+TestResults
+k-spider-dotnet.sln.DotSettings.user
+.vs

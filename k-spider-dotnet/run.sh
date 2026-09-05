@@ -1,0 +1,1 @@
+nohup ./k-spider-dotnet > output.log 2>&1 &
