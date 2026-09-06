@@ -13,11 +13,10 @@
 
 ```
 k-spider-dotnet/              仓库根 = 解决方案根
-├── db/                       数据库 DDL（k-script-spider-datasource.sql）
+├── db/                       DDL（k-script-spider-datasource.sql）+ 优化 SQL（optimization.sql , 附说明手册 optimization.md）
 ├── scripts/                  verify.sh 一键验证
 └── src/
-    ├── k-spider-dotnet/      主爬虫（Quartz 调度 + SqlSugar 落库 , 含 Playwright 特殊页面抓取）
-    ├── k-spider-dotnet-lib/  公共库（SpiderJob 抽象 / 日志 / 飞书 SDK / 工具类）
+    ├── k-spider-dotnet/      主爬虫（Quartz 调度 + SqlSugar 落库 + 公共工具 + 飞书 SDK 备用 , 含 Playwright 特殊页面抓取）
     ├── k-spider-sync/        远端 PG → 本地 PG 增量同步（SqlSugar , 复用主项目实体）
     └── k-spider-test/        MSTest 单元测试（离线可跑）
 ```

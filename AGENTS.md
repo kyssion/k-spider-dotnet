@@ -30,16 +30,15 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 
 ## 解决方案结构
 
-仓库根 = 解决方案根，四个项目位于 `src/` 下：
+仓库根 = 解决方案根，三个项目位于 `src/` 下：
 
 | 项目 | 类型 | 职责 |
 |---|---|---|
-| `src/k-spider-dotnet` | Exe | 主爬虫：新闻/股票抓取、解析、落库、Quartz 调度；含 Playwright（特殊页面抓取与栏目自检） |
-| `src/k-spider-dotnet-lib` | 类库 | 公共工具：`SpiderJob` 抽象、`LogFactory` 日志、飞书 SDK（`LarkMessage`，当前无调用方）、json/collection/strings/time 工具 |
+| `src/k-spider-dotnet` | Exe | 主爬虫：新闻/股票抓取、解析、落库、Quartz 调度、公共工具（`SpiderJob` 抽象/`LogFactory` 日志/json/collection/strings/time）与飞书 SDK（`lark/`，当前无调用方）；含 Playwright（特殊页面抓取与栏目自检） |
 | `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 4 张新闻表按 Id 增量同步到本地，引用主项目实体 |
 | `src/k-spider-test` | 类库 | MSTest 单元测试（全部离线） |
 
-依赖方向：`k-spider-dotnet → lib`；`k-spider-sync → k-spider-dotnet + lib`（复用主项目的 `model/` 实体与 `data/Pg` 连接工厂）；test 引用主项目与 lib。**实体只有一套**（主项目 `model/`）。数据库 DDL 在仓库根 `db/k-script-spider-datasource.sql`。
+依赖方向：`k-spider-sync → k-spider-dotnet`（复用主项目的 `model/` 实体、`data/Pg` 连接工厂与 `job/SpiderJob` 抽象）；test 引用主项目。**实体只有一套**（主项目 `model/`）。数据库 DDL 在仓库根 `db/k-script-spider-datasource.sql`。
 
 主项目目录（命名空间全小写下划线风格，如 `k_spider_dotnet.job`；代码在项目根下，无额外 src 层）：
 
@@ -49,9 +48,11 @@ src/k-spider-dotnet/
 ├── config/AppConfig.cs        # 全局配置中心（改配置只改这里/appsettings.json）
 ├── data/                      # 数据访问：Pg.cs 连接工厂 + DAO + devtools/（开发期工具）
 ├── model/                     # SqlSugar 实体（DbFirst 生成，带 Model 后缀）
-├── job/                       # 全部 Quartz 任务：Starter + check/ + news/ + stock/
+├── job/                       # 全部 Quartz 任务：SpiderJob 基类 + Starter + check/ + news/ + stock/
 ├── spider/                    # 爬虫实现：DataResource.cs（枚举/栏目分类）+ df_news/ + df_stock/ + df_research_report/
 ├── tool/                      # html/（HtmlTools、HtmlTagName）+ http/（HttpClient 伪装头、URL 工具）
+├── logger/ json/ collection/ strings/ time/   # 公共工具（原独立 lib 项目并入）
+├── lark/                      # 飞书 SDK（当前无调用方，保留备用）
 └── exception/                 # 异常体系（DownloadHttpException 族、KDbException）
 ```
 
@@ -83,6 +84,12 @@ DfCheckJob (每5分钟, job/check/)
 
 ## 代码约定
 
+### 开发原则（最高优先级，覆盖以下所有条目）
+
+- **不过度设计、不过度封装**：优先最简单可用的实现；不为假想的扩展点提前加抽象层（接口/泛型/继承层级），只有出现第二个真实使用者时才提取抽象。
+- **可读性优先**：代码首先是给人读的；注释/日志用中文，新代码与所在文件的既有风格保持一致；宁要直白的长代码，不要绕弯的短代码。
+- **兼顾性能最优化**：热路径（轮询查询、批量写入、HTTP 调用）必须注意连接复用、批量操作与索引支撑；但不做无测量依据的微优化，不为性能牺牲可读性。
+
 - 注释、日志、commit message 用中文；日志统一 `LogFactory.GetLogger<T>()`（注意：静态类不能作类型参数）。
 - **新增定时任务的固定套路**：继承 `SpiderJob`（lib），实现 `Execute/GetTrigger/GetJobDetail` 三方法（照抄现有 Job 模板，`DisallowConcurrentExecution` 必加）→ 在 `job/Starter.cs` 加 `StartXxxJob()` → 在 `Program.Main` 调用启用。
 - Job 尽量 async：网络调用直接 `await`，不要 `.Result`/`.Wait()`（Quartz 的 `Execute` 本身返回 Task）。
@@ -107,7 +114,7 @@ DfCheckJob (每5分钟, job/check/)
 
 ## 数据库
 
-- 库名 `k_script_spider`，8 张表的完整 DDL 在仓库根 `db/k-script-spider-datasource.sql`（pg_dump 导出 + 增量演进段），新环境用它初始化。
+- 库名 `k_script_spider`，8 张表的完整 DDL 在仓库根 `db/k-script-spider-datasource.sql`（pg_dump 导出 + 增量演进段），新环境用它初始化；可选的索引/数据治理 SQL 在 `db/optimization.md`（已按安全性复审分级收录）。
 - 唯一键约定：新闻三表以 `news_url` 去重，图片表以 `image_resource_url`，股票日线以 `(date, stock_id)`。
 - 表**不是** CodeFirst 管理；`data/devtools/PgDevelop.cs` 可从库反向重新生成 SqlSugar 实体（DbFirst）。
 - 所有表有 `update_time_func()` 触发器自动刷新 `update_time`，upsert 时 ignore 这三列即可。
@@ -121,10 +128,46 @@ DfCheckJob (每5分钟, job/check/)
 4. 时间格式强绑定：列表接口 `yyyy-MM-dd HH:mm:ss`、详情接口 `yyyy/MM/dd HH:mm:ss`（`DfListInfo`/`DfContentInfo` 的 `To*Model()` 各自使用 `TimeTools` 常量），格式不匹配会抛 `FormatException`。
 5. 股票 Job 的 `DateTime.Today` 依赖服务器时区，UTC 服务器上日期会错（部署时确认 TZ=Asia/Shanghai）。
 6. `data/devtools/`（DbFirst 生成器）与 `spider/df_stock/devtools/`（一次性下载工具）是开发期工具，不参与生产链路。
-7. lib 中的飞书 SDK（`lark/LarkMessage`）当前无调用方（新闻推送功能已按需求移除），保留备用；重新启用时凭据走 `AppConfig` 加回配置节即可。
+7. 主项目 `lark/` 下的飞书 SDK（`LarkMessage`）当前无调用方（新闻推送功能已按需求移除），保留备用；重新启用时凭据走 `AppConfig` 加回配置节即可。
 8. `spider_news_content_origin` 存整篇原始 JSON、图片表只增不删，长期运行需人工做归档清理（暂无自动保留策略）。
 
 ## 提交规范
 
-- 中文 commit，`feat:` / `fix:` 前缀（参照 `git log`）。
-- 不向新文件提交真实凭据；环境相关值进 `AppConfig`，由部署方用环境变量覆盖。
+### 分支
+
+- `main`：默认主分支，始终可构建、测试全绿。
+- 功能分支 `feat/<简述>`，修复分支 `fix/<简述>`，合并后删除。
+
+### 提交信息（Conventional Commits）
+
+```
+<type>(<scope>?): <中文描述>
+```
+
+| type | 用途 |
+| --- | --- |
+| feat | 新功能（scope 标注模块，如 `feat(news): …`、`feat(stock): …`、`feat(sync): …`） |
+| fix | 缺陷修复 |
+| docs | 仅文档变更 |
+| refactor | 重构（不改行为） |
+| test | 仅测试变更 |
+| chore | 构建/工具/依赖变更（如 `chore(deps): …`） |
+
+示例：
+
+```
+feat(news): 新闻列表任务增加自适应翻页
+fix(sync): 修复本地库缺列时同步插入失败
+refactor: 合并公共库到主项目
+```
+
+### 提交前自查清单
+
+```bash
+./scripts/verify.sh    # 构建 0 错误 + 全部测试通过（存量告警豁免，不新增告警）
+git status             # 无产物文件混入（bin/obj/.idea 等）
+```
+
+文档同步：结构性 / 约定性变更须同步更新 README.md 与 AGENTS.md 对应章节。
+
+凭据红线：不向仓库提交真实凭据；环境相关值进 `AppConfig`，由部署方用环境变量覆盖。
