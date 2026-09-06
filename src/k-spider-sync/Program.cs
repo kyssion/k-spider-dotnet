@@ -1,28 +1,25 @@
-﻿using k_spider_dotnet.logger;
-using k_spider_sync.job;
-using Microsoft.Extensions.Logging;
+using KSpider.Sync.Job;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Quartz;
 
-namespace k_spider_sync;
+namespace KSpider.Sync;
 
 internal static class Program
 {
-    // 定义一个静态方法Main，这是C#程序的入口点
-    private static readonly ILogger Log = LogFactory.GetLogger<Starter>();
-    private static readonly AutoResetEvent AutoEvent = new(false);
-
-    public static void Main()
+    public static async Task Main(string[] args)
     {
-        var start = new Starter();
-        start.TransferSpiderDataJob();
-        Console.CancelKeyPress += (sender, e) =>
+        var builder = Host.CreateApplicationBuilder(args);
+        builder.Services.AddQuartz(quartz =>
         {
-            e.Cancel = true;
-            AutoEvent.Set();
-        };
-        AppDomain.CurrentDomain.ProcessExit += (sender, e) => AutoEvent.Set();
-        AutoEvent.WaitOne();
-        Log.LogInformation("收到退出信号 , 等待任务完成后停止....");
-        start.Shutdown();
-        Log.LogInformation("结束....");
+            quartz.AddJob<TransferSpiderDataJob>(j => j.WithIdentity("TransferSpiderDataJob")
+                    .DisallowConcurrentExecution())
+                .AddTrigger(t => t.WithIdentity("TransferSpiderDataJob.Trigger").ForJob("TransferSpiderDataJob")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever()));
+        });
+        // 优雅停机 : 收到退出信号后等待在跑任务完成
+        builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+        await builder.Build().RunAsync();
     }
 }

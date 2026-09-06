@@ -1,0 +1,9 @@
+<Project>
+
+    <!-- 解决方案级公共属性 , 各 csproj 不再重复声明 -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+</Project>

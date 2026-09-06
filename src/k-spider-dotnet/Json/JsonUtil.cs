@@ -1,0 +1,18 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
+
+namespace KSpider.Json;
+
+public static class JsonUtil
+{
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        IncludeFields = true
+    };
+
+    public static string GetJson(object item)
+    {
+        return JsonSerializer.Serialize(item, JsonSerializerOptions);
+    }
+}

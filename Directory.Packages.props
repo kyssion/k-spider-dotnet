@@ -1,0 +1,21 @@
+<Project>
+
+    <!-- 中央包版本管理 : 各 csproj 的 PackageReference 只写包名不写版本 -->
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="HtmlAgilityPack" Version="1.12.4" />
+        <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+        <PackageVersion Include="MSTest.TestAdapter" Version="4.3.3" />
+        <PackageVersion Include="MSTest.TestFramework" Version="4.3.3" />
+        <PackageVersion Include="Microsoft.Playwright" Version="1.61.0" />
+        <PackageVersion Include="Quartz" Version="3.19.1" />
+        <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.19.1" />
+        <PackageVersion Include="SqlSugarCore" Version="5.1.4.216" />
+        <!-- 显式升级 SqlSugar 的传递依赖 , 消除 NU1903 已知漏洞告警 ( 本项目不使用 SQLite 功能 ) -->
+        <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.13" />
+    </ItemGroup>
+</Project>
