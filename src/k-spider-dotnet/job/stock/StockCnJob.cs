@@ -1,6 +1,5 @@
-using k_spider_dotnet_lib.job;
-using k_spider_dotnet_lib.logger;
-using k_spider_dotnet.data;
+using k_spider_dotnet.job;
+using k_spider_dotnet.logger;
 using k_spider_dotnet.data;
 using k_spider_dotnet.job.news;
 using k_spider_dotnet.model;

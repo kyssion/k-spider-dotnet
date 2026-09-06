@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using k_spider_dotnet_lib.logger;
+using k_spider_dotnet.logger;
 using k_spider_dotnet.exception;
 using k_spider_dotnet.spider.df_news.model;
 using k_spider_dotnet.tool.http;

@@ -1,4 +1,4 @@
-using k_spider_dotnet_lib.strings;
+using k_spider_dotnet.strings;
 using k_spider_dotnet.data;
 
 namespace k_spider_dotnet.data.devtools;

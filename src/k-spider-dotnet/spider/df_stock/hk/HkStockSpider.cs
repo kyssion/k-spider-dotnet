@@ -1,4 +1,4 @@
-using k_spider_dotnet_lib.logger;
+using k_spider_dotnet.logger;
 using Microsoft.Extensions.Logging;
 
 namespace k_spider_dotnet.spider.df_stock.hk;

@@ -1,5 +1,5 @@
 using System.Text;
-namespace k_spider_dotnet_lib.strings;
+namespace k_spider_dotnet.strings;
 
 public class StringTools
 {

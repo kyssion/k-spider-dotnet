@@ -1,4 +1,4 @@
-namespace k_spider_dotnet_lib.time;
+namespace k_spider_dotnet.time;
 
 public static class TimeTools
 {

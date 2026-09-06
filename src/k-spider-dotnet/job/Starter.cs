@@ -1,13 +1,11 @@
-using k_spider_dotnet_lib.job;
-using k_spider_dotnet_lib.logger;
 using k_spider_dotnet.data;
 using k_spider_dotnet.job.check;
 using k_spider_dotnet.job.news;
 using k_spider_dotnet.job.stock;
+using k_spider_dotnet.logger;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl;
-using Quartz.Impl.Matchers;
 
 namespace k_spider_dotnet.job;
 
@@ -22,8 +20,6 @@ public class Starter
     {
         _scheduler = SchedulerFactory.GetScheduler().Result;
         _scheduler.Start();
-        _scheduler.ListenerManager.AddJobListener(new SpiderJobListener("StarterJobListener"),
-            GroupMatcher<JobKey>.AnyGroup());
         Pg.EnsureSpiderNewsListDbObjects();
     }
 
@@ -36,82 +32,26 @@ public class Starter
         Logger.LogInformation("[Shutdown] scheduler is shutdown");
     }
 
-    public void StartCheckJob()
+    /// <summary>
+    ///     统一的任务注册 : 生成 JobDetail 与 Trigger 并注册到调度器 ( 调度线程在构造时已启动 )
+    /// </summary>
+    private void ScheduleJob(SpiderJob job)
     {
-        //调度器,生成实例的时候线程已经开启了，不过是在等待状态
-        var jobBase = new DfCheckJob();
-
-        //创建一个Job,绑定MyJob
-        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
-        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
-        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
-        //将job和trigger注册到scheduler中
-        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
-        Logger.LogInformation("[StartCheckJob] job is start , DfCheckJob");
+        var jobDetail = job.GetJobDetail(NewsListGroup);
+        var trigger = job.GetTrigger(NewsListGroup, jobDetail);
+        _scheduler.ScheduleJob(jobDetail, trigger).Wait();
+        Logger.LogInformation("[Start{JobName}] job is start", job.GetType().Name);
     }
 
-    public void StartDfListNewsJob()
-    {
-        //调度器,生成实例的时候线程已经开启了，不过是在等待状态
-        var jobBase = new DfNewsListJob();
+    public void StartDfListNewsJob() => ScheduleJob(new DfNewsListJob());
 
-        //创建一个Job,绑定MyJob
-        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
-        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
-        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
-        //将job和trigger注册到scheduler中
-        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
-        Logger.LogInformation("[StartDfListNewsJob] job is start , DfListNewsJob");
-    }
+    public void StartDfContentNewsJob() => ScheduleJob(new DfNewsContentJob());
 
-    public void StartDfContentNewsJob()
-    {
-        //调度器,生成实例的时候线程已经开启了，不过是在等待状态
-        var jobBase = new DfNewsContentJob();
-        //创建一个Job,绑定MyJob
-        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
-        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
-        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
-        //将job和trigger注册到scheduler中
-        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
-        Logger.LogInformation("[StartDfContentNewsJob] job is start , DfContentNewsJob");
-    }
+    public void StartDfContentNewsOriginJob() => ScheduleJob(new DfNewsContentOriginJob());
 
-    public void StartStockCnJob()
-    {
-        var jobBase = new StockCnJob();
-        //创建一个Job,绑定MyJob
-        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
-        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
-        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
-        //将job和trigger注册到scheduler中
-        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
-        Logger.LogInformation("[StartStockCnJob] job is start , StartStockCnJob");
-    }
+    public void StartCheckJob() => ScheduleJob(new DfCheckJob());
 
-    public void StartStockHkJob()
-    {
-        var jobBase = new StockHkJob();
-        //创建一个Job,绑定MyJob
-        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
-        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
-        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
-        //将job和trigger注册到scheduler中
-        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
-        Logger.LogInformation("[StartStockHkJob] job is start , StartStockHkJob");   
-    }
+    public void StartStockCnJob() => ScheduleJob(new StockCnJob());
 
-
-    public void StartDfContentNewsOriginJob()
-    {
-        //调度器,生成实例的时候线程已经开启了，不过是在等待状态
-        var jobBase = new DfNewsContentOriginJob();
-        //创建一个Job,绑定MyJob
-        var newJobDetail = jobBase.GetJobDetail(NewsListGroup);
-        var newJobTrigger = jobBase.GetTrigger(NewsListGroup, newJobDetail);
-        //start让调度线程启动【调度线程可以从jobstore中获取快要执行的trigger,然后获取trigger关联的job，执行job】
-        //将job和trigger注册到scheduler中
-        _scheduler.ScheduleJob(newJobDetail, newJobTrigger).Wait();
-        Logger.LogInformation("[StartDfContentNewsOriginJob] job is start ,DfContentNewsOriginJob");
-    }
+    public void StartStockHkJob() => ScheduleJob(new StockHkJob());
 }

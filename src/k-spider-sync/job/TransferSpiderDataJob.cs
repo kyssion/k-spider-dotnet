@@ -1,5 +1,5 @@
-﻿using k_spider_dotnet_lib.job;
-using k_spider_dotnet_lib.logger;
+﻿using k_spider_dotnet.job;
+using k_spider_dotnet.logger;
 using k_spider_sync.transfer;
 using Microsoft.Extensions.Logging;
 using Quartz;

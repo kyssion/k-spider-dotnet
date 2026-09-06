@@ -1,4 +1,4 @@
-namespace k_spider_dotnet_lib.lark;
+namespace k_spider_dotnet.lark;
 
 public class LarkDatasource
 {

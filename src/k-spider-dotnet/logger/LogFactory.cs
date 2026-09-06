@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace k_spider_dotnet_lib.logger;
+namespace k_spider_dotnet.logger;
 
 public class LogFactory
 {

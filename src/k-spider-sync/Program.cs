@@ -1,5 +1,4 @@
-﻿using k_spider_dotnet_lib.job;
-using k_spider_dotnet_lib.logger;
+﻿using k_spider_dotnet.logger;
 using k_spider_sync.job;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +7,7 @@ namespace k_spider_sync;
 internal static class Program
 {
     // 定义一个静态方法Main，这是C#程序的入口点
-    private static readonly ILogger Log = LogFactory.GetLogger<SpiderJobListener>();
+    private static readonly ILogger Log = LogFactory.GetLogger<Starter>();
     private static readonly AutoResetEvent AutoEvent = new(false);
 
     public static void Main()

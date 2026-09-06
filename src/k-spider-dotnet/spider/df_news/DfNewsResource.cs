@@ -8,7 +8,7 @@ public static class DfNewsResource
 
     public const string RequestDfContextUrl = "https://newsinfo.eastmoney.com/kuaixun/v2/api/article/{0}?guid={1}";
     public const string ListResourceHost = "np-listapi.eastmoney.com";
-    public const string ContextResourceHost = "finance.eastmoney.com";
+    public const string ContextApiResourceHost = "newsinfo.eastmoney.com";
 
     public static readonly DfListUrlResource[] DfListUrlResourceList =
     {

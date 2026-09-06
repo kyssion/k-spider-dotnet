@@ -1,7 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-namespace k_spider_dotnet_lib.json;
+namespace k_spider_dotnet.json;
 
 public static class JsonUtil
 {

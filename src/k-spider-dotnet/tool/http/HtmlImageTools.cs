@@ -6,7 +6,7 @@ public static class HtmlImageTools
 
     public static async Task<ImgInfo> DownloadImgAsByteInto(ImgInfo imgInfo)
     {
-        var httpResponse = await new HttpClient().GetAsync(imgInfo.ResourceUrl);
+        var httpResponse = await HttpClientTools.GetHttpClient().GetAsync(imgInfo.ResourceUrl);
         var dataByte = await httpResponse.Content.ReadAsByteArrayAsync();
         imgInfo.Data = dataByte;
         return imgInfo;

@@ -1,5 +1,5 @@
-using k_spider_dotnet_lib.json;
-using k_spider_dotnet_lib.time;
+using k_spider_dotnet.json;
+using k_spider_dotnet.time;
 using k_spider_dotnet.model;
 using k_spider_dotnet.tool.http;
 

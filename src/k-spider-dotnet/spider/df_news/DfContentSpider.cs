@@ -3,8 +3,8 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using k_spider_dotnet_lib.json;
-using k_spider_dotnet_lib.logger;
+using k_spider_dotnet.json;
+using k_spider_dotnet.logger;
 using k_spider_dotnet.exception;
 using k_spider_dotnet.spider.df_news.model;
 using k_spider_dotnet.tool.html;
@@ -34,7 +34,8 @@ public partial class DfContentSpider
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         try
         {
-            var responseString = await new HttpClient().GetStringAsync(newUrl);
+            var responseString = await HttpClientTools.CreateByHost(DfNewsResource.ContextApiResourceHost)
+                .GetStringAsync(newUrl);
             ans.NewsOriginContent = responseString;
             ans.Status = NewsContentOriginStatus.Success;
             return ans;
@@ -58,7 +59,8 @@ public partial class DfContentSpider
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         try
         {
-            return GetContentInfoByJson(await new HttpClient().GetStringAsync(newUrl), url);
+            return GetContentInfoByJson(
+                await HttpClientTools.CreateByHost(DfNewsResource.ContextApiResourceHost).GetStringAsync(newUrl), url);
         }
         catch (DownloadHttpRequestException)
         {
@@ -331,7 +333,8 @@ public partial class DfContentSpider
     {
         try
         {
-            var responseString = await new HttpClient().GetStringAsync(url);
+            // 页面 URL 域名不固定 ( finance/hk/stock 等站点 ) , 使用无伪装头的共享客户端
+            var responseString = await HttpClientTools.GetHttpClient().GetStringAsync(url);
             return GetDfContextInfoByHtml(url, responseString);
         }
         catch (Exception e)

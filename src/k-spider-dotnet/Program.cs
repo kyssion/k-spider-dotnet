@@ -1,13 +1,12 @@
-﻿using k_spider_dotnet_lib.job;
-using k_spider_dotnet_lib.logger;
-using k_spider_dotnet.job;
+﻿using k_spider_dotnet.job;
+using k_spider_dotnet.logger;
 using Microsoft.Extensions.Logging;
 
 namespace k_spider_dotnet;
 
 public static class Program
 {
-    private static readonly ILogger Log = LogFactory.GetLogger<SpiderJobListener>();
+    private static readonly ILogger Log = LogFactory.GetLogger<Starter>();
     private static readonly AutoResetEvent AutoEvent = new(false);
 
     public static void Main()

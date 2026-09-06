@@ -17,11 +17,5 @@
 
     <ItemGroup>
       <ProjectReference Include="..\k-spider-dotnet\k-spider-dotnet.csproj" />
-      <ProjectReference Include="..\k-spider-dotnet-lib\k-spider-dotnet-lib.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\k-spider-dotnet\k-spider-dotnet.csproj" />
-      <ProjectReference Include="..\k-spider-dotnet-lib\k-spider-dotnet-lib.csproj" />
     </ItemGroup>
 </Project>

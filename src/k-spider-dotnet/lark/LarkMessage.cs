@@ -1,11 +1,11 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using k_spider_dotnet_lib.json;
-using k_spider_dotnet_lib.logger;
+using k_spider_dotnet.json;
+using k_spider_dotnet.logger;
 using Microsoft.Extensions.Logging;
 
-namespace k_spider_dotnet_lib.lark;
+namespace k_spider_dotnet.lark;
  
 public class LarkMessage : LarkToken
 {

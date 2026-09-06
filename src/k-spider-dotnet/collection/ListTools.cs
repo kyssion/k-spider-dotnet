@@ -1,4 +1,4 @@
-namespace k_spider_dotnet_lib.collection;
+namespace k_spider_dotnet.collection;
 
 public class ListTools
 {

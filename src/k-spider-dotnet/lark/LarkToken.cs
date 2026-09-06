@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
-using k_spider_dotnet_lib.logger;
-using k_spider_dotnet_lib.time;
+using k_spider_dotnet.logger;
+using k_spider_dotnet.time;
 using Microsoft.Extensions.Logging;
 
-namespace k_spider_dotnet_lib.lark;
+namespace k_spider_dotnet.lark;
 
 public struct TenantAccessToken
 {

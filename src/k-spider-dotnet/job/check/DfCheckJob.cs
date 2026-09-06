@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using k_spider_dotnet_lib.job;
-using k_spider_dotnet_lib.logger;
+using k_spider_dotnet.job;
+using k_spider_dotnet.logger;
 using k_spider_dotnet.data;
 using k_spider_dotnet.model;
 using k_spider_dotnet.spider;
@@ -21,12 +21,6 @@ public class DfCheckJob : SpiderJob
     private const string JobDescription = "东方财富网站抓取新闻列表check任务";
 
     private static readonly ILogger Logger = LogFactory.GetLogger<DfCheckJob>();
-
-    public static void Run()
-    {
-        var item = new DfCheckJob();
-        item.Execute(null).GetAwaiter().GetResult();
-    }
 
     public override Task Execute(IJobExecutionContext context)
     {
