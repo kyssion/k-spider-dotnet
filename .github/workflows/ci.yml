@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: 构建
+        run: dotnet build k-spider-dotnet.sln
+
+      - name: 测试 ( 离线 )
+        run: dotnet test src/k-spider-test/k-spider-test.csproj --no-build
