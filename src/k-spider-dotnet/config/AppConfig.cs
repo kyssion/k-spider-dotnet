@@ -4,15 +4,23 @@ namespace k_spider_dotnet.config;
 
 /// <summary>
 ///     全局配置中心。
-///     读取优先级 : appsettings.json -> K_SPIDER_ 前缀环境变量 ( 层级用双下划线 , 如 K_SPIDER__DATABASE__CONNECTIONSTRING ) -> 代码内默认值。
-///     默认值即项目原有硬编码值 , 因此删除 appsettings.json 程序依然可以按原行为运行。
+///     读取优先级 : appsettings.json -> appsettings.{环境}.json -> K_SPIDER_ 前缀环境变量 ( 层级用双下划线 ) -> 代码内默认值。
+///     环境由 DOTNET_ENVIRONMENT 指定 ( dev / test / prod ) , 未设置时默认 dev。
 /// </summary>
 public static class AppConfig
 {
+    /// <summary>
+    ///     当前环境 : dev ( 本地默认 ) / test / prod , 打包发布时与 -p:SpiderEnvironment 对齐
+    /// </summary>
+    public static string Environment { get; } =
+        System.Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "dev";
+
     private static readonly IConfiguration Root = new ConfigurationBuilder()
         .SetBasePath(AppContext.BaseDirectory)
         .AddJsonFile("appsettings.json", true)
-        .AddEnvironmentVariables("K_SPIDER_")
+        .AddJsonFile($"appsettings.{Environment}.json", true)
+        // 前缀须含双下划线 : K_SPIDER__DATABASE__CONNECTIONSTRING -> Database:ConnectionString ( 层级用 __ )
+        .AddEnvironmentVariables("K_SPIDER__")
         .Build();
 
     /// <summary>

@@ -9,6 +9,8 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <ServerGarbageCollection>true</ServerGarbageCollection>
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+        <!-- 目标环境 ( dev / test / prod ) : 控制拷贝哪份环境配置 , 本地默认 dev ; 发布时如 dotnet publish -p:SpiderEnvironment=prod -->
+        <SpiderEnvironment Condition="'$(SpiderEnvironment)' == ''">dev</SpiderEnvironment>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
@@ -22,6 +24,10 @@
         <PackageReference Include="SqlSugarCore" Version="5.1.4.216" />
     </ItemGroup>
     <ItemGroup>
+        <!-- 基础配置 + 当前目标环境的配置文件 , 其余环境文件不进产物 ( 避免连接串互相泄漏 ) -->
         <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="appsettings.dev.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'dev'" />
+        <None Update="appsettings.test.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'test'" />
+        <None Update="appsettings.prod.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'prod'" />
     </ItemGroup>
 </Project>

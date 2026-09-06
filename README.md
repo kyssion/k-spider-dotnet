@@ -31,8 +31,8 @@ k-spider-dotnet/              仓库根 = 解决方案根
 # 1. 初始化数据库（表结构 + 触发器 + 索引）
 psql -h 127.0.0.1 -U postgres -f db/k-script-spider-datasource.sql k_script_spider
 
-# 2. 配置（默认连接 127.0.0.1:5432/k_script_spider，按需修改）
-#    方式一：编辑 src/k-spider-dotnet/appsettings.json
+# 2. 配置（默认 dev 环境连本机 127.0.0.1:5432/k_script_spider，按需修改）
+#    方式一：编辑 src/k-spider-dotnet/appsettings.dev.json
 #    方式二：环境变量，如 K_SPIDER__DATABASE__CONNECTIONSTRING=...
 
 # 3. 构建 + 测试
@@ -42,13 +42,18 @@ psql -h 127.0.0.1 -U postgres -f db/k-script-spider-datasource.sql k_script_spid
 dotnet run --project src/k-spider-dotnet
 ```
 
-配置读取优先级：`appsettings.json` → `K_SPIDER_` 前缀环境变量（层级用 `__`）→ 代码内默认值。
+配置采用多环境文件（`src/k-spider-dotnet/` 下）：`appsettings.json`（公共）+ `appsettings.dev.json`（本地 PG，默认）/ `appsettings.test.json`（测试环境）/ `appsettings.prod.json`（线上）。
+
+读取优先级：`appsettings.json` → `appsettings.{环境}.json` → `K_SPIDER_` 前缀环境变量（层级用 `__`）→ 代码内默认值。
 
 | 配置键 | 环境变量 | 说明 |
 |---|---|---|
 | `Database:ConnectionString` | `K_SPIDER__DATABASE__CONNECTIONSTRING` | 主程序 PostgreSQL 连接串 |
 | —（仅环境变量） | `K_SPIDER_REMOTE__CONNECTIONSTRING` | k-spider-sync 远端库连接串 |
 | —（仅环境变量） | `K_SPIDER_LOCAL__CONNECTIONSTRING` | k-spider-sync 本地库连接串 |
+
+- **环境切换**：`DOTNET_ENVIRONMENT=dev|test|prod`（默认 `dev`）
+- **打包只带目标环境文件**：`dotnet publish ... -p:SpiderEnvironment=prod`（产物不含其他环境的连接串）
 
 老库升级：程序启动时会自动幂等补齐 `spider_news_list.fail_count` 列与轮询部分索引，无需手工执行 SQL。
 

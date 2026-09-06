@@ -102,11 +102,24 @@ DfCheckJob (每5分钟, job/check/)
 
 ## 配置
 
-主程序配置集中在 `src/k-spider-dotnet/appsettings.json`，读取优先级：`appsettings.json` → `K_SPIDER_` 前缀环境变量（层级用双下划线）→ 代码内默认值（`AppConfig` 中，删除配置文件程序仍按原行为运行）。
+主程序配置集中在 `src/k-spider-dotnet/` 下的多环境文件：
+
+| 文件 | 环境 | 说明 |
+|---|---|---|
+| `appsettings.json` | 公共 | 基础默认值（无环境差异的键） |
+| `appsettings.dev.json` | dev（默认） | 本地 PostgreSQL（127.0.0.1/k_script_spider） |
+| `appsettings.test.json` | test | 测试环境 PG（当前暂指向线上库，留切换口子） |
+| `appsettings.prod.json` | prod | 线上 PG |
+
+读取优先级：`appsettings.json` → `appsettings.{环境}.json` → `K_SPIDER_` 前缀环境变量（层级用双下划线）→ 代码内默认值（`AppConfig` 中）。
+
+- **环境选择**：环境变量 `DOTNET_ENVIRONMENT`（取值 `dev` / `test` / `prod`），未设置默认 `dev`；`run.sh` 部署时默认导出 `prod`。
+- **本地切换环境调试**：`DOTNET_ENVIRONMENT=test dotnet run --project src/k-spider-dotnet -p:SpiderEnvironment=test`（构建与运行参数对齐，确保对应环境文件被拷贝）。
+- **打包只带目标环境文件**：`dotnet publish ... -p:SpiderEnvironment=prod`，产物只含 `appsettings.json` + `appsettings.prod.json`。
 
 | 配置键 | 环境变量 | 说明 |
 |---|---|---|
-| `Database:ConnectionString` | `K_SPIDER__DATABASE__CONNECTIONSTRING` | 主程序 PG 连接串（库 `k_script_spider`） |
+| `Database:ConnectionString` | `K_SPIDER__DATABASE__CONNECTIONSTRING` | PG 连接串（库 `k_script_spider`） |
 | —（仅环境变量） | `K_SPIDER_REMOTE__CONNECTIONSTRING` | k-spider-sync 远端库 |
 | —（仅环境变量） | `K_SPIDER_LOCAL__CONNECTIONSTRING` | k-spider-sync 本地库 |
 
