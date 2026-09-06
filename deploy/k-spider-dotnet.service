@@ -1,0 +1,20 @@
+[Unit]
+Description=k-spider-dotnet 金融数据爬虫 ( 东方财富新闻/股票 )
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# 部署目录 = dotnet publish 产物目录 , 按实际路径调整
+WorkingDirectory=/opt/k-spider
+ExecStart=/opt/k-spider/k-spider-dotnet
+# 与发布产物的环境配置对齐 ( dotnet publish -p:SpiderEnvironment=Production )
+Environment=DOTNET_ENVIRONMENT=Production
+# 股票任务依赖本地日期 , 必须为上海时区
+Environment=TZ=Asia/Shanghai
+Restart=always
+RestartSec=10
+# 日志进 journald ( journalctl -u k-spider-dotnet -f ) , 自带轮转
+SyslogIdentifier=k-spider-dotnet
+
+[Install]
+WantedBy=multi-user.target
