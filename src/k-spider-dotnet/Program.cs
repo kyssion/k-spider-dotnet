@@ -42,22 +42,22 @@ public static class Program
     /// </summary>
     private static void AddSpiderJobs(IServiceCollectionQuartzConfigurator quartz)
     {
-        quartz.AddJob<DfNewsListJob>(j => j.WithIdentity("DfNewsListJob").DisallowConcurrentExecution())
-            .AddTrigger(t => t.WithIdentity("DfNewsListJob.Trigger").ForJob("DfNewsListJob").StartNow()
+        quartz.AddJob<NewsListJob>(j => j.WithIdentity("NewsListJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("NewsListJob.Trigger").ForJob("NewsListJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever()));
 
-        quartz.AddJob<DfNewsContentOriginJob>(j => j.WithIdentity("DfNewsContentOriginJob")
+        quartz.AddJob<NewsContentOriginJob>(j => j.WithIdentity("NewsContentOriginJob")
                 .DisallowConcurrentExecution())
-            .AddTrigger(t => t.WithIdentity("DfNewsContentOriginJob.Trigger").ForJob("DfNewsContentOriginJob")
+            .AddTrigger(t => t.WithIdentity("NewsContentOriginJob.Trigger").ForJob("NewsContentOriginJob")
                 .StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInSeconds(3).RepeatForever()));
 
-        quartz.AddJob<DfNewsContentJob>(j => j.WithIdentity("DfNewsContentJob").DisallowConcurrentExecution())
-            .AddTrigger(t => t.WithIdentity("DfNewsContentJob.Trigger").ForJob("DfNewsContentJob").StartNow()
+        quartz.AddJob<NewsContentJob>(j => j.WithIdentity("NewsContentJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("NewsContentJob.Trigger").ForJob("NewsContentJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever()));
 
-        quartz.AddJob<DfCheckJob>(j => j.WithIdentity("DfCheckJob").DisallowConcurrentExecution())
-            .AddTrigger(t => t.WithIdentity("DfCheckJob.Trigger").ForJob("DfCheckJob").StartNow()
+        quartz.AddJob<NewsCheckJob>(j => j.WithIdentity("NewsCheckJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("NewsCheckJob.Trigger").ForJob("NewsCheckJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()));
 
         // 股票任务 : 按需启用 ( Cron 工作日 20:00 )

@@ -181,7 +181,7 @@ WHERE conrelid::regclass::text IN ('spider_news_list', 'spider_news_content',
                                    'stock_hk_level1_archived_daily_origin')
 ORDER BY 1, 2;
 
--- 流水线积压概况 ( 应与 DfCheckJob 日志一致 )
+-- 流水线积压概况 ( 应与 NewsCheckJob 日志一致 )
 SELECT download_status_code, count(*) AS cnt
 FROM public.spider_news_list
 WHERE from_media = 1

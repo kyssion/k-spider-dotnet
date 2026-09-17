@@ -58,7 +58,7 @@ ALTER TABLE public.stock_hk_level1_archived_daily_origin DROP CONSTRAINT IF EXIS
 
 回滚 : `ALTER TABLE ... ADD CONSTRAINT uk_cn_daily_stock UNIQUE (date, stock_id);`（大表回滚会锁表重建索引 , 低峰执行）
 
-### 2.2 升级轮询索引（服务 DfCheckJob 的 MIN(news_time)）
+### 2.2 升级轮询索引（服务 NewsCheckJob 的 MIN(news_time)）
 
 ⚠️ 必须用 `CONCURRENTLY`（普通 CREATE INDEX 建索引期间阻塞写入 , 会卡住 3 秒轮询的 origin 任务）。
 不能在事务块内执行 ; 若中途失败会留下 INVALID 索引 , 删掉重跑即可。
@@ -195,7 +195,7 @@ VACUUM (ANALYZE) public.spider_news_content;
 
 | 条目 | 暂缓原因 |
 |---|---|
-| `spider_news_list` 加 `CHECK (news_url <> '')` 约束 | 代码侧 `DfListSpider` 会产出空串 URL（缺 url 时静默降级）, 直接加约束会让整批 INSERT 抛异常、栏目持续失败。需先在 `DfNewsListJob` 过滤空 URL 并部署后 , 方可执行 |
+| `spider_news_list` 加 `CHECK (news_url <> '')` 约束 | 代码侧 `DfListSpider` 会产出空串 URL（缺 url 时静默降级）, 直接加约束会让整批 INSERT 抛异常、栏目持续失败。需先在 `NewsListJob` 过滤空 URL 并部署后 , 方可执行 |
 | 美股表改名 `daliy → daily` | 需与代码 `[SugarTable]` 同一次部署 , 单边执行会报错 ; 表当前为空不急 |
 
 ## 7. 执行后验证
@@ -206,6 +206,6 @@ SELECT indexname FROM pg_indexes WHERE tablename IN ('spider_news_list','stock_c
 -- 约束就位 / 冗余已除
 SELECT conname, conrelid::regclass FROM pg_constraint
 WHERE conrelid::regclass::text IN ('spider_news_list','spider_news_content','stock_cn_level1_archived_daily_origin');
--- 待处理积压概况（应与 DfCheckJob 日志一致）
+-- 待处理积压概况（应与 NewsCheckJob 日志一致）
 SELECT download_status_code, count(*) FROM spider_news_list WHERE from_media = 1 GROUP BY 1 ORDER BY 1;
 ```

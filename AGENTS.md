@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：从东方财富抓取新闻快讯（33 个栏目）与股票 Level1 日线快照（A股/港股），存入 PostgreSQL。解决方案共 3 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯（多源框架，当前接入东方财富 35 个栏目）与股票 Level1 日线快照（A股/港股），存入 PostgreSQL。解决方案共 3 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -52,7 +52,7 @@ src/k-spider-dotnet/
 ├── Data/                      # Pg 连接工厂 + DAO ( DI Singleton ) + Devtools/ ( 开发期工具 )
 ├── Model/                     # SqlSugar 实体（DbFirst 生成，带 Model 后缀）
 ├── Job/                       # SpiderJob 基类 + News/ + Check/ + Stock/ 全部定时任务
-├── Spider/                    # 爬虫实现：DataResource.cs（枚举/栏目分类）+ DfNews/ + DfStock/ + DfResearchReport/
+├── Spider/                    # 爬虫实现：DataResource.cs（枚举/栏目分类）+ News/（多源抽象）+ DfNews/ + DfStock/ + DfResearchReport/
 ├── Tool/                      # Html/（HtmlTools、HtmlTagName）+ Http/（HttpClient 伪装头、URL 工具）
 ├── Logger/ Json/ Collection/ Strings/ Time/   # 公共工具
 ├── Lark/                      # 飞书 SDK（当前无调用方，保留备用）
@@ -63,24 +63,25 @@ src/k-spider-dotnet/
 
 ## 核心数据流（改动前必须理解）
 
-新闻管线由三个接力 Job 组成，通过 `spider_news_list.download_status_code` 状态机驱动：
+新闻管线由三个接力 Job 组成，通过 `spider_news_list.download_status_code` 状态机驱动。
+三个 Job 都是**多源通用**的：遍历 `NewsSpiderRegistry` 里的源、或按行上的 `from_media` 分发到 `INewsSpider` 实现（东财 = `DfNewsSpider`）：
 
 ```
-DfNewsListJob (每2分钟, Job/News/)
-  逐栏目抓列表 (最多4页, 当前页无新URL即停止翻页)
+NewsListJob (每2分钟, Job/News/)
+  遍历全部源的栏目抓列表 (最多4页, 当前页无新URL即停止翻页)
   → 批量 ON CONFLICT DO NOTHING 写 spider_news_list (status=0)
 
-DfNewsContentOriginJob (每3秒, 每轮200条, 按Id先进先出)
+NewsContentOriginJob (每3秒, 每轮200条, 全源按Id先进先出)
   取 status=0 或 (status=4 且 fail_count<3)
-  → 抓文章原始 JSON → spider_news_content_origin → status=3 (失败→4, fail_count+1)
+  → 按 from_media 分发抓文章原始内容 → spider_news_content_origin → status=3 (失败→4, fail_count+1)
 
-DfNewsContentJob (每1分钟, 按Id先进先出)
+NewsContentJob (每1分钟, 按Id先进先出)
   取 status=3 或 (status=2 且 fail_count<3) , 批量预加载 origin
-  → HtmlAgilityPack 规则解析 → spider_news_content / spider_news_image_list
+  → 按 from_media 分发解析 → spider_news_content / spider_news_image_list
   → status=1 (失败→2, fail_count+1 ; origin 缺失→退回4重新下载)
 
-DfCheckJob (每5分钟, Job/Check/)
-  33 栏目接口可用性探测 + 流水线各状态数量/最老待处理新闻统计
+NewsCheckJob (每5分钟, Job/Check/)
+  各源栏目接口可用性探测 + 分源流水线各状态数量/最老待处理新闻统计
 ```
 
 状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 解析失败 / 4 下载失败`。失败态在 `fail_count < NewsPipelineConst.MaxFailCount(3)` 时自动重试；数据库异常（KDbException）不消耗重试次数。
@@ -106,6 +107,7 @@ DfCheckJob (每5分钟, Job/Check/)
 - 表结构变更：改主项目 `Model/` 实体 + `db/k-script-spider-datasource.sql` 两处；属于"增量演进"的列/索引可加到 `Pg.EnsureSpiderNewsListDbObjects()`（启动时幂等执行）。
 - 新增 NuGet 包：`Directory.Packages.props` 加 `PackageVersion` + 项目 csproj 加无版本 `PackageReference`。
 - 新增数据源爬虫参考 `Spider/DfStock/IStockSpider.cs` 的接口 + 模板方法模式；爬虫实现一律放 `Spider/` 目录。
+- **新增新闻源**：实现 `Spider/News/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（`FromTypeOfNews` 枚举加值）+ 在 `Model/` 与 DDL 无需改动（`from_media` 已在表上）。列表接口已带全文的源（快讯型）在 `GetContentOrigin` 内直接构造返回、不发起请求。
 - **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/DfNews/Playwright/`），生产新闻链路是纯 HTTP（`Tool/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。
 
 ## 配置

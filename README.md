@@ -1,12 +1,12 @@
 # k-spider-dotnet
 
-7x24 小时金融数据爬虫：抓取东方财富新闻快讯（33 个栏目）与股票 Level1 日线快照，存入 PostgreSQL，支持远端到本地的增量数据同步。
+7x24 小时金融数据爬虫：抓取财经新闻快讯（当前接入东方财富 35 个栏目，多源框架可扩展）与股票 Level1 日线快照，存入 PostgreSQL，支持远端到本地的增量数据同步。
 
 ## 功能
 
-- **新闻管线**（三段接力，状态机驱动，失败自动重试）：列表发现 → 原始 JSON 下载 → 结构化解析（段落/图片/列表/表格），按 `news_url` 全局去重。
+- **新闻管线**（三段接力，状态机驱动，失败自动重试）：列表发现 → 原始内容下载 → 结构化解析（段落/图片/列表/表格），按 `news_url` 全局去重；**多源通用**，新增源只需实现 `INewsSpider` 并注册（见 `Spider/News/`）。
 - **股票管线**：A股（沪/深北）与港股的当日 Level1 归档快照，Cron 工作日收盘后执行，按 `(date, stock_id)` 去重（默认停用，按需启用）。
-- **健康检查**：栏目接口可用性探测 + 流水线积压/失败统计（每 5 分钟）。
+- **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计（每 5 分钟）。
 - **数据搬运**：独立进程 `k-spider-sync` 将远端库的 4 张新闻表增量同步到本地（SqlSugar，单表失败不阻断其余表）。
 
 ## 解决方案结构
@@ -63,10 +63,10 @@ dotnet run --project src/k-spider-dotnet
 
 | Job | 间隔 | 说明 | 默认 |
 |---|---|---|---|
-| `DfNewsListJob` | 2 分钟 | 抓取栏目列表，批量 ON CONFLICT 写入，自适应翻页 | 启用 |
-| `DfNewsContentOriginJob` | 3 秒 | 下载文章原始 JSON（FIFO，失败重试 ≤3 次） | 启用 |
-| `DfNewsContentJob` | 1 分钟 | 解析原始 JSON 为结构化内容（失败重试 ≤3 次） | 启用 |
-| `DfCheckJob` | 5 分钟 | 栏目接口探测 + 流水线积压统计 | 启用 |
+| `NewsListJob` | 2 分钟 | 遍历全部源的栏目抓列表，批量 ON CONFLICT 写入，自适应翻页 | 启用 |
+| `NewsContentOriginJob` | 3 秒 | 按源分发下载原始内容（全源 FIFO，失败重试 ≤3 次） | 启用 |
+| `NewsContentJob` | 1 分钟 | 按源分发解析原始内容为结构化内容（失败重试 ≤3 次） | 启用 |
+| `NewsCheckJob` | 5 分钟 | 各源栏目接口探测 + 分源积压统计 | 启用 |
 | `StockCnJob` / `StockHkJob` | Cron 工作日 20:00 | 股票 Level1 日线归档 | 停用 |
 | `TransferSpiderDataJob`（sync） | 2 分钟 | 远端 → 本地增量同步 | 启用 |
 
@@ -75,17 +75,17 @@ dotnet run --project src/k-spider-dotnet
 ## 数据流
 
 ```
-东方财富列表 API ──DfNewsListJob──▶ spider_news_list (status=0)
-                                        │ DfNewsContentOriginJob (0→3 , 失败→4 可重试)
-                                        ▼
-                                  spider_news_content_origin (原始 JSON)
-                                        │ DfNewsContentJob (3→1 , 失败→2 可重试)
-                                        ▼
-                              spider_news_content (结构化片段+纯文本)
-                              spider_news_image_list (图片 URL)
+各源列表 API ──NewsListJob──▶ spider_news_list (status=0 , from_media 标识来源)
+                                   │ NewsContentOriginJob (0→3 , 失败→4 可重试)
+                                   ▼
+                             spider_news_content_origin (原始内容)
+                                   │ NewsContentJob (3→1 , 失败→2 可重试)
+                                   ▼
+                         spider_news_content (结构化片段+纯文本)
+                         spider_news_image_list (图片 URL)
 ```
 
-状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。8 张表完整 DDL 见 [db/k-script-spider-datasource.sql](db/k-script-spider-datasource.sql)。
+状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。8 张表完整 DDL 见 [db/k-script-spider-datasource.sql](db/k-script-spider-datasource.sql)。
 
 ## 部署（Linux）
 
