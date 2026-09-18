@@ -1,8 +1,18 @@
+using System.Net;
+
 namespace KSpider.Tool.Http;
 
 public static class HttpClientTools
 {
-    private static readonly HttpClient HttpClient = new HttpClient();
+    // 开启压缩响应自动解压 ( gzip/deflate/br ) , Accept-Encoding 请求头也由 handler 自动携带。
+    // 注意 : 不能手动 Add("Accept-Encoding", ...) —— 手动设置后 SocketsHttpHandler 会视为调用方自行处理压缩 , 自动解压随之失效。
+    // DecompressionMethods 暂不含 zstd , 请求头也不声明 zstd ( 避免"声明了却解不开"的乱码雷 )。
+    private static readonly HttpClientHandler DecompressHandler = new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.All
+    };
+
+    private static readonly HttpClient HttpClient = new HttpClient(DecompressHandler);
     private static readonly Object Lock = new object();
     private static readonly Dictionary<string, HttpClient> HostClientMap = new Dictionary<string, HttpClient>();
     // 使用host创建新的HttpClient
@@ -14,10 +24,10 @@ public static class HttpClientTools
             {
                 return httpClient;
             }
-            httpClient = new HttpClient();
+            httpClient = new HttpClient(DecompressHandler);
             httpClient.DefaultRequestHeaders.Add("Accept",
                 "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
-            httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip,deflate,br,zstd");
+            // Accept-Encoding 不在此手动设置 , 由 DecompressHandler 自动携带 ( 见上 )
             httpClient.DefaultRequestHeaders.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
             httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
             httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
