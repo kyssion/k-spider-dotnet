@@ -6,7 +6,7 @@ namespace KSpider.Model;
 ///     新闻信息详情表
 /// </summary>
 [SugarTable("spider_news_content")]
-public class SpiderNewsContentModel : ILongIdEntity
+public class SpiderNewsContentModel : ILongIdEntity, IUpdateTimeEntity
 {
     /// <summary>
     ///     Desc:

@@ -37,7 +37,7 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 | 项目 | 类型 | 职责 |
 |---|---|---|
 | `src/k-spider-dotnet` | Exe | 主爬虫：新闻/股票抓取、解析、落库、Quartz 托管调度；含 Playwright（特殊页面抓取与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
-| `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 4 张新闻表按 Id 增量同步到本地，引用主项目实体 |
+| `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 4 张新闻表同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
 | `src/k-spider-test` | 类库 | MSTest 单元测试（全部离线） |
 
 依赖方向：`k-spider-sync → k-spider-dotnet`（复用 `Model/` 实体、`Data/Pg` 连接工厂与 `Job/SpiderJob` 基类）；test 引用主项目。**实体只有一套**（主项目 `Model/`）。

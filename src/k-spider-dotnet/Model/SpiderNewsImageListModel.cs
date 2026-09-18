@@ -6,7 +6,7 @@ namespace KSpider.Model;
 ///     爬虫详情中的图片信息记录
 /// </summary>
 [SugarTable("spider_news_image_list")]
-public class SpiderNewsImageListModel : ILongIdEntity
+public class SpiderNewsImageListModel : ILongIdEntity, IUpdateTimeEntity
 {
     /// <summary>
     ///     Desc:

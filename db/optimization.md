@@ -85,6 +85,23 @@ ALTER TABLE public.spider_news_list ALTER COLUMN news_from TYPE varchar(100);
 
 注意 : 扩宽容易缩窄难（若已有超 30 字符数据 , 缩回 30 会失败）, 实际为单向变更。
 
+### 2.5 sync 更新通道支撑索引（远端/被拉取侧库）
+
+`k-spider-sync` 的更新通道按 `(update_time, id)` 双键水位拉取远端被更新的行（`WHERE update_time > ? ORDER BY update_time, id LIMIT`）,
+`update_time` 上无索引时每批都是全表排序。索引建在**远端（被拉取侧）库**的 4 张新闻表上 ;
+⚠️ 用 `CONCURRENTLY` 避免阻塞 origin 任务每 3 秒一次的 UPDATE。
+
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_list_update_time
+    ON public.spider_news_list (update_time, id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_content_origin_update_time
+    ON public.spider_news_content_origin (update_time, id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_content_update_time
+    ON public.spider_news_content (update_time, id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_image_list_update_time
+    ON public.spider_news_image_list (update_time, id);
+```
+
 ---
 
 ## 3. 数据质量修复（可选）
@@ -188,8 +205,8 @@ VACUUM (ANALYZE) public.spider_news_content;
 
 ## 5. 跨库提醒
 
-第 3/4 节在**远端库**执行后 , 不会经 `k-spider-sync` 传播到本地库（sync 只按 Id 增量搬新增行 , 不传播 UPDATE/DELETE）。
-两张库需**各自执行一遍** , 先后顺序不影响结果。
+第 3/4 节在**远端库**执行后 : 行内容的 UPDATE 已会经 `k-spider-sync` 的更新通道传播到本地（按 `update_time` 水位）,
+但 **DELETE 仍不传播**。删除类操作两张库需**各自执行一遍** , 先后顺序不影响结果。
 
 ## 6. 已知未收录项（暂缓 , 原因如下）
 

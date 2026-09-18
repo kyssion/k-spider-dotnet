@@ -49,6 +49,19 @@ END $$;
 -- 2.3 news_from 扩容到 100 , 与 spider_news_content 对齐 ( varchar 加宽是纯元数据操作 )
 ALTER TABLE public.spider_news_list ALTER COLUMN news_from TYPE varchar(100);
 
+-- 2.4 sync 更新通道支撑索引 : k-spider-sync 按 (update_time, id) 双键水位拉取被更新的行 ,
+--     该查询落在远端 ( 被拉取侧 ) 库 , 无索引时每批都是全表排序 ;
+--     CONCURRENTLY 建索引 , 表越大越有必要
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_list_update_time
+    ON public.spider_news_list (update_time, id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_content_origin_update_time
+    ON public.spider_news_content_origin (update_time, id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_content_update_time
+    ON public.spider_news_content (update_time, id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_news_image_list_update_time
+    ON public.spider_news_image_list (update_time, id);
+
+
 \echo '==== 3/5 数据质量修复 ( 空 URL 清理 + 摘要回填 ) ===='
 
 -- 3.1 清理空 URL 脏行 ( 顺序 : 子表在前 ; 预期各表为 0 或极少 )
