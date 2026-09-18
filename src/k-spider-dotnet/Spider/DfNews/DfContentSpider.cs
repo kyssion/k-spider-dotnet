@@ -126,7 +126,18 @@ public partial class DfContentSpider
             }
 
             if (infosNode.NodeType != HtmlNodeType.Comment)
-                switch ((HtmlTagName)Enum.Parse(typeof(HtmlTagName), ti.ToTitleCase(infosNode.Name)))
+            {
+                // 未知标签 ( iframe/figure 等 ) 跳过该片段并记日志 ,
+                // 防止源站新增标签导致整篇新闻解析失败、重试耗尽后静默丢正文
+                if (!Enum.TryParse<HtmlTagName>(ti.ToTitleCase(infosNode.Name), true, out var tagName) ||
+                    !Enum.IsDefined(typeof(HtmlTagName), tagName))
+                {
+                    Log.LogWarning("[FillContentInfoByHtmlNode] unknown html tag skip , tag : {} , url : {}",
+                        infosNode.Name, ans.NewsUrl);
+                    continue;
+                }
+
+                switch (tagName)
                 {
                     case HtmlTagName.Strong:
                         var strongImage = infosNode.SelectSingleNode(".//img");
@@ -286,6 +297,7 @@ public partial class DfContentSpider
                     default:
                         continue;
                 }
+            }
         }
 
         ans.NewsDataContent = contextDetails;

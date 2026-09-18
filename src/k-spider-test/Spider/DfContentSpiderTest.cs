@@ -73,6 +73,20 @@ public class DfContentSpiderTest
     }
 
     [TestMethod]
+    public void ParseSkipUnknownHtmlTag()
+    {
+        var spider = new DfContentSpider();
+        var info = spider.GetContentInfoByJson(
+            BuildArticleJson(
+                "<p>正文第一段。</p><iframe src=\"https://ad.example.com/video\"></iframe><figure>配图说明</figure><p>正文第二段。</p>"),
+            NewsUrl);
+
+        // 未知标签只跳过自身片段 , 前后正常段落不受影响
+        Assert.IsTrue(info.NewsDataContentText!.Contains("正文第一段。"));
+        Assert.IsTrue(info.NewsDataContentText.Contains("正文第二段。"));
+    }
+
+    [TestMethod]
     public void ParseCollectImageFromParagraph()
     {
         var spider = new DfContentSpider();
