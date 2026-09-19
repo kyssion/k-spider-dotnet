@@ -66,11 +66,44 @@ public class Pg
                     ON public.spider_news_list (download_status_code, id)
                     WHERE download_status_code IN (0, 2, 3, 4)
                 """);
+            CheckBatchUpsertUniqueIndexes(connection);
         }
         catch (Exception e)
         {
             // 启动时数据库不可用不阻断进程 , Job 轮询会持续重试
             Log.LogError("[EnsureSpiderNewsListDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
+    ///     批量 upsert 依赖的唯一索引自检。
+    ///     SpiderNewsBatchDao 的手拼 SQL 用 ON CONFLICT (列) 做去重 , 该列上必须有唯一索引 / 约束 ,
+    ///     否则 PostgreSQL 会报 "there is no unique or exclusion constraint matching the ON CONFLICT
+    ///     specification" , 而列表任务里列表行与原始内容同事务 , 异常会把整批写入一起回滚 ——
+    ///     表现为该源"一行都进不来"却不影响其它源 , 排查成本很高 , 因此启动时显式告警。
+    /// </summary>
+    private static void CheckBatchUpsertUniqueIndexes(SqlSugarClient connection)
+    {
+        var requiredIndexes = new (string Table, string Column)[]
+        {
+            ("spider_news_list", "news_url"),
+            ("spider_news_content_origin", "news_url"),
+            ("spider_news_content", "news_url"),
+            ("spider_news_image_list", "image_resource_url")
+        };
+        foreach (var (table, column) in requiredIndexes)
+        {
+            var count = connection.Ado.GetInt(
+                """
+                SELECT count(*) FROM pg_index i
+                JOIN pg_class t ON t.oid = i.indrelid
+                JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY (i.indkey)
+                WHERE t.relname = @table AND a.attname = @column AND i.indisunique
+                """, new { table, column });
+            if (count == 0)
+                Log.LogError(
+                    "[CheckBatchUpsertUniqueIndexes] 表 {Table} 的 {Column} 缺少唯一索引 , 批量 upsert 会整批失败 ( 该源将无数据落库 ) , 请按 db/k-script-spider-datasource.sql 补建",
+                    table, column);
         }
     }
 }
