@@ -1,5 +1,5 @@
 using KSpider.Spider;
-using KSpider.Spider.ClsNews;
+using KSpider.Spider.News.Flash.Cls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

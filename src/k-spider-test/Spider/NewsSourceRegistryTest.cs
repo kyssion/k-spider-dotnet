@@ -1,11 +1,11 @@
 using KSpider.Spider;
-using KSpider.Spider.ClsNews;
-using KSpider.Spider.DfNews;
-using KSpider.Spider.FlashNews;
-using KSpider.Spider.Jin10News;
-using KSpider.Spider.News;
-using KSpider.Spider.SinaNews;
-using KSpider.Spider.WscnNews;
+using KSpider.Spider.News.Flash.Cls;
+using KSpider.Spider.News.Web.Eastmoney;
+using KSpider.Spider.News.Flash;
+using KSpider.Spider.News.Flash.Jin10;
+using KSpider.Spider.News.Web;
+using KSpider.Spider.News.Flash.Sina;
+using KSpider.Spider.News.Flash.Wscn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

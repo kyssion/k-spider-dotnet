@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 using KSpider.Exceptions;
-using KSpider.Spider.DfNews;
+using KSpider.Spider.News.Web.Eastmoney;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

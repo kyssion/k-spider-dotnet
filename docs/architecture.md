@@ -93,20 +93,21 @@ src/k-spider-dotnet/
 ├── Data/             # Pg 连接工厂 + DAO ( 事务由 Job 层管理 ) + SpiderNewsBatchDao 手拼批量 SQL
 │   └── Devtools/     # DbFirst 实体生成器 ( 开发期工具 , 不参与生产 )
 ├── Model/            # SqlSugar 实体 ( DbFirst 生成 , 带 Model 后缀 ) — 全解决方案唯一实体源
-├── Job/              # SpiderJob 基类 + News/ + Check/ + Stock/ 定时任务
-├── Spider/           # 抓取与解析
-│   ├── DataResource.cs   # 来源枚举 / 状态机枚举 / 分类定义
-│   ├── News/             # 网页型抽象 : INewsSpider / NewsSpiderRegistry / 公共模型
-│   ├── FlashNews/        # 快讯型抽象 : IFlashNewsSpider / FlashNewsSpiderRegistry
-│   ├── DfNews/           # 东财新闻源 ( 含 Playwright 兜底 )
-│   ├── ClsNews/          # 财联社电报源
-│   ├── SinaNews/         # 新浪财经 7x24 快讯源
-│   ├── WscnNews/         # 华尔街见闻 live 快讯源
-│   ├── Jin10News/        # 金十数据快讯源
-│   ├── DfStock/          # 股票 Level1 归档
-│   └── DfResearchReport/ # 研报 ( 当前无调用方 )
+├── Job/              # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
+│   ├── News/Web/     #   网页型三段任务
+│   ├── News/Flash/   #   FlashNewsJob ( 15 秒 )
+│   ├── Check/        #   NewsCheckJob
+│   └── Stock/        #   StockCnJob / StockHkJob ( 默认停用 )
+├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组
+│   ├── DataResource.cs   # 中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
+│   ├── News/             # ── 新闻域 ──
+│   │   ├── NewsSpiderModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
+│   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
+│   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
+│   ├── Stock/            # ── 股票域 ── : IStockSpider + Eastmoney/ ( China/ Hk/ Usa/ )
+│   └── Report/           # ── 研报域 ── : Eastmoney/ ( 当前无调用方 , 预留扩展 )
 ├── Tool/             # Http/ ( 伪装头客户端与 URL 工具 ) + Html/ ( 标签枚举与解析工具 )
-├── Logger/ Json/ Collection/ Strings/ Time/  # 公共工具
+├── Common/           # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/
 ├── Lark/             # 飞书 SDK ( 当前无调用方 , 保留备用 )
 └── Exceptions/       # DownloadHttpException 族 + KDbException
 ```
@@ -128,8 +129,8 @@ src/k-spider-dotnet/
 
 | 要加什么 | 怎么做 |
 |---|---|
-| 新闻源 | 实现 `Spider/News/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md) |
+| 新闻源 | 实现 `Spider/News/Web/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md) |
 | 定时任务 | 继承 `Job/SpiderJob.cs`（只需实现 `Execute`）→ 构造函数注入 DAO/Pg/`ILogger<T>` → `Program.AddSpiderJobs` 加 `AddJob` + `AddTrigger` 两行（`DisallowConcurrentExecution` 必加） |
 | 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k_script_spider.sql` |
 | 同步到本地的表 | `k-spider-sync` 的 `TransferSpiderData.DoTransfer` 加一行 `SyncTableSafely<T>`（实体需实现 `ILongIdEntity` + `IUpdateTimeEntity`） |
-| 需要浏览器渲染的页面 | `Spider/DfNews/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |
+| 需要浏览器渲染的页面 | `Spider/News/Web/Eastmoney/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |

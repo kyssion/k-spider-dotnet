@@ -1,4 +1,4 @@
-using KSpider.Strings;
+using KSpider.Common.Strings;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;

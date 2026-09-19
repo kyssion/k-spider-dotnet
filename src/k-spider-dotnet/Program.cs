@@ -1,7 +1,8 @@
 using KSpider.Config;
 using KSpider.Data;
 using KSpider.Job.Check;
-using KSpider.Job.News;
+using KSpider.Job.News.Flash;
+using KSpider.Job.News.Web;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -44,9 +45,9 @@ public static class Program
     /// </summary>
     private static void AddSpiderJobs(IServiceCollectionQuartzConfigurator quartz)
     {
-        quartz.AddJob<NewsListJob>(j => j.WithIdentity("NewsListJob").DisallowConcurrentExecution())
-            .AddTrigger(t => t.WithIdentity("NewsListJob.Trigger").ForJob("NewsListJob").StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever()));
+        // quartz.AddJob<NewsListJob>(j => j.WithIdentity("NewsListJob").DisallowConcurrentExecution())
+        //     .AddTrigger(t => t.WithIdentity("NewsListJob.Trigger").ForJob("NewsListJob").StartNow()
+        //         .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever()));
 
         // 实时快讯 : 15 秒一轮 ( 发布到入库最坏延迟约 16 秒 ) ; 四源合计约 16 请求/分钟
         quartz.AddJob<FlashNewsJob>(j => j.WithIdentity("FlashNewsJob").DisallowConcurrentExecution())

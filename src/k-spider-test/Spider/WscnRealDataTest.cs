@@ -1,6 +1,6 @@
 using KSpider.Exceptions;
 using KSpider.Spider;
-using KSpider.Spider.WscnNews;
+using KSpider.Spider.News.Flash.Wscn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

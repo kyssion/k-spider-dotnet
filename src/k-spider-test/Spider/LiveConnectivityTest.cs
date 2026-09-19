@@ -1,9 +1,9 @@
 using System.Net.Sockets;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.DfNews;
-using KSpider.Spider.FlashNews;
-using KSpider.Spider.News;
+using KSpider.Spider.News.Web.Eastmoney;
+using KSpider.Spider.News.Flash;
+using KSpider.Spider.News.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
@@ -54,25 +54,25 @@ public class LiveConnectivityTest
     [TestMethod]
     public async Task ClsTelegraphLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.ClsNews.ClsNewsSpider(), "财联社电报");
+        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Cls.ClsNewsSpider(), "财联社电报");
     }
 
     [TestMethod]
     public async Task SinaLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.SinaNews.SinaNewsSpider(), "新浪 7x24");
+        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Sina.SinaNewsSpider(), "新浪 7x24");
     }
 
     [TestMethod]
     public async Task WscnLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.WscnNews.WscnNewsSpider(), "华尔街见闻 live");
+        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Wscn.WscnNewsSpider(), "华尔街见闻 live");
     }
 
     [TestMethod]
     public async Task Jin10LiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.Jin10News.Jin10NewsSpider(), "金十快讯");
+        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Jin10.Jin10NewsSpider(), "金十快讯");
     }
 
     /// <summary>

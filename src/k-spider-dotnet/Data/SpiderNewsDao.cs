@@ -1,4 +1,4 @@
-using KSpider.Logger;
+using KSpider.Common.Logger;
 using KSpider.Exceptions;
 using KSpider.Model;
 using Microsoft.Extensions.Logging;

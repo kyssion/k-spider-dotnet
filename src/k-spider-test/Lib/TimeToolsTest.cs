@@ -1,4 +1,4 @@
-using KSpider.Time;
+using KSpider.Common.Time;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;

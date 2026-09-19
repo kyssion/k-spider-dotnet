@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using KSpider.Logger;
-using KSpider.Time;
+using KSpider.Common.Logger;
+using KSpider.Common.Time;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Lark;

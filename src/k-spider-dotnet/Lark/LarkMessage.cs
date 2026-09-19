@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using KSpider.Json;
-using KSpider.Logger;
+using KSpider.Common.Json;
+using KSpider.Common.Logger;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Lark;

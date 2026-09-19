@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using KSpider.Spider;
-using KSpider.Spider.DfNews;
-using KSpider.Spider.News;
+using KSpider.Spider.News.Web.Eastmoney;
+using KSpider.Spider.News.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

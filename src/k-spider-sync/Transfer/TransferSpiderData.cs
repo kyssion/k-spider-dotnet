@@ -1,5 +1,5 @@
 using KSpider.Data;
-using KSpider.Logger;
+using KSpider.Common.Logger;
 using KSpider.Model;
 using KSpider.Sync.Job;
 using Microsoft.Extensions.Logging;

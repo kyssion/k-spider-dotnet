@@ -1,4 +1,4 @@
-using KSpider.Collection;
+using KSpider.Common.Collection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;

@@ -13,10 +13,10 @@
 
 | 市场 | 实现 | 接口市场号（`secid` 前缀） | 库内 `exchange_channel` |
 |---|---|---|---|
-| 上海 | `Spider/DfStock/China/ShStockSpider.cs` | `1` | `1` (`ShangHStockExchangeChannel`) |
-| 深圳 / 北交所 | `Spider/DfStock/China/SzBjStockSpider.cs` | `0` | `0` (`SzBjStockExchangeChannel`) |
-| 港股 | `Spider/DfStock/Hk/HkStockSpider.cs` | `116`（实现内硬编码） | `2` (`HkStockExchangeChannel`) |
-| 美股 | `Spider/DfStock/Usa/UsaStockSpider.cs` | — | `3` (`UsaStockExchangeChannel`) |
+| 上海 | `Spider/Stock/Eastmoney/China/ShStockSpider.cs` | `1` | `1` (`ShangHStockExchangeChannel`) |
+| 深圳 / 北交所 | `Spider/Stock/Eastmoney/China/SzBjStockSpider.cs` | `0` | `0` (`SzBjStockExchangeChannel`) |
+| 港股 | `Spider/Stock/Eastmoney/Hk/HkStockSpider.cs` | `116`（实现内硬编码） | `2` (`HkStockExchangeChannel`) |
+| 美股 | `Spider/Stock/Eastmoney/Usa/UsaStockSpider.cs` | — | `3` (`UsaStockExchangeChannel`) |
 
 > 注意：库内渠道枚举与接口市场号**不是同一套值**——沪 / 深北恰好一致，港股库内是 `2`、接口要 `116`。
 > 加新市场时别直接拿枚举值去拼 `secid`。
@@ -53,4 +53,4 @@ stock_{cn,hk}_level1_archived_daily_origin  ( 唯一键 (date, stock_id) , upser
 - Cron 是工作日 20:00，**依赖服务器时区**：UTC 服务器上会在错误的日期抓取。systemd 模板已设 `TZ=Asia/Shanghai`，自管进程需要自行确认。
 - 日期取 `DateTime.Today`，同样依赖时区。
 - `StockUsaJob`、`UsaStockSpider`（空类，只留了一段富途接口的抓包样例注释）与 `stock_usa_level1_archived_daliy_origin`（表名与实体里的 `daliy` 是历史笔误，已成事实契约）当前**未接入**：Job 类不是 `SpiderJob`、没有 DI 注册也没有调用方。
-- `Spider/DfStock/Devtools/` 是一次性下载工具，不参与生产链路。
+- `Spider/Stock/Eastmoney/Devtools/` 是一次性下载工具，不参与生产链路。

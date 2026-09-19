@@ -1,7 +1,7 @@
 using KSpider.Data;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.DfStock.China;
+using KSpider.Spider.Stock.Eastmoney.China;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SqlSugar;

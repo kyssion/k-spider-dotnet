@@ -1,8 +1,8 @@
 using KSpider.Data;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.DfStock;
-using KSpider.Spider.DfStock.Hk;
+using KSpider.Spider.Stock;
+using KSpider.Spider.Stock.Eastmoney.Hk;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SqlSugar;

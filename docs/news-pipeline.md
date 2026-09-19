@@ -108,15 +108,15 @@ public interface INewsSpider
 > 接收该栏目的 `category`（否则多栏目会写成同一个分类号）、并在 `Columns` 里注册。
 > 这是把一个源"从壳子做成完整源"的工作，见下"源成熟度"。
 
-### 东方财富（`Spider/DfNews/`）
+### 东方财富（`Spider/News/Web/Eastmoney/`）
 
 - 列表：`np-listapi.eastmoney.com/comm/web/getNewsByColumns`，按 `column`（栏目号）+ `page_index` 翻页。
 - 正文：由新闻页 URL 反推文章号（兼容 `/news/<栏目号>,<文章号>.html` 与 `/a/<文章号>.html` 两种形态）再请求详情接口，返回 HTML 片段后用 HtmlAgilityPack 解析成结构化片段。
 - 详情页有三种模板（`contentwrap` / `newsContent` / `content_text`），解析器按序探测，都匹配不上才判失败。
 - **时间格式强绑定**：列表接口 `yyyy-MM-dd HH:mm:ss`，详情接口 `yyyy/MM/dd HH:mm:ss`，格式不匹配会抛 `FormatException` 并计入解析失败。
-- 播放兜底：`Spider/DfNews/Playwright/` 保留浏览器渲染能力（栏目自检用），生产链路是纯 HTTP。
+- 播放兜底：`Spider/News/Web/Eastmoney/Playwright/` 保留浏览器渲染能力（栏目自检用），生产链路是纯 HTTP。
 
-### 财联社电报（`Spider/ClsNews/`）
+### 财联社电报（`Spider/News/Flash/Cls/`）
 
 - 端点：`www.cls.cn/v1/roll/get_roll_list`，参数 `app=CailianpressWeb&os=web&sv=8.7.9&refresh_type=1&rn=&last_time=`。
 - **签名**：`sign = MD5(SHA1(参数按 key 升序拼接的 query))`，拼接不做 URL 编码、空值参数丢弃；`sv`（前端版本号）参与签名，财联社升级前端后需要同步更新（失效表现：`errno 10012`）。算法与实测向量锁在 `ClsSignature` 与 `ClsNewsSpiderTest.SignMatchesVerifiedVector`。
@@ -125,21 +125,21 @@ public interface INewsSpider
 - 字段映射：`news_url = https://www.cls.cn/detail/{id}`（不用响应里的 `shareurl`，它带 `sv` 参数、版本一变去重键就变）；标题为空时用 `brief` 兜底（约半数电报没有标题）；`ctime` 是 unix 秒，固定按东八区换算，不依赖宿主时区；`subjects[].subject_name` 拼成关键字。
 - 实测量级：约 370 条/天，50 条约覆盖 3.3 小时；图片属低频（50 条里约 1 条带图）。
 
-### 新浪财经 7x24（`Spider/SinaNews/`）
+### 新浪财经 7x24（`Spider/News/Flash/Sina/`）
 
 - 端点：`zhibo.sina.com.cn/api/zhibo/feed`，参数 `page` / `page_size` / `zhibo_id=152` / `tag_id=0` / `dire=f` / `dpc=1`；无需鉴权，`page_size` 实测可到 100。
 - 正文在 `rich_text`，约 86% 以 `【标题】` 开头——解析时取【】内为标题，其余用正文前 60 字兜底。
 - `docurl` 是详情页地址（清单唯一键）；实测约 1% 条目缺 `docurl`，此时用合成去重键 `https://finance.sina.com.cn/7x24/#feed-{id}`。
 - `tag[].name` 是业务标签（公司 / 宏观 / 央行 / 市场 等）写进关键字；正文是纯文本，图片在 `multimedia` 字段（实测 100 条仅 1 条非空），v1 不解析。
 
-### 华尔街见闻 live（`Spider/WscnNews/`）
+### 华尔街见闻 live（`Spider/News/Flash/Wscn/`）
 
 - 端点：`api-one.wallstcn.com/apiv1/content/lives`，参数 `channel=global-channel` / `client=pc` / `limit`；无需鉴权。
 - 翻页直接用响应的 `data.next_cursor`（不含边界，两页无重叠）。
 - 字段映射：`news_url` 取 `uri`；正文用 `content_text`（纯文本，接口同时给了 `content` 的 HTML 形态，避免再解析一次）；`display_time` 是 unix 秒，固定按东八区换算；`images` 数组产图片记录。
 - 约 1/3 条目没有 `title`，用正文前 60 字兜底；关键字只用业务 `tags`，频道 `channels` 是内部英文 slug 不放进关键字（原始 JSON 里保留）。
 
-### 金十数据快讯（`Spider/Jin10News/`）
+### 金十数据快讯（`Spider/News/Flash/Jin10/`）
 
 - 端点：`flash-api.jin10.com/get_flash_list`，参数 `channel=-8200`（全部快讯）/ `vip=1`，翻页用 `max_time=<时间串>`（URL 编码）。
 - **必须带 `x-app-id` / `x-version` 两个头**，否则返回 502；两个值写在 `Jin10NewsResource`，被拒时对照网页端请求更新。
