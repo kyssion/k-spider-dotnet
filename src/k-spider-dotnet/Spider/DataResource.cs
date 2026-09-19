@@ -145,7 +145,16 @@ public enum FromTypeOfNews
     DfMedia = 1,
 
     // 财联社 ( 电报 )
-    ClsMedia = 2
+    ClsMedia = 2,
+
+    // 新浪财经 ( 7x24 快讯 )
+    SinaMedia = 3,
+
+    // 华尔街见闻 ( live 快讯 )
+    WscnMedia = 4,
+
+    // 金十数据 ( 快讯 )
+    Jin10Media = 5
 }
 
 public enum NewsDownloadStatusCode

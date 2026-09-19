@@ -1,5 +1,8 @@
 using KSpider.Spider.ClsNews;
 using KSpider.Spider.DfNews;
+using KSpider.Spider.Jin10News;
+using KSpider.Spider.SinaNews;
+using KSpider.Spider.WscnNews;
 
 namespace KSpider.Spider.News;
 
@@ -11,7 +14,10 @@ public static class NewsSpiderRegistry
     private static readonly Dictionary<FromTypeOfNews, INewsSpider> Map = new()
     {
         { FromTypeOfNews.DfMedia, new DfNewsSpider() },
-        { FromTypeOfNews.ClsMedia, new ClsNewsSpider() }
+        { FromTypeOfNews.ClsMedia, new ClsNewsSpider() },
+        { FromTypeOfNews.SinaMedia, new SinaNewsSpider() },
+        { FromTypeOfNews.WscnMedia, new WscnNewsSpider() },
+        { FromTypeOfNews.Jin10Media, new Jin10NewsSpider() }
     };
 
     /// <summary>
