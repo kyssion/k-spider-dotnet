@@ -1,4 +1,5 @@
 using KSpider.Json;
+using KSpider.Spider.News;
 using KSpider.Time;
 using KSpider.Model;
 using KSpider.Tool.Http;
@@ -14,7 +15,7 @@ public class DfContentInfo
 
     public string? NewsTime { get; set; } // 新闻添加时间
     public string? NewsFrom { get; set; } // 新闻原始来源
-    public List<DfContextDetailInfo> NewsDataContent { get; set; } = new(); // 内容结构化片段
+    public List<NewsContentSegment> NewsDataContent { get; set; } = new(); // 内容结构化片段
     public string? NewsDataContentText { get; set; } // 内容纯文本
     public string? NewsUrl { get; set; } // 新闻原始url
 
@@ -37,25 +38,6 @@ public class DfContentInfo
         };
         return model;
     }
-}
-
-// 单个正文片段 ( 段落/图片/表格/列表 )
-public class DfContextDetailInfo
-{
-    /// <summary>
-    ///     内容类型常量 , 保持字符串形式以兼容已入库的 news_content_json 数据
-    /// </summary>
-    public const string TextType = "TEXT";
-    public const string ImgType = "IMG";
-    public const string TableType = "TABLE";
-    public const string UlType = "UL";
-    public const string OtherType = "OTHER";
-
-    public string? TagType { get; set; } // 原始结构标签
-    public string? Value { get; set; } // 原始结构文本内容
-    public string? ValueType { get; set; } // 内容类型 ( 上述常量 )
-
-    public string? ResourceUri { get; set; } // 如果是图片等资源的 Uri地址
 }
 
 // 列表接口的单条新闻

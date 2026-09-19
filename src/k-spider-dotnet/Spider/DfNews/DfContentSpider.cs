@@ -7,6 +7,7 @@ using KSpider.Json;
 using KSpider.Logger;
 using KSpider.Exceptions;
 using KSpider.Spider.DfNews.Model;
+using KSpider.Spider.News;
 using KSpider.Tool.Html;
 using KSpider.Tool.Http;
 using Microsoft.Extensions.Logging;
@@ -20,10 +21,19 @@ public partial class DfContentSpider
     [GeneratedRegex(@"\s")]
     private static partial Regex FillWriteLine();
 
-    public async Task<DfNewsContentOrigin> GetDfContentOriginInfoByInterface(string url)
+    /// <summary>
+    ///     从新闻页 URL 提取详情接口的文章参数
+    ///     真实 URL 有两种形态 : /news/1345,202609183878840472.html 与 /a/202609061234567.html
+    /// </summary>
+    public static string GetArticleParamFromUrl(string url)
     {
         var lastPath = HttpUrlTools.GetUrlLastPath(url);
-        var paramsNumber = lastPath.Split(".", 2)[0].Split(",", 2)[^1];
+        return lastPath.Split(".", 2)[0].Split(",", 2)[^1];
+    }
+
+    public async Task<DfNewsContentOrigin> GetDfContentOriginInfoByInterface(string url)
+    {
+        var paramsNumber = GetArticleParamFromUrl(url);
         var ans = new DfNewsContentOrigin
         {
             NewsUrl = url,
@@ -53,8 +63,7 @@ public partial class DfContentSpider
 
     public async Task<DfContentInfo> GetDfContextInfoByUrlInterface(string url)
     {
-        var lastPath = HttpUrlTools.GetUrlLastPath(url);
-        var paramsNumber = lastPath.Split(".", 2)[0].Split(",", 2)[^1];
+        var paramsNumber = GetArticleParamFromUrl(url);
         var newUrl = string.Format(DfNewsResource.RequestDfContextUrl, paramsNumber,
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         try
@@ -105,7 +114,7 @@ public partial class DfContentSpider
     private DfContentInfo GetDetailInfoByHtml(HtmlNode htmlDoc, DfContentInfo ans)
     {
         var txtInfNodes = htmlDoc.ChildNodes;
-        var contextDetails = new List<DfContextDetailInfo>();
+        var contextDetails = new List<NewsContentSegment>();
         var ti = CultureInfo.CurrentCulture.TextInfo;
         string detailValues;
         foreach (var infosNode in txtInfNodes)
@@ -116,11 +125,11 @@ public partial class DfContentSpider
             {
                 detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                 if (detailValues == "") continue;
-                contextDetails.Add(new DfContextDetailInfo
+                contextDetails.Add(new NewsContentSegment
                 {
                     TagType = HtmlTagName.Table.ToString(),
                     Value = infosNode.InnerText,
-                    ValueType = DfContextDetailInfo.TextType
+                    ValueType = NewsContentSegment.TextType
                 });
                 continue;
             }
@@ -145,21 +154,21 @@ public partial class DfContentSpider
                         {
                             detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                             if (detailValues == "") continue;
-                            contextDetails.Add(new DfContextDetailInfo
+                            contextDetails.Add(new NewsContentSegment
                             {
                                 TagType = HtmlTagName.Table.ToString(),
                                 Value = infosNode.InnerText,
-                                ValueType = DfContextDetailInfo.OtherType
+                                ValueType = NewsContentSegment.OtherType
                             });
                             continue;
                         }
 
                         var strongUrl = strongImage.Attributes["src"].Value;
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Center.ToString(),
                             Value = "",
-                            ValueType = DfContextDetailInfo.ImgType,
+                            ValueType = NewsContentSegment.ImgType,
                             ResourceUri = strongUrl
                         });
                         break;
@@ -169,11 +178,11 @@ public partial class DfContentSpider
                         {
                             detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                             if (detailValues == "") continue;
-                            contextDetails.Add(new DfContextDetailInfo
+                            contextDetails.Add(new NewsContentSegment
                             {
                                 TagType = HtmlTagName.Table.ToString(),
                                 Value = infosNode.InnerText,
-                                ValueType = DfContextDetailInfo.OtherType
+                                ValueType = NewsContentSegment.OtherType
                             });
                             continue;
                         }
@@ -182,11 +191,11 @@ public partial class DfContentSpider
                         var liList = liNodes.Select(
                             liNode => liNode.InnerText
                         ).ToList();
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Table.ToString(),
                             Value = JsonUtil.GetJson(liList),
-                            ValueType = DfContextDetailInfo.UlType
+                            ValueType = NewsContentSegment.UlType
                         });
                         break;
                     case HtmlTagName.Table:
@@ -197,22 +206,22 @@ public partial class DfContentSpider
                             into childNodes
                             where childNodes.Count != 0
                             select childNodes.Select(tdNode => tdNode.InnerText).ToList()).ToList();
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Table.ToString(),
                             Value = JsonUtil.GetJson(tableDataList),
-                            ValueType = DfContextDetailInfo.TableType
+                            ValueType = NewsContentSegment.TableType
                         });
                         break;
                     case HtmlTagName.Center:
                         var imgItem = infosNode.SelectSingleNode(".//img");
                         if (imgItem == null) continue;
                         var imgUrl = imgItem.Attributes["src"].Value;
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Center.ToString(),
                             Value = "",
-                            ValueType = DfContextDetailInfo.ImgType,
+                            ValueType = NewsContentSegment.ImgType,
                             ResourceUri = imgUrl
                         });
                         break;
@@ -222,11 +231,11 @@ public partial class DfContentSpider
                         if (pImgItem != null)
                         {
                             var pImgItemUrl = pImgItem.Attributes["src"].Value;
-                            contextDetails.Add(new DfContextDetailInfo
+                            contextDetails.Add(new NewsContentSegment
                             {
                                 TagType = HtmlTagName.P.ToString(),
                                 Value = "",
-                                ValueType = DfContextDetailInfo.ImgType,
+                                ValueType = NewsContentSegment.ImgType,
                                 ResourceUri = pImgItemUrl
                             });
                         }
@@ -234,11 +243,11 @@ public partial class DfContentSpider
                         {
                             detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                             if (detailValues == "" || detailValues.StartsWith("主力资金加仓名单实时更新")) continue;
-                            contextDetails.Add(new DfContextDetailInfo
+                            contextDetails.Add(new NewsContentSegment
                             {
                                 TagType = HtmlTagName.P.ToString(),
                                 Value = detailValues,
-                                ValueType = DfContextDetailInfo.TextType
+                                ValueType = NewsContentSegment.TextType
                             });
                         }
 
@@ -252,32 +261,32 @@ public partial class DfContentSpider
                     case HtmlTagName.H6:
                         detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                         if (detailValues == "") continue;
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.H.ToString(),
                             Value = detailValues,
-                            ValueType = DfContextDetailInfo.TextType
+                            ValueType = NewsContentSegment.TextType
                         });
                         break;
                     case HtmlTagName.Span:
                         detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                         if (detailValues == "") continue;
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Span.ToString(),
                             Value = detailValues,
-                            ValueType = DfContextDetailInfo.TextType
+                            ValueType = NewsContentSegment.TextType
                         });
                         break;
                     case HtmlTagName.Pre:
                         imgItem = infosNode.SelectSingleNode(".//img");
                         if (imgItem == null) continue;
                         imgUrl = imgItem.Attributes["src"].Value;
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Center.ToString(),
                             Value = "",
-                            ValueType = DfContextDetailInfo.ImgType,
+                            ValueType = NewsContentSegment.ImgType,
                             ResourceUri = imgUrl
                         });
                         break;
@@ -287,11 +296,11 @@ public partial class DfContentSpider
                             infosNode.InnerHtml, ans.NewsUrl);
                         detailValues = FillWriteLine().Replace(infosNode.InnerText, "");
                         if (detailValues == "") continue;
-                        contextDetails.Add(new DfContextDetailInfo
+                        contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Span.ToString(),
                             Value = detailValues,
-                            ValueType = DfContextDetailInfo.TextType
+                            ValueType = NewsContentSegment.TextType
                         });
                         break;
                     default:
@@ -305,10 +314,10 @@ public partial class DfContentSpider
         foreach (var detailItem in contextDetails)
             switch (detailItem.ValueType)
             {
-                case DfContextDetailInfo.TextType:
+                case NewsContentSegment.TextType:
                     current.Append(detailItem.Value).Append('\n');
                     break;
-                case DfContextDetailInfo.TableType:
+                case NewsContentSegment.TableType:
                     current.Append(detailItem.Value).Append('\n');
                     break;
                 default:
@@ -322,11 +331,11 @@ public partial class DfContentSpider
 
     // 下载图片信息
     private List<HtmlImageTools.ImgInfo> GetAllContextDetailAndImgInfoList(string baseUrl,
-        IReadOnlyList<DfContextDetailInfo> contextDetails)
+        IReadOnlyList<NewsContentSegment> contextDetails)
     {
         var imgUrlList = new List<HtmlImageTools.ImgInfo>();
         foreach (var detailInfo in contextDetails)
-            if (detailInfo is { ValueType: DfContextDetailInfo.ImgType, ResourceUri: not null })
+            if (detailInfo is { ValueType: NewsContentSegment.ImgType, ResourceUri: not null })
                 imgUrlList.Add(new HtmlImageTools.ImgInfo
                 {
                     ResourceUrl = detailInfo.ResourceUri,

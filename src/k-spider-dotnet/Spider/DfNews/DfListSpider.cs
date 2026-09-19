@@ -41,27 +41,7 @@ public class DfListSpider
         try
         {
             var responseString = await HttpClientTools.CreateByHost(DfNewsResource.ListResourceHost).GetStringAsync(urlNow);
-
-            var forecastNode = JsonNode.Parse(responseString)!;
-            var jsonData = forecastNode["data"];
-            if (jsonData?["list"] == null) throw new Exception("not find date");
-
-            var jsonDataList = (JsonArray)jsonData["list"]!;
-
-            var ans = jsonDataList.OfType<JsonNode>()
-                .Select(dataItem => new DfListInfo
-                {
-                    NewsUrl = dataItem["url"]?.ToString() ?? "",
-                    NewsTitle = dataItem["title"]?.ToString() ?? "",
-                    NewsSummary = dataItem["summary"]?.ToString() ?? "",
-                    NewsTime = dataItem["showTime"]?.ToString() ?? "",
-                    FromMedia = FromTypeOfNews.DfMedia,
-                    NewsFrom = dataItem["mediaName"]?.ToString() ?? "",
-                    NewsDownloadTime = DateTime.Now,
-                    Category = dfListResourceInfo.CategoryInfo.CategoryNumber
-                })
-                .ToList();
-            return ans;
+            return ParseListResponse(responseString, dfListResourceInfo.CategoryInfo.CategoryNumber);
         }
         catch (Exception e)
         {
@@ -72,5 +52,31 @@ public class DfListSpider
             Log.LogError(message);
             throw new HtmlFormException(urlNow, message, e);
         }
+    }
+
+    /// <summary>
+    ///     解析列表接口响应 ( 独立成公开静态方法供离线测试 )
+    /// </summary>
+    public static List<DfListInfo> ParseListResponse(string responseString, int categoryNumber)
+    {
+        var forecastNode = JsonNode.Parse(responseString)!;
+        var jsonData = forecastNode["data"];
+        if (jsonData?["list"] == null) throw new Exception("not find date");
+
+        var jsonDataList = (JsonArray)jsonData["list"]!;
+
+        return jsonDataList.OfType<JsonNode>()
+            .Select(dataItem => new DfListInfo
+            {
+                NewsUrl = dataItem["url"]?.ToString() ?? "",
+                NewsTitle = dataItem["title"]?.ToString() ?? "",
+                NewsSummary = dataItem["summary"]?.ToString() ?? "",
+                NewsTime = dataItem["showTime"]?.ToString() ?? "",
+                FromMedia = FromTypeOfNews.DfMedia,
+                NewsFrom = dataItem["mediaName"]?.ToString() ?? "",
+                NewsDownloadTime = DateTime.Now,
+                Category = categoryNumber
+            })
+            .ToList();
     }
 }

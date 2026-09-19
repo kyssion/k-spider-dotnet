@@ -20,8 +20,9 @@ public interface INewsSpider
 
     /// <summary>
     ///     抓取指定栏目的一页列表 , 返回归一化后的列表实体 ( 不落库 )
+    ///     cursor 为上一页返回的 NextCursor , 首页传 null ; 页码翻页与时间游标翻页的源都走这一个入口
     /// </summary>
-    Task<List<SpiderNewsListModel>> GetListPage(NewsColumn column, int pageNumber, int pageSize);
+    Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor);
 
     /// <summary>
     ///     下载单条新闻的原始内容

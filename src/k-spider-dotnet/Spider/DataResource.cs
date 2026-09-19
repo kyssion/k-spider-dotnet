@@ -142,7 +142,10 @@ public struct NewsCategory
 public enum FromTypeOfNews
 {
     // 东方财富
-    DfMedia = 1
+    DfMedia = 1,
+
+    // 财联社 ( 电报 )
+    ClsMedia = 2
 }
 
 public enum NewsDownloadStatusCode

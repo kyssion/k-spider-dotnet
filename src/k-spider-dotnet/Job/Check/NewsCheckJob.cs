@@ -31,8 +31,8 @@ public class NewsCheckJob(Pg pg, ILogger<NewsCheckJob> logger) : SpiderJob
         foreach (var column in spider.Columns)
             try
             {
-                var newsList = await spider.GetListPage(column, 1, 10);
-                if (newsList.Count == 0) throw new Exception("not find date");
+                var listPage = await spider.GetListPage(column, 10, null);
+                if (listPage.Items.Count == 0) throw new Exception("接口未返回数据");
             }
             catch (Exception e)
             {

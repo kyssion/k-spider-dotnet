@@ -16,6 +16,25 @@ public sealed class NewsColumn(string columnId, string columnName)
 }
 
 /// <summary>
+///     一页列表结果 : 列表项 + 可选的内联原始内容 + 下一页游标
+/// </summary>
+public class NewsListPage
+{
+    public List<SpiderNewsListModel> Items { get; init; } = [];
+
+    /// <summary>
+    ///     列表接口已带全文的源 ( 快讯型 ) 在此同时给出原始内容 , 由列表任务与列表行同一事务落库
+    ///     需要详情页的源保持为空
+    /// </summary>
+    public List<NewsContentOrigin> InlineOrigins { get; init; } = [];
+
+    /// <summary>
+    ///     下一页游标 , null = 没有更多 ; 游标对任务不透明 , 由各源自行解释 ( 东财 = 页码 , 财联社 = last_time )
+    /// </summary>
+    public string? NextCursor { get; init; }
+}
+
+/// <summary>
 ///     单条新闻的原始内容 ( 未解析 )
 /// </summary>
 public class NewsContentOrigin
@@ -41,6 +60,27 @@ public class NewsContentOrigin
             Message = Message
         };
     }
+}
+
+/// <summary>
+///     单个正文片段 ( 段落 / 图片 / 表格 / 列表 ) , 各源的 news_content_json 共用同一份结构
+/// </summary>
+public class NewsContentSegment
+{
+    /// <summary>
+    ///     内容类型常量 , 保持字符串形式以兼容已入库的 news_content_json 数据
+    /// </summary>
+    public const string TextType = "TEXT";
+    public const string ImgType = "IMG";
+    public const string TableType = "TABLE";
+    public const string UlType = "UL";
+    public const string OtherType = "OTHER";
+
+    public string? TagType { get; set; } // 原始结构标签
+    public string? Value { get; set; } // 原始结构文本内容
+    public string? ValueType { get; set; } // 内容类型 ( 上述常量 )
+
+    public string? ResourceUri { get; set; } // 如果是图片等资源的 Uri地址
 }
 
 /// <summary>

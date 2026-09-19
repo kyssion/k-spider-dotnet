@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using KSpider.Spider.DfNews.Model;
+using KSpider.Spider.News;
 using KSpider.Tool.Html;
 using KSpider.Tool.Http;
 using Microsoft.Playwright;
@@ -117,7 +118,7 @@ public partial class DfContextSpiderWithPlaywright(IPlaywright playwright)
             var nodeTypeStr = nodeType.ToString() ?? throw new InvalidOperationException();
             if (!Enum.IsDefined(typeof(HtmlTagName), nodeTypeStr)) continue;
 
-            var valueItem = new DfContextDetailInfo();
+            var valueItem = new NewsContentSegment();
             switch ((HtmlTagName)Enum.Parse(typeof(HtmlTagName), nodeTypeStr))
             {
                 case HtmlTagName.Div:
