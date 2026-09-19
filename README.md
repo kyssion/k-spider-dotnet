@@ -1,11 +1,11 @@
 # k-spider-dotnet
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯（当前接入东方财富 35 个栏目、财联社电报，多源框架可扩展）与股票 Level1 日线快照，存入 PostgreSQL，支持远端到本地的增量数据同步。
+7x24 小时金融数据爬虫：抓取财经新闻快讯（当前接入东方财富 35 个栏目、财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯，多源框架可扩展）与股票 Level1 日线快照，存入 PostgreSQL，支持远端到本地的增量数据同步。
 
 ## 功能
 
 - **新闻管线**（三段接力，状态机驱动，失败自动重试）：列表发现 → 原始内容下载 → 结构化解析（段落/图片/列表/表格），按 `news_url` 全局去重；**多源通用**，新增源只需实现 `INewsSpider` 并注册（见 `Spider/News/`）。列表接口已带全文的源（快讯型，如财联社电报）由列表任务直接把原始内容与列表行同事务落库、跳过下载阶段。
-- **已接入新闻源**：东方财富（`DfNewsSpider`，35 个栏目，页码翻页 + 详情接口）、财联社电报（`ClsNewsSpider`，时间游标翻页、列表即全文，日均约 370 条）。
+- **已接入新闻源**：东方财富（`DfNewsSpider`，35 个栏目，页码翻页 + 详情接口）、财联社电报（`ClsNewsSpider`）、新浪财经 7x24（`SinaNewsSpider`）、华尔街见闻 live（`WscnNewsSpider`）、金十数据快讯（`Jin10NewsSpider`）——后四个都是"列表即全文"的快讯型源，原始内容随列表落库、跳过下载阶段。
 - **股票管线**：A股（沪/深北）与港股的当日 Level1 归档快照，Cron 工作日收盘后执行，按 `(date, stock_id)` 去重（默认停用，按需启用）。
 - **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计（每 5 分钟）。
 - **数据搬运**：独立进程 `k-spider-sync` 将远端库的 4 张新闻表增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
@@ -16,6 +16,7 @@
 k-spider-dotnet/                 仓库根 = 解决方案根
 ├── db/                          DDL + 优化 SQL（k-script-spider-datasource.sql / optimization.sql + 手册）
 ├── deploy/                      systemd 服务模板
+├── docs/                        设计文档（设计原则 / 架构 / 新闻管线 / 股票管线 / 数据模型 / 运维手册）
 ├── scripts/                     verify.sh 一键验证
 ├── .github/workflows/ci.yml     CI（push/PR 构建测试）
 ├── Directory.Build.props        公共构建属性（net10.0 / Nullable 等）
@@ -100,7 +101,8 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 ## AI 辅助开发
 
 - **[AGENTS.md](AGENTS.md)**：AI 代理操作手册（结构、命令、约定、扩展套路、已知坑），ZCode / Claude Code / Cursor 自动读取。
+- **[docs/](docs/README.md)**：面向维护者的设计文档（[设计原则](docs/principles.md) / [架构](docs/architecture.md) / [新闻管线](docs/news-pipeline.md) / [股票管线](docs/stock-pipeline.md) / [数据模型](docs/data-model.md) / [运维手册](docs/operations.md)），含"代码变更 → 必须更新哪份文档"的映射。
 - **全部测试**：`dotnet test src/k-spider-test/k-spider-test.csproj` —— 含真实接口连通性用例（直接请求两源线上 URL，验证能调通、能拿到数据集、能解析；断网时自动跳过）。
 - **离线测试**：`dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"` 不依赖网络与数据库，基于 `TestData/` 里的真实响应夹具做解析回归。
 - **连通性排障**：`dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"`（源改版、财联社签名失效时先跑它）。
-- **一键验证**：`./scripts/verify.sh` = 构建 + 离线测试（CI 同款）。
+- **一键验证**：`./scripts/verify.sh` = 文档链接检查 + 构建 + 离线测试（CI 同款）。

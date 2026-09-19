@@ -3,7 +3,10 @@ using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.ClsNews;
 using KSpider.Spider.DfNews;
+using KSpider.Spider.Jin10News;
 using KSpider.Spider.News;
+using KSpider.Spider.SinaNews;
+using KSpider.Spider.WscnNews;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
@@ -85,6 +88,53 @@ public class LiveConnectivityTest
         TestContext.WriteLine($"  样例 : {newsItem.NewsUrl} | {newsItem.NewsTitle}");
         TestContext.WriteLine(
             $"  解析正文 {parseResult.Content.NewsContentText!.Length} 字 , 图片 {parseResult.Images.Count} 张 , 关键字 {parseResult.Content.NewsKeyword}");
+    }
+
+    [TestMethod]
+    public Task SinaLiveFetchListCursorAndParse()
+    {
+        return CheckFastNewsSourceLiveAsync(new SinaNewsSpider(), "新浪 7x24");
+    }
+
+    [TestMethod]
+    public Task WscnLiveFetchListCursorAndParse()
+    {
+        return CheckFastNewsSourceLiveAsync(new WscnNewsSpider(), "华尔街见闻 live");
+    }
+
+    [TestMethod]
+    public Task Jin10LiveFetchListCursorAndParse()
+    {
+        return CheckFastNewsSourceLiveAsync(new Jin10NewsSpider(), "金十快讯");
+    }
+
+    /// <summary>
+    ///     快讯型源的通用连通性检查 : 拉一页 → 解析第一条 → 用游标再拉一页并确保更早
+    ///     ( 东财是详情页型 , 链路不同 , 单独一个用例 )
+    /// </summary>
+    private async Task CheckFastNewsSourceLiveAsync(INewsSpider spider, string sourceName)
+    {
+        var listPage = await FetchOrSkipAsync(() => spider.GetListPage(spider.Columns[0], 20, null));
+        Assert.IsTrue(listPage.Items.Count > 0, $"{sourceName} 接口未返回任何数据");
+        Assert.AreEqual(listPage.Items.Count, listPage.InlineOrigins.Count,
+            $"{sourceName} 列表项与原始内容必须一一对应");
+        AssertRealNewsItems(listPage.Items);
+
+        var parseResult = spider.ParseContent(listPage.InlineOrigins[0].NewsOriginContent,
+            listPage.InlineOrigins[0].NewsUrl);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText), $"{sourceName} 解析后正文为空");
+
+        TestContext.WriteLine(
+            $"{sourceName} : {listPage.Items.Count} 条 ( {listPage.Items.Min(item => item.NewsTime):MM-dd HH:mm} ~ {listPage.Items.Max(item => item.NewsTime):MM-dd HH:mm} )");
+        TestContext.WriteLine($"  样例 : {listPage.Items[0].NewsUrl} | {listPage.Items[0].NewsTitle}");
+        TestContext.WriteLine($"  解析正文 {parseResult.Content.NewsContentText!.Length} 字 , 关键字 {parseResult.Content.NewsKeyword}");
+
+        if (listPage.NextCursor == null) return;
+        var olderPage = await FetchOrSkipAsync(() => spider.GetListPage(spider.Columns[0], 20, listPage.NextCursor));
+        Assert.IsTrue(olderPage.Items.Count > 0, $"{sourceName} 用游标翻页未取到数据 ( 游标语义可能已变更 )");
+        var oldestOfFirstPage = listPage.Items.Min(item => item.NewsTime);
+        Assert.IsTrue(olderPage.Items.All(item => item.NewsTime <= oldestOfFirstPage),
+            $"{sourceName} 第二页出现了比第一页更新的数据");
     }
 
     /// <summary>
