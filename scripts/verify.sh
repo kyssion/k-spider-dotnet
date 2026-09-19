@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 echo "==> dotnet build"
 dotnet build k-spider-dotnet.sln
 
-echo "==> dotnet test"
-dotnet test src/k-spider-test/k-spider-test.csproj --no-build
+echo "==> dotnet test ( 离线 : 排除 Live 分类的真实接口连通性用例 )"
+dotnet test src/k-spider-test/k-spider-test.csproj --no-build --filter "TestCategory!=Live"
 
 echo "==> verify ok"

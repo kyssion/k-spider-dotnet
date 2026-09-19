@@ -18,5 +18,6 @@ jobs:
       - name: 构建
         run: dotnet build k-spider-dotnet.sln
 
+      # 排除 Live 分类 : 真实接口连通性用例依赖线上可达 , 不放进门禁 ( 本地手动跑 dotnet test 即可 )
       - name: 测试 ( 离线 )
-        run: dotnet test src/k-spider-test/k-spider-test.csproj --no-build
+        run: dotnet test src/k-spider-test/k-spider-test.csproj --no-build --filter "TestCategory!=Live"

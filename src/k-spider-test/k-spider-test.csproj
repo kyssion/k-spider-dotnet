@@ -15,4 +15,9 @@
     <ItemGroup>
       <ProjectReference Include="..\k-spider-dotnet\k-spider-dotnet.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <!-- 真实抓取数据夹具 : 各源接口的真实响应 , 供解析回归测试离线使用 -->
+        <Content Include="TestData\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>
