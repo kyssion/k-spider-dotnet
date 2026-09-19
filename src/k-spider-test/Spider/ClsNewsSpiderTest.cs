@@ -1,13 +1,11 @@
 using KSpider.Exceptions;
-using KSpider.Spider;
 using KSpider.Spider.ClsNews;
-using KSpider.Spider.News;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
 
 /// <summary>
-///     财联社电报源测试 : 签名向量 / 列表解析 / 游标 / 注册 ( 全部离线 , 不访问网络 )
+///     财联社电报源测试 : 签名向量 / 快讯解析 ( 全部离线 , 不访问网络 )
 /// </summary>
 [TestClass]
 public class ClsNewsSpiderTest
@@ -16,34 +14,6 @@ public class ClsNewsSpiderTest
     private const string VerifiedQueryString =
         "app=CailianpressWeb&last_time=0&os=web&refresh_type=1&rn=20&sv=8.7.9";
     private const string VerifiedSign = "e11ef7d616d8f9a2f056e6df1aefc4d4";
-
-    // 带标题 + 图片的电报
-    private const string TitleItemJson = """
-                                        {
-                                          "id": 2487643,
-                                          "title": "国际原子能机构新增11个理事会成员国",
-                                          "brief": "【国际原子能机构新增11个理事会成员国】财联社9月19日电，11个新当选国家将加入国际原子能机构理事会。",
-                                          "content": "【国际原子能机构新增11个理事会成员国】财联社9月19日电，11个新当选国家将加入国际原子能机构理事会，任期为2026年至2028年。",
-                                          "ctime": 1789752848,
-                                          "img": "https://image.cls.cn/images/20260919/cover.png",
-                                          "images": ["https://image.cls.cn/images/20260919/body.png"],
-                                          "subjects": [{"subject_id": 1556, "subject_name": "环球市场情报"}, {"subject_id": 1557, "subject_name": "美股IPO动态"}]
-                                        }
-                                        """;
-
-    // 无标题电报 ( 用摘要兜底 )
-    private const string UntitledItemJson = """
-                                            {
-                                              "id": 2487644,
-                                              "title": "",
-                                              "brief": "财联社9月19日电，消息人士称，西屋电气计划在美国IPO中寻求超过500亿美元估值。",
-                                              "content": "财联社9月19日电，消息人士称，西屋电气计划在美国IPO中寻求超过500亿美元估值。",
-                                              "ctime": 1789745925,
-                                              "img": "",
-                                              "images": [],
-                                              "subjects": [{"subject_name": "环球市场情报"}]
-                                            }
-                                            """;
 
     private static string BuildListJson(params string[] items)
     {
@@ -84,117 +54,99 @@ public class ClsNewsSpiderTest
     }
 
     [TestMethod]
-    public void ParseListPageMapsItemFields()
+    public void ParseFlashPageMapCompleteRecord()
     {
-        var listPage = ClsNewsSpider.ParseListPage(BuildListJson(TitleItemJson), 20);
+        const string itemJson = """
+                                {
+                                  "id": 2487643,
+                                  "title": "国际原子能机构新增11个理事会成员国",
+                                  "brief": "【国际原子能机构新增11个理事会成员国】财联社9月19日电。",
+                                  "content": "【国际原子能机构新增11个理事会成员国】财联社9月19日电，11个新当选国家将加入。",
+                                  "ctime": 1789752848,
+                                  "level": "A",
+                                  "img": "https://image.cls.cn/images/20260919/cover.png",
+                                  "images": ["https://image.cls.cn/images/20260919/body.png"],
+                                  "subjects": [{"subject_id": 1556, "subject_name": "环球市场情报"}, {"subject_id": 1557, "subject_name": "美股IPO动态"}],
+                                  "stock_list": [{"StockID": "sz300476", "name": "胜宏科技", "RiseRange": 1.86}]
+                                }
+                                """;
 
-        Assert.AreEqual(1, listPage.Items.Count);
-        var item = listPage.Items[0];
-        Assert.AreEqual((int)FromTypeOfNews.ClsMedia, item.FromMedia);
+        var page = ClsNewsSpider.ParseFlashPage(BuildListJson(itemJson), 20);
+
+        Assert.AreEqual(1, page.Items.Count);
+        var item = page.Items[0];
+        Assert.AreEqual(2, item.FromMedia);
+        Assert.AreEqual(101, item.Category);
         Assert.AreEqual("https://www.cls.cn/detail/2487643", item.NewsUrl);
-        Assert.AreEqual("国际原子能机构新增11个理事会成员国", item.NewsTitle);
-        Assert.AreEqual("财联社", item.NewsFrom);
-        Assert.AreEqual(ClsNewsResource.TelegraphCategoryNumber, item.Category);
-        Assert.IsTrue(item.NewsSummary!.StartsWith("【国际原子能机构"));
-        // ctime 1789752848 = 北京时间 2026-09-19 01:34:08
         Assert.AreEqual(new DateTime(2026, 9, 19, 1, 34, 8), item.NewsTime);
+        Assert.AreEqual("国际原子能机构新增11个理事会成员国", item.Title);
+        Assert.IsTrue(item.Content!.Contains("11个新当选国家"));
+        Assert.AreEqual("环球市场情报,美股IPO动态", item.Keyword);
+        // level A → 3 重大
+        Assert.AreEqual(3, item.Level);
+        // 关联标的提取为统一形态
+        Assert.AreEqual("[{\"stock_id\":\"sz300476\",\"name\":\"胜宏科技\"}]", item.StockList);
+        // 正文图 + 封面图
+        Assert.AreEqual("[\"https://image.cls.cn/images/20260919/body.png\",\"https://image.cls.cn/images/20260919/cover.png\"]",
+            item.ImageUrls);
+        Assert.IsTrue(item.RawContent!.Contains("\"id\":2487643"));
     }
 
     [TestMethod]
-    public void ParseListPageFallbackToBriefWhenTitleEmpty()
+    public void ParseFlashPageLevelMapping()
     {
-        var listPage = ClsNewsSpider.ParseListPage(BuildListJson(UntitledItemJson), 20);
+        var bItem = """{"id":1,"title":"t","brief":"b","content":"c","ctime":1789752848,"level":"B"}""";
+        var cItem = """{"id":2,"title":"t","brief":"b","content":"c","ctime":1789752848,"level":"C"}""";
 
-        var item = listPage.Items[0];
-        Assert.AreEqual(item.NewsSummary, item.NewsTitle);
-        // ctime 1789745925 = 北京时间 2026-09-18 23:38:45
-        Assert.AreEqual(new DateTime(2026, 9, 18, 23, 38, 45), item.NewsTime);
+        var page = ClsNewsSpider.ParseFlashPage(BuildListJson(bItem, cItem), 20);
+
+        Assert.AreEqual(2, page.Items[1 - 1].Level);
+        Assert.AreEqual(1, page.Items[1].Level);
+        // 无标的与图片时为 null 而不是空串
+        Assert.IsNull(page.Items[0].StockList);
+        Assert.IsNull(page.Items[0].ImageUrls);
     }
 
     [TestMethod]
-    public void ParseListPageTruncateLongBriefForTitle()
+    public void ParseFlashPageFallbackToBriefWhenTitleEmpty()
     {
-        var longBrief = new string('财', 80);
-        var itemJson = $$"""{"id": 1, "title": "", "brief": "{{longBrief}}", "content": "正文", "ctime": 1789752848}""";
+        const string itemJson = """
+                                {
+                                  "id": 2487644,
+                                  "title": "",
+                                  "brief": "财联社9月19日电，消息人士称，西屋电气计划在美国IPO中寻求超过500亿美元估值。",
+                                  "content": "财联社9月19日电，消息人士称，西屋电气计划在美国IPO中寻求超过500亿美元估值。",
+                                  "ctime": 1789745925
+                                }
+                                """;
 
-        var listPage = ClsNewsSpider.ParseListPage(BuildListJson(itemJson), 20);
+        var page = ClsNewsSpider.ParseFlashPage(BuildListJson(itemJson), 20);
 
-        Assert.AreEqual(60, listPage.Items[0].NewsTitle!.Length);
+        var item = page.Items[0];
+        Assert.AreEqual(item.Content, item.Title);
+        // 无 level 字段默认 C → 1
+        Assert.AreEqual(1, item.Level);
     }
 
     [TestMethod]
-    public void ParseListPageCarryInlineOriginForEveryItem()
+    public void ParseFlashPageNextCursorIsOldestCtimePlusOne()
     {
-        var listPage = ClsNewsSpider.ParseListPage(BuildListJson(TitleItemJson, UntitledItemJson), 20);
-
-        Assert.AreEqual(2, listPage.Items.Count);
-        Assert.AreEqual(listPage.Items.Count, listPage.InlineOrigins.Count);
-        var origin = listPage.InlineOrigins[0];
-        Assert.AreEqual("https://www.cls.cn/detail/2487643", origin.NewsUrl);
-        Assert.AreEqual(NewsContentOriginType.Json, origin.OriginType);
-        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status);
-        Assert.IsTrue(origin.NewsOriginContent.Contains("\"id\":2487643"));
-    }
-
-    [TestMethod]
-    public void ParseListPageNextCursorIsOldestCtimePlusOne()
-    {
-        var json = BuildListJson(TitleItemJson, UntitledItemJson);
+        const string first = """{"id":1,"title":"t","brief":"b","content":"c","ctime":1789752848}""";
+        const string second = """{"id":2,"title":"t","brief":"b","content":"c","ctime":1789745925}""";
+        var json = BuildListJson(first, second);
 
         // 满页 : 游标取最老一条 ctime + 1 ( 接口严格小于 , 不加 1 会漏掉同一秒的条目 )
-        var fullPage = ClsNewsSpider.ParseListPage(json, 2);
+        var fullPage = ClsNewsSpider.ParseFlashPage(json, 2);
         Assert.AreEqual("1789745926", fullPage.NextCursor);
 
         // 短页即末页
-        Assert.IsNull(ClsNewsSpider.ParseListPage(json, 20).NextCursor);
+        Assert.IsNull(ClsNewsSpider.ParseFlashPage(json, 20).NextCursor);
     }
 
     [TestMethod]
-    public void ParseListPageThrowOnErrorErrno()
+    public void ParseFlashPageThrowOnErrorErrno()
     {
         Assert.ThrowsExactly<HtmlFormException>(() =>
-            ClsNewsSpider.ParseListPage("""{"errno":"10012","msg":"签名错误"}""", 20));
-    }
-
-    [TestMethod]
-    public void ParseContentMapsTextImagesAndKeyword()
-    {
-        var spider = new ClsNewsSpider();
-
-        var parseResult = spider.ParseContent(TitleItemJson, "https://www.cls.cn/detail/2487643");
-
-        Assert.AreEqual("https://www.cls.cn/detail/2487643", parseResult.Content.NewsUrl);
-        Assert.AreEqual("国际原子能机构新增11个理事会成员国", parseResult.Content.NewsTitle);
-        Assert.AreEqual("环球市场情报,美股IPO动态", parseResult.Content.NewsKeyword);
-        Assert.IsTrue(parseResult.Content.NewsContentText!.Contains("任期为2026年至2028年"));
-        Assert.IsTrue(parseResult.Content.NewsContentJson!.Contains(NewsContentSegment.TextType));
-        Assert.IsTrue(parseResult.Content.NewsContentJson.Contains(NewsContentSegment.ImgType));
-        // 正文图 + 封面图
-        Assert.AreEqual(2, parseResult.Images.Count);
-        Assert.AreEqual("https://image.cls.cn/images/20260919/body.png", parseResult.Images[0].ImageResourceUrl);
-        Assert.AreEqual("cover.png", parseResult.Images[1].ImageName);
-    }
-
-    [TestMethod]
-    public void RegistryRegisterClsSource()
-    {
-        var spider = NewsSpiderRegistry.Get((int)FromTypeOfNews.ClsMedia);
-
-        Assert.IsNotNull(spider);
-        Assert.IsInstanceOfType<ClsNewsSpider>(spider);
-        Assert.AreEqual(FromTypeOfNews.ClsMedia, spider.FromMedia);
-        Assert.AreEqual(1, spider.Columns.Count);
-    }
-
-    [TestMethod]
-    public void GetContentOriginReportFailedWithoutNetwork()
-    {
-        var spider = new ClsNewsSpider();
-        var newsItem = new KSpider.Model.SpiderNewsListModel { NewsUrl = "https://www.cls.cn/detail/1" };
-
-        var origin = spider.GetContentOrigin(newsItem).GetAwaiter().GetResult();
-
-        Assert.AreEqual(NewsContentOriginStatus.Failed, origin.Status);
-        Assert.AreEqual("", origin.NewsOriginContent);
+            ClsNewsSpider.ParseFlashPage("""{"errno":"10012","msg":"签名错误"}""", 20));
     }
 }

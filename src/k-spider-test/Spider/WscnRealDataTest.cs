@@ -1,13 +1,12 @@
 using KSpider.Exceptions;
 using KSpider.Spider;
-using KSpider.Spider.News;
 using KSpider.Spider.WscnNews;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
 
 /// <summary>
-///     华尔街见闻 live : 真实抓取数据的解析回归 ( 夹具为 2026-09-19 接口原样响应 , 测试离线 )
+///     华尔街见闻 live : 真实抓取数据的快讯解析回归 ( 夹具为 2026-09-19 接口原样响应 , 测试离线 )
 /// </summary>
 [TestClass]
 public class WscnRealDataTest
@@ -18,50 +17,42 @@ public class WscnRealDataTest
     }
 
     [TestMethod]
-    public void ParseRealPageMapEveryItemListRow()
+    public void ParseRealPageMapEveryFlashRecord()
     {
-        var listPage = WscnNewsSpider.ParseListPage(LoadFixture("wscn_live_page1.json"));
+        var page = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"));
 
-        Assert.AreEqual(20, listPage.Items.Count);
-        Assert.AreEqual(listPage.Items.Count, listPage.InlineOrigins.Count);
-        Assert.IsTrue(listPage.Items.All(item => item.NewsUrl!.StartsWith("https://wallstreetcn.com/livenews/")));
-        Assert.IsTrue(listPage.Items.All(item => !string.IsNullOrEmpty(item.NewsTitle)));
-        Assert.IsTrue(listPage.Items.All(item => item.NewsFrom == WscnNewsResource.NewsFromName));
-        Assert.IsTrue(listPage.Items.All(item => item.FromMedia == (int)FromTypeOfNews.WscnMedia));
-        Assert.IsTrue(listPage.Items.All(item => item.Category == WscnNewsResource.LiveCategoryNumber));
-        Assert.IsTrue(listPage.Items.All(item => item.NewsTime?.Year == 2026 && item.NewsTime?.Month == 9));
-        Assert.AreEqual(listPage.Items.Count, listPage.Items.Select(item => item.NewsUrl).Distinct().Count());
-        Assert.IsNotNull(listPage.NextCursor);
+        Assert.AreEqual(20, page.Items.Count);
+        Assert.IsTrue(page.Items.All(item => item.NewsUrl.StartsWith("https://wallstreetcn.com/livenews/")));
+        Assert.IsTrue(page.Items.All(item => !string.IsNullOrEmpty(item.Title)));
+        Assert.IsTrue(page.Items.All(item => !string.IsNullOrEmpty(item.Content)));
+        Assert.IsTrue(page.Items.All(item => item.FromMedia == (int)FromTypeOfNews.WscnMedia));
+        Assert.IsTrue(page.Items.All(item => item.Category == WscnNewsResource.LiveCategoryNumber));
+        Assert.IsTrue(page.Items.All(item => item.NewsTime.Year == 2026 && item.NewsTime.Month == 9));
+        Assert.AreEqual(page.Items.Count, page.Items.Select(item => item.NewsUrl).Distinct().Count());
+        Assert.IsNotNull(page.NextCursor);
     }
 
     [TestMethod]
-    public void ParseRealOriginRoundTripToContent()
+    public void ParseRealLevelFromScore()
     {
-        var spider = new WscnNewsSpider();
-        var listPage = WscnNewsSpider.ParseListPage(LoadFixture("wscn_live_page1.json"));
+        var page = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"));
 
-        foreach (var origin in listPage.InlineOrigins)
-        {
-            var parseResult = spider.ParseContent(origin.NewsOriginContent, origin.NewsUrl);
-
-            Assert.AreEqual(origin.NewsUrl, parseResult.Content.NewsUrl);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle));
-            Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText));
-            Assert.IsNotNull(parseResult.Content.NewsTime);
-            Assert.IsTrue(parseResult.Content.NewsContentJson!.Contains(NewsContentSegment.TextType));
-        }
+        // 真实夹具 20 条 : score=1 x18 ( level 1 ) + score=2 x2 ( level 2 重要 )
+        Assert.AreEqual(18, page.Items.Count(item => item.Level == 1));
+        Assert.AreEqual(2, page.Items.Count(item => item.Level == 2));
     }
 
     [TestMethod]
     public void ParseRealSecondPageContinuesOlder()
     {
-        var page1 = WscnNewsSpider.ParseListPage(LoadFixture("wscn_live_page1.json"));
-        var page2 = WscnNewsSpider.ParseListPage(LoadFixture("wscn_live_page2.json"));
+        var page1 = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"));
+        var page2 = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page2.json"));
 
         // 游标是接口给的 next_cursor , 不含边界条目
         var oldestOfPage1 = page1.Items.Min(item => item.NewsTime);
         Assert.IsTrue(page2.Items.All(item => item.NewsTime < oldestOfPage1));
-        Assert.AreEqual(0, page1.Items.Select(item => item.NewsUrl).Intersect(page2.Items.Select(item => item.NewsUrl)).Count());
+        Assert.AreEqual(0,
+            page1.Items.Select(item => item.NewsUrl).Intersect(page2.Items.Select(item => item.NewsUrl)).Count());
     }
 
     [TestMethod]
@@ -73,16 +64,16 @@ public class WscnRealDataTest
                    ]}}
                    """;
 
-        var listPage = WscnNewsSpider.ParseListPage(json);
+        var page = WscnNewsSpider.ParseFlashPage(json);
 
-        Assert.AreEqual("见闻快讯正文", listPage.Items[0].NewsTitle);
-        Assert.AreEqual("1789785930", listPage.NextCursor);
+        Assert.AreEqual("见闻快讯正文", page.Items[0].Title);
+        Assert.AreEqual("1789785930", page.NextCursor);
     }
 
     [TestMethod]
-    public void ParseListPageThrowOnErrorCode()
+    public void ParseFlashPageThrowOnErrorCode()
     {
         Assert.ThrowsExactly<HtmlFormException>(() =>
-            WscnNewsSpider.ParseListPage("""{"code":40001,"message":"invalid"}"""));
+            WscnNewsSpider.ParseFlashPage("""{"code":40001,"message":"invalid"}"""));
     }
 }
