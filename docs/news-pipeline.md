@@ -224,5 +224,6 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 金十 PLUS 专享条目只有标题 | 实测约 20% 条目正文需付费账号，实现用 `vip_title` 兜底，正文与标题相同 | 需要正文时接付费通道，或在下游按 `data.lock` 过滤 |
 | 新浪快讯图片未解析 | 图片在 `multimedia` 字段，实测 100 条仅 1 条非空 | 出现高频图片时补该字段解析 |
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
+| 跨源 URL 碰撞未防护 | 四个快讯源共用 `spider_news_content_origin` 表且都用 `ON CONFLICT (news_url) DO UPDATE`。若两个源产出同一 URL（当前实测各源域名互不重叠，尚未发生），后写的会覆盖先写的原始内容，而两源解析器不同（东财是 `Art_Content` 的 JSON、快讯源是条目 JSON），覆盖后解析必然失败。另外三张表（`content_origin` / `content` / `image_list`）没有 `from_media` 列，无法按源隔离 | 真出现碰撞时给这三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 存整篇原始响应，长期运行需要归档 | 用 `db/optimization.sql` 的清理段做定期治理 |
