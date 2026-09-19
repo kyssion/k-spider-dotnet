@@ -3,6 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+echo "==> 文档链接检查"
+bash scripts/check-docs.sh
+
 echo "==> dotnet build"
 dotnet build k-spider-dotnet.sln
 
