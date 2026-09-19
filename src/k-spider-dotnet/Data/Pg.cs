@@ -76,6 +76,57 @@ public class Pg
     }
 
     /// <summary>
+    ///     实时快讯表的幂等建表 ( 表 + 实时消费索引 + update_time 触发器 )。
+    ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsureFlashNewsDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            // id 用 bigserial ( 与 DDL 文件其它表一致 ) : 序列随表自动创建 , 无需单独建序列
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TABLE IF NOT EXISTS public.spider_flash_news
+                (
+                    id          bigserial    NOT NULL,
+                    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    from_media  integer      NOT NULL,
+                    category    integer      NOT NULL DEFAULT 0,
+                    news_url    varchar(300) NOT NULL,
+                    news_time   timestamp    NOT NULL,
+                    title       varchar(300),
+                    content     text,
+                    keyword     varchar(500),
+                    level       smallint     NOT NULL DEFAULT 1,
+                    stock_list  text,
+                    image_urls  text,
+                    raw_content text,
+                    CONSTRAINT spider_flash_news_pkey PRIMARY KEY (id),
+                    CONSTRAINT uk_flash_news_media_url UNIQUE (from_media, news_url)
+                )
+                """);
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_flash_news_media_time
+                    ON public.spider_flash_news (from_media, news_time)
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            connection.Ado.ExecuteCommand("DROP TRIGGER IF EXISTS update_modified_column ON public.spider_flash_news");
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.spider_flash_news
+                    FOR EACH ROW EXECUTE FUNCTION public.update_time_func()
+                """);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsureFlashNewsDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     批量 upsert 依赖的唯一索引自检。
     ///     SpiderNewsBatchDao 的手拼 SQL 用 ON CONFLICT (列) 做去重 , 该列上必须有唯一索引 / 约束 ,
     ///     否则 PostgreSQL 会报 "there is no unique or exclusion constraint matching the ON CONFLICT

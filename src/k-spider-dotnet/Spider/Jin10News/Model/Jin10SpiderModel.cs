@@ -1,14 +1,13 @@
 using System.Text.Json.Nodes;
 using KSpider.Json;
 using KSpider.Model;
-using KSpider.Spider.News;
+using KSpider.Spider.FlashNews;
 using KSpider.Time;
-using KSpider.Tool.Http;
 
 namespace KSpider.Spider.Jin10News.Model;
 
 /// <summary>
-///     金十数据快讯的单条数据 ( 列表即全文 , 无按 id 重拉的接口 )
+///     金十数据快讯的单条数据 ( 列表即全文 ) , 直接映射为可入库的快讯记录
 /// </summary>
 public class Jin10FlashItem
 {
@@ -16,11 +15,6 @@ public class Jin10FlashItem
     ///     无标题快讯用正文兜底的截断长度
     /// </summary>
     private const int TitleMaxLength = 60;
-
-    /// <summary>
-    ///     接口没有摘要字段 , 用正文截断作为列表摘要 ( 供消费端预览 )
-    /// </summary>
-    private const int SummaryMaxLength = 200;
 
     /// <summary>
     ///     id 是时间戳风格的字符串 ( 如 20260919105910403800 ) , 保持字符串形态
@@ -65,7 +59,18 @@ public class Jin10FlashItem
     /// </summary>
     private string EffectiveContent => string.IsNullOrEmpty(Content) ? VipTitle : Content;
 
+    /// <summary>
+    ///     正文与标题 ( 含 vip_title 兜底 ) 全为空 : 条目没有任何公开信息 ( PLUS 锁定且无 vip_title ) , 不值得入库
+    /// </summary>
+    public bool HasNoPublicContent =>
+        string.IsNullOrEmpty(Title) && string.IsNullOrEmpty(EffectiveContent);
+
     private string DisplayTitle => !string.IsNullOrEmpty(Title) ? Title : ExtractTitle(EffectiveContent);
+
+    /// <summary>
+    ///     重要度映射 : important=1 → 2 重要 , 其余 → 1 普通
+    /// </summary>
+    private short FlashLevel => (short)(Important == 1 ? 2 : 1);
 
     public static Jin10FlashItem FromJson(JsonNode node)
     {
@@ -83,93 +88,23 @@ public class Jin10FlashItem
         };
     }
 
-    public SpiderNewsListModel ToSpiderNewListModel()
+    public SpiderFlashNewsModel ToFlashNewsModel(string itemJson)
     {
-        return new SpiderNewsListModel
+        return new SpiderFlashNewsModel
         {
             FromMedia = (int)FromTypeOfNews.Jin10Media,
+            Category = Jin10NewsResource.FlashCategoryNumber,
             NewsUrl = NewsUrl,
-            NewsTitle = DisplayTitle,
-            NewsSummary = Truncate(EffectiveContent, SummaryMaxLength),
-            NewsFrom = Jin10NewsResource.NewsFromName,
             NewsTime = NewsTime,
-            NewsDownloadTime = DateTime.Now,
-            Category = Jin10NewsResource.FlashCategoryNumber
+            Title = DisplayTitle,
+            Content = EffectiveContent,
+            Keyword = string.Join(",", Tags),
+            Level = FlashLevel,
+            StockList = null,
+            // 金十图片地址带尺寸后缀 ( 实测形态 : .../demo.png/lite ) , 图片名场景已不适用单列 , 直接存原地址数组
+            ImageUrls = string.IsNullOrEmpty(Pic) ? null : JsonUtil.GetJson(new List<string> { Pic }),
+            RawContent = itemJson
         };
-    }
-
-    /// <summary>
-    ///     快讯列表项本身即全文 , 原始内容直接取列表返回的条目 JSON
-    /// </summary>
-    public NewsContentOrigin ToContentOrigin(string itemJson)
-    {
-        return new NewsContentOrigin
-        {
-            NewsUrl = NewsUrl,
-            OriginType = NewsContentOriginType.Json,
-            NewsOriginContent = itemJson,
-            Status = NewsContentOriginStatus.Success
-        };
-    }
-
-    public NewsContentParseResult ToParseResult()
-    {
-        var segments = new List<NewsContentSegment>();
-        foreach (var line in EffectiveContent.Split('\n',
-                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            segments.Add(new NewsContentSegment
-            {
-                TagType = "P",
-                Value = line,
-                ValueType = NewsContentSegment.TextType
-            });
-        if (!string.IsNullOrEmpty(Pic))
-            segments.Add(new NewsContentSegment
-            {
-                TagType = "P",
-                Value = "",
-                ValueType = NewsContentSegment.ImgType,
-                ResourceUri = Pic
-            });
-
-        return new NewsContentParseResult
-        {
-            Content = new SpiderNewsContentModel
-            {
-                NewsUrl = NewsUrl,
-                NewsTitle = DisplayTitle,
-                NewsSummary = Truncate(EffectiveContent, SummaryMaxLength),
-                NewsFrom = Jin10NewsResource.NewsFromName,
-                NewsTime = NewsTime,
-                NewsKeyword = string.Join(",", Tags),
-                NewsContentJson = JsonUtil.GetJson(segments),
-                NewsContentText = string.Join("\n", segments
-                    .Where(item => item.ValueType == NewsContentSegment.TextType)
-                    .Select(item => item.Value))
-            },
-            Images = string.IsNullOrEmpty(Pic)
-                ? []
-                : [
-                    new SpiderNewsImageListModel
-                    {
-                        NewsUrl = NewsUrl,
-                        ImageResourceUrl = Pic,
-                        ImageName = GetImageName(Pic)
-                    }
-                ]
-        };
-    }
-
-    /// <summary>
-    ///     金十图片地址带尺寸后缀 ( 实测形态 : .../demo.png/lite ) , 直接取最后一段会得到 "lite" ;
-    ///     这里取最后一个像文件名的路径段 , 找不到再退回最后一段
-    /// </summary>
-    private static string GetImageName(string imageUrl)
-    {
-        var lastPath = HttpUrlTools.GetUrlLastPath(imageUrl);
-        if (lastPath.Contains('.')) return lastPath;
-        var segments = imageUrl.Split('?', 2)[0].Split('/');
-        return segments.LastOrDefault(segment => segment.Contains('.')) ?? lastPath;
     }
 
     /// <summary>
@@ -184,17 +119,12 @@ public class Jin10FlashItem
             if (end > 1) return text[1..end];
         }
 
-        return Truncate(text, TitleMaxLength);
+        return text.Length <= TitleMaxLength ? text : text[..TitleMaxLength];
     }
 
     private static List<string> ReadStringArray(JsonNode? node)
     {
         if (node is not JsonArray array) return [];
         return array.Select(item => item?.ToString() ?? "").Where(item => item != "").ToList();
-    }
-
-    private static string Truncate(string value, int maxLength)
-    {
-        return value.Length <= maxLength ? value : value[..maxLength];
     }
 }

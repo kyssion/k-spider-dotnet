@@ -141,8 +141,7 @@ public class SpiderNewsBatchDao
 
     public int UpsertSpiderNewsListOnConflict(SqlSugarClient connection, List<SpiderNewsListModel> newsList,
         int maxBatchNumber)
-    {
-        try
+    {        try
         {
             newsList = newsList.GroupBy(item => item.NewsUrl).Select(item => item.First()).ToList();
 
@@ -160,7 +159,7 @@ public class SpiderNewsBatchDao
             }
 
             var item = connection.Insertable(newsList).IgnoreColumns("id", "create_time", "update_time");
-            // todo 这里是一个坑 ， sqlsurge tostring 默认使用的200 行的 导出也就是说每200个数据就会有一个insert 不能重用需要重写一下 。 
+            // todo 这里是一个坑 ， sqlsurge tostring 默认使用的200 行的 导出也就是说每200个数据就会有一个insert 不能重用需要重写一下 。
             item.InsertBuilder.IsNoPage = true;
             item.InsertBuilder.IsReturnPkList = true;
             var insertSql = item.ToSqlString();
@@ -174,6 +173,53 @@ public class SpiderNewsBatchDao
         catch (Exception e)
         {
             throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
+        }
+    }
+
+    /// <summary>
+    ///     实时快讯批量写入 : 新行插入 , 已存在行更新内容字段 ( 快讯常在发布后数分钟内修正/补充 ,
+    ///     首页每轮重拉 , DO UPDATE 让修正随下一轮 15 秒 poll 自然回填 )。
+    ///     唯一键是 (from_media, news_url)。
+    /// </summary>
+    public int UpsertFlashNewsOnConflict(SqlSugarClient connection, List<SpiderFlashNewsModel> flashNews,
+        int maxBatchNumber)
+    {
+        try
+        {
+            flashNews = flashNews
+                .GroupBy(item => new { item.FromMedia, item.NewsUrl })
+                .Select(item => item.First()).ToList();
+            if (flashNews.Count == 0) return 0;
+            if (flashNews.Count > maxBatchNumber)
+            {
+                var allNumber = 0;
+                for (var i = 0; i < flashNews.Count; i += maxBatchNumber)
+                    allNumber += UpsertFlashNewsOnConflict(connection,
+                        flashNews.GetRange(i, Math.Min(maxBatchNumber, flashNews.Count - i)), maxBatchNumber);
+                return allNumber;
+            }
+
+            var item = connection.Insertable(flashNews).IgnoreColumns("id", "create_time", "update_time");
+            item.InsertBuilder.IsNoPage = true;
+            var insertSql = item.ToSqlString().TrimEnd();
+            // 单条数据时 ToSqlString 不带分号 ( 也不带 returning ) , 按结尾字符条件去分号 ,
+            // 不要照抄其它方法的 [..LastIndexOf(';')] —— 那个写法遇到单条会抛参数越界
+            if (insertSql.EndsWith(';')) insertSql = insertSql[..^1];
+            var sqlTemple = $"""
+                             {insertSql}
+                             ON CONFLICT (from_media, news_url) DO UPDATE SET title       = EXCLUDED.title,
+                                                                          content     = EXCLUDED.content,
+                                                                          keyword     = EXCLUDED.keyword,
+                                                                          level       = EXCLUDED.level,
+                                                                          stock_list  = EXCLUDED.stock_list,
+                                                                          image_urls  = EXCLUDED.image_urls,
+                                                                          raw_content = EXCLUDED.raw_content
+                             """;
+            return connection.Ado.ExecuteCommand(sqlTemple);
+        }
+        catch (Exception e)
+        {
+            throw new KDbException("[UpsertFlashNewsOnConflict] err : {e}", e);
         }
     }
 }

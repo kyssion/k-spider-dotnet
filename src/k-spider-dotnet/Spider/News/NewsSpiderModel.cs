@@ -19,20 +19,14 @@ public sealed class NewsColumn(string columnId, string columnName)
 }
 
 /// <summary>
-///     一页列表结果 : 列表项 + 可选的内联原始内容 + 下一页游标
+///     一页列表结果 : 列表项 + 下一页游标 ( 快讯型源走 FlashNewsPage , 不在这里 )
 /// </summary>
 public class NewsListPage
 {
     public List<SpiderNewsListModel> Items { get; init; } = [];
 
     /// <summary>
-    ///     列表接口已带全文的源 ( 快讯型 ) 在此同时给出原始内容 , 由列表任务与列表行同一事务落库
-    ///     需要详情页的源保持为空
-    /// </summary>
-    public List<NewsContentOrigin> InlineOrigins { get; init; } = [];
-
-    /// <summary>
-    ///     下一页游标 , null = 没有更多 ; 游标对任务不透明 , 由各源自行解释 ( 东财 = 页码 , 财联社 = last_time )
+    ///     下一页游标 , null = 没有更多 ; 游标对任务不透明 , 由各源自行解释 ( 东财 = 页码 )
     /// </summary>
     public string? NextCursor { get; init; }
 }

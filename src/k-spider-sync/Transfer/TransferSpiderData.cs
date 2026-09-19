@@ -25,6 +25,7 @@ public static class TransferSpiderData
         await SyncTableSafely<SpiderNewsContentOriginModel>(remote, local, "spider_news_content_origin");
         await SyncTableSafely<SpiderNewsContentModel>(remote, local, "spider_news_content");
         await SyncTableSafely<SpiderNewsImageListModel>(remote, local, "spider_news_image_list");
+        await SyncTableSafely<SpiderFlashNewsModel>(remote, local, "spider_flash_news");
         Logger.LogInformation("[DoTransfer] transfer success");
     }
 

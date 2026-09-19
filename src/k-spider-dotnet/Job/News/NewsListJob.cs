@@ -9,8 +9,8 @@ using SqlSugar;
 namespace KSpider.Job.News;
 
 /// <summary>
-///     新闻列表任务 : 各 media 并行抓取 , 每个 media 内部按原逻辑逐栏目翻页写入
-///     ( 批量写 spider_news_list ; 快讯型源同时落原始内容并直接置为已下载 status=3 )
+///     网页抓取型新闻的列表任务 : 各 media 并行抓取栏目列表 , 批量写入 spider_news_list ( status=0 ) ,
+///     下载与解析由后续两个任务接力。实时快讯走 FlashNewsJob , 不在本任务范围。
 /// </summary>
 public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<NewsListJob> logger) : SpiderJob
 {
@@ -45,8 +45,6 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
                 }
                 catch (Exception e)
                 {
-                    // 无活动事务时 RollbackTran 是安全空操作
-                    connection.Ado.RollbackTran();
                     logger.LogError("[NewsListJob Execute] run error , source : {} , column : {} , err : {}",
                         spider.FromMedia, column.ColumnId, e);
                 }
@@ -60,7 +58,7 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
     }
 
     /// <summary>
-    ///     抓取单个栏目 : 按游标翻页 , 每页一个事务写入列表行 ( 与内联原始内容 )
+    ///     抓取单个栏目 : 按游标翻页 , 每页一条批量 upsert ( 单条语句自带原子性 , 不需要显式事务 )
     /// </summary>
     private async Task<int> RunColumnAsync(SqlSugarClient connection, INewsSpider spider, NewsColumn column)
     {
@@ -72,15 +70,8 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
             if (listPage.Items.Count == 0) break;
 
             var existsUrls = GetExistsUrls(connection, listPage.Items);
-            MarkInlineOriginItems(listPage);
-            connection.Ado.BeginTran();
             // 批量 ON CONFLICT DO NOTHING 写入 , 避免逐条查询分流的写放大
             insertNumber += spiderNewsBatchDao.UpsertSpiderNewsListOnConflict(connection, listPage.Items, 200);
-            // 快讯型源的原始内容必须与列表行同一事务 , 否则会留下"已置为已下载却没有 origin"的悬空行
-            if (listPage.InlineOrigins.Count > 0)
-                spiderNewsBatchDao.UpsetSpiderNewsContentOriginOnConflict(connection,
-                    listPage.InlineOrigins.Select(item => item.ToModel()).ToList(), 200);
-            connection.Ado.CommitTran();
 
             // 当前页已无新 URL 说明该栏目翻到了存量区间 , 不再继续翻页
             if (listPage.Items.All(item => existsUrls.Contains(item.NewsUrl))) break;
@@ -89,18 +80,6 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
         }
 
         return insertNumber;
-    }
-
-    /// <summary>
-    ///     快讯型源的列表项已带全文 : 置为已下载 , 让这些行跳过下载阶段直接进解析阶段
-    ///     ( 公开以便离线测试这条状态置位规则 )
-    /// </summary>
-    public static void MarkInlineOriginItems(NewsListPage listPage)
-    {
-        if (listPage.InlineOrigins.Count == 0) return;
-        var inlineUrls = listPage.InlineOrigins.Select(item => item.NewsUrl).ToHashSet();
-        foreach (var item in listPage.Items.Where(item => item.NewsUrl != null && inlineUrls.Contains(item.NewsUrl)))
-            item.DownloadStatusCode = (int)NewsDownloadStatusCode.SuccessDownloadOriginInfo;
     }
 
     private static List<string?> GetExistsUrls(SqlSugarClient connection, List<SpiderNewsListModel> newsList)

@@ -34,6 +34,8 @@ public static class Program
         var host = builder.Build();
         // 启动时幂等补齐 fail_count 列与轮询索引 ( 库不可用时仅记录日志不阻断 )
         host.Services.GetRequiredService<Pg>().EnsureSpiderNewsListDbObjects();
+        // 实时快讯表幂等建表 ( 表 + 实时消费索引 + update_time 触发器 )
+        host.Services.GetRequiredService<Pg>().EnsureFlashNewsDbObjects();
         await host.RunAsync();
     }
 
@@ -45,6 +47,11 @@ public static class Program
         quartz.AddJob<NewsListJob>(j => j.WithIdentity("NewsListJob").DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("NewsListJob.Trigger").ForJob("NewsListJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever()));
+
+        // 实时快讯 : 15 秒一轮 ( 发布到入库最坏延迟约 16 秒 ) ; 四源合计约 16 请求/分钟
+        quartz.AddJob<FlashNewsJob>(j => j.WithIdentity("FlashNewsJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("FlashNewsJob.Trigger").ForJob("FlashNewsJob").StartNow()
+                .WithSimpleSchedule(x => x.WithIntervalInSeconds(15).RepeatForever()));
 
         quartz.AddJob<NewsContentOriginJob>(j => j.WithIdentity("NewsContentOriginJob")
                 .DisallowConcurrentExecution())

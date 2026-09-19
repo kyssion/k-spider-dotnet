@@ -1,13 +1,13 @@
 using System.Text.Json.Nodes;
 using KSpider.Json;
 using KSpider.Model;
-using KSpider.Spider.News;
+using KSpider.Spider.FlashNews;
 using KSpider.Time;
 
 namespace KSpider.Spider.SinaNews.Model;
 
 /// <summary>
-///     新浪 7x24 直播的单条快讯 ( 列表即全文 , 无单条接口 )
+///     新浪 7x24 直播的单条快讯 ( 列表即全文 ) , 直接映射为可入库的快讯记录
 /// </summary>
 public class SinaLiveItem
 {
@@ -15,11 +15,6 @@ public class SinaLiveItem
     ///     无标题快讯用正文兜底的截断长度
     /// </summary>
     private const int TitleMaxLength = 60;
-
-    /// <summary>
-    ///     接口没有摘要字段 , 用正文截断作为列表摘要 ( 供消费端预览 )
-    /// </summary>
-    private const int SummaryMaxLength = 200;
 
     public long Id { get; set; }
 
@@ -37,6 +32,11 @@ public class SinaLiveItem
 
     public List<string> Tags { get; set; } = [];
 
+    /// <summary>
+    ///     关联标的 ( ext 字段是 JSON 字符串 , 内含 stocks 数组 : symbol 代码 + key 名称 )
+    /// </summary>
+    public JsonArray? Stocks { get; set; }
+
     public string NewsUrl => string.IsNullOrEmpty(DocUrl)
         ? string.Format(SinaNewsResource.FallbackNewsUrlTemplate, Id)
         : DocUrl;
@@ -53,69 +53,67 @@ public class SinaLiveItem
             RichText = node["rich_text"]?.ToString() ?? "",
             CreateTime = node["create_time"]?.ToString() ?? "",
             DocUrl = node["docurl"]?.ToString() ?? "",
-            Tags = ReadTagNames(node["tag"])
+            Tags = ReadTagNames(node["tag"]),
+            Stocks = ReadStocks(node["ext"])
         };
     }
 
-    public SpiderNewsListModel ToSpiderNewListModel()
+    public SpiderFlashNewsModel ToFlashNewsModel(string itemJson)
     {
-        return new SpiderNewsListModel
+        return new SpiderFlashNewsModel
         {
             FromMedia = (int)FromTypeOfNews.SinaMedia,
+            Category = SinaNewsResource.LiveCategoryNumber,
             NewsUrl = NewsUrl,
-            NewsTitle = DisplayTitle,
-            NewsSummary = Truncate(RichText, SummaryMaxLength),
-            NewsFrom = SinaNewsResource.NewsFromName,
             NewsTime = NewsTime,
-            NewsDownloadTime = DateTime.Now,
-            Category = SinaNewsResource.LiveCategoryNumber
+            Title = DisplayTitle,
+            Content = RichText,
+            Keyword = string.Join(",", Tags),
+            Level = 1,
+            StockList = ReadStockListJson(),
+            // 图片在 multimedia 字段 ( 实测 100 条仅 1 条非空 ) , v1 不解析
+            ImageUrls = null,
+            RawContent = itemJson
         };
     }
 
     /// <summary>
-    ///     快讯列表项本身即全文 , 原始内容直接取列表返回的条目 JSON
+    ///     关联标的提取为统一形态 [{"stock_id":"sz399975","name":"证券公司"}] ; 无标的返回 null
     /// </summary>
-    public NewsContentOrigin ToContentOrigin(string itemJson)
+    private string? ReadStockListJson()
     {
-        return new NewsContentOrigin
+        if (Stocks is not { Count: > 0 }) return null;
+        var result = new List<Dictionary<string, string>>();
+        foreach (var stock in Stocks)
         {
-            NewsUrl = NewsUrl,
-            OriginType = NewsContentOriginType.Json,
-            NewsOriginContent = itemJson,
-            Status = NewsContentOriginStatus.Success
-        };
+            var symbol = stock?["symbol"]?.ToString();
+            if (string.IsNullOrEmpty(symbol)) continue;
+            result.Add(new Dictionary<string, string>
+            {
+                ["stock_id"] = symbol,
+                ["name"] = stock?["key"]?.ToString() ?? ""
+            });
+        }
+
+        // 用 JsonUtil 序列化 : JsonNode.ToJsonString 会把中文转义成 \uXXXX , 与已入库 JSON 的风格不一致
+        return result.Count > 0 ? JsonUtil.GetJson(result) : null;
     }
 
-    public NewsContentParseResult ToParseResult()
+    /// <summary>
+    ///     ext 是 JSON 字符串 , 内含 stocks 数组
+    /// </summary>
+    private static JsonArray? ReadStocks(JsonNode? node)
     {
-        var segments = new List<NewsContentSegment>();
-        // 正文是纯文本 , 按换行拆段 ( 实测多为一整段 , 拆段属于防御性处理 )
-        foreach (var line in RichText.Split('\n',
-                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            segments.Add(new NewsContentSegment
-            {
-                TagType = "P",
-                Value = line,
-                ValueType = NewsContentSegment.TextType
-            });
-
-        return new NewsContentParseResult
+        var extText = node?.ToString();
+        if (string.IsNullOrEmpty(extText)) return null;
+        try
         {
-            Content = new SpiderNewsContentModel
-            {
-                NewsUrl = NewsUrl,
-                NewsTitle = DisplayTitle,
-                NewsSummary = Truncate(RichText, SummaryMaxLength),
-                NewsFrom = SinaNewsResource.NewsFromName,
-                NewsTime = NewsTime,
-                NewsKeyword = string.Join(",", Tags),
-                NewsContentJson = JsonUtil.GetJson(segments),
-                NewsContentText = string.Join("\n", segments
-                    .Where(item => item.ValueType == NewsContentSegment.TextType)
-                    .Select(item => item.Value))
-            }
-            // 新浪快讯正文是纯文本 , 图片在 multimedia 字段里 ( 实测 100 条仅 1 条非空 ) , v1 不解析
-        };
+            return JsonNode.Parse(extText)?["stocks"] as JsonArray;
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -130,17 +128,12 @@ public class SinaLiveItem
             if (end > 1) return text[1..end];
         }
 
-        return Truncate(text, TitleMaxLength);
+        return text.Length <= TitleMaxLength ? text : text[..TitleMaxLength];
     }
 
     private static List<string> ReadTagNames(JsonNode? node)
     {
         if (node is not JsonArray tagArray) return [];
         return tagArray.Select(tag => tag?["name"]?.ToString() ?? "").Where(name => name != "").ToList();
-    }
-
-    private static string Truncate(string value, int maxLength)
-    {
-        return value.Length <= maxLength ? value : value[..maxLength];
     }
 }

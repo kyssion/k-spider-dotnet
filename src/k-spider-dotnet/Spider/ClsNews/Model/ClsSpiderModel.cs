@@ -1,13 +1,13 @@
 using System.Text.Json.Nodes;
 using KSpider.Json;
 using KSpider.Model;
-using KSpider.Spider.News;
+using KSpider.Spider.FlashNews;
 using KSpider.Tool.Http;
 
 namespace KSpider.Spider.ClsNews.Model;
 
 /// <summary>
-///     电报列表接口的单条数据 ( 列表即全文 , 无详情接口 )
+///     电报列表接口的单条数据 ( 列表即全文 ) , 直接映射为可入库的快讯记录
 /// </summary>
 public class ClsRollItem
 {
@@ -34,20 +34,37 @@ public class ClsRollItem
     /// </summary>
     public long Ctime { get; set; }
 
+    /// <summary>
+    ///     重要度 , 接口原始值 A / B / C
+    /// </summary>
+    public string Level { get; set; } = "C";
+
     public string CoverImage { get; set; } = "";
 
     public List<string> Images { get; set; } = [];
 
     public List<string> Subjects { get; set; } = [];
 
+    /// <summary>
+    ///     关联标的的原始数组 ( 元素含 StockID / name 等 , 见 ToFlashNewsModel 的提取 )
+    /// </summary>
+    public JsonArray? StockList { get; set; }
+
     public string NewsUrl => string.Format(ClsNewsResource.DetailUrlTemplate, Id);
 
     public DateTime NewsTime => DateTimeOffset.FromUnixTimeSeconds(Ctime).ToOffset(ChinaOffset).DateTime;
 
-    /// <summary>
-    ///     无标题电报用摘要兜底 , 保证标题不为空
-    /// </summary>
     private string DisplayTitle => string.IsNullOrEmpty(Title) ? Truncate(Brief, BriefTitleMaxLength) : Title;
+
+    /// <summary>
+    ///     重要度映射 : A→3 重大 / B→2 重要 / C→1 普通
+    /// </summary>
+    private short FlashLevel => Level switch
+    {
+        "A" => 3,
+        "B" => 2,
+        _ => 1
+    };
 
     public static ClsRollItem FromJson(JsonNode node)
     {
@@ -58,86 +75,53 @@ public class ClsRollItem
             Brief = node["brief"]?.ToString() ?? "",
             Content = node["content"]?.ToString() ?? "",
             Ctime = ReadLong(node["ctime"]),
+            Level = node["level"]?.ToString() ?? "C",
             CoverImage = node["img"]?.ToString() ?? "",
             Images = ReadImageUrls(node["images"]),
-            Subjects = ReadSubjectNames(node["subjects"])
+            Subjects = ReadSubjectNames(node["subjects"]),
+            StockList = node["stock_list"] as JsonArray
         };
     }
 
-    public SpiderNewsListModel ToSpiderNewListModel()
+    public SpiderFlashNewsModel ToFlashNewsModel(string itemJson)
     {
-        return new SpiderNewsListModel
+        var imageUrls = AllImageUrls();
+        return new SpiderFlashNewsModel
         {
             FromMedia = (int)FromTypeOfNews.ClsMedia,
+            Category = ClsNewsResource.TelegraphCategoryNumber,
             NewsUrl = NewsUrl,
-            NewsTitle = DisplayTitle,
-            NewsSummary = Brief,
-            NewsFrom = ClsNewsResource.NewsFromName,
             NewsTime = NewsTime,
-            NewsDownloadTime = DateTime.Now,
-            Category = ClsNewsResource.TelegraphCategoryNumber
-            // 下载状态由列表任务按 "是否带内联原始内容" 统一置位 , 这里保持默认 0
+            Title = DisplayTitle,
+            Content = Content,
+            Keyword = string.Join(",", Subjects),
+            Level = FlashLevel,
+            StockList = ReadStockListJson(),
+            ImageUrls = imageUrls.Count > 0 ? JsonUtil.GetJson(imageUrls) : null,
+            RawContent = itemJson
         };
     }
 
     /// <summary>
-    ///     电报列表项本身即全文 , 原始内容直接取列表返回的条目 JSON
+    ///     关联标的提取为统一形态 [{"stock_id":"sz300476","name":"胜宏科技"}] ; 无标的返回 null
     /// </summary>
-    public NewsContentOrigin ToContentOrigin(string itemJson)
+    private string? ReadStockListJson()
     {
-        return new NewsContentOrigin
+        if (StockList is not { Count: > 0 }) return null;
+        var result = new List<Dictionary<string, string>>();
+        foreach (var stock in StockList)
         {
-            NewsUrl = NewsUrl,
-            OriginType = NewsContentOriginType.Json,
-            NewsOriginContent = itemJson,
-            Status = NewsContentOriginStatus.Success
-        };
-    }
-
-    public NewsContentParseResult ToParseResult()
-    {
-        var imageUrls = AllImageUrls();
-        var segments = new List<NewsContentSegment>();
-        // 正文是纯文本 , 按换行拆段 ( 实测多数电报无换行 , 拆段属于防御性处理 )
-        foreach (var line in Content.Split('\n',
-                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            segments.Add(new NewsContentSegment
+            var stockId = stock?["StockID"]?.ToString();
+            if (string.IsNullOrEmpty(stockId)) continue;
+            result.Add(new Dictionary<string, string>
             {
-                TagType = "P",
-                Value = line,
-                ValueType = NewsContentSegment.TextType
+                ["stock_id"] = stockId,
+                ["name"] = stock?["name"]?.ToString() ?? ""
             });
-        foreach (var imageUrl in imageUrls)
-            segments.Add(new NewsContentSegment
-            {
-                TagType = "P",
-                Value = "",
-                ValueType = NewsContentSegment.ImgType,
-                ResourceUri = imageUrl
-            });
+        }
 
-        return new NewsContentParseResult
-        {
-            Content = new SpiderNewsContentModel
-            {
-                NewsUrl = NewsUrl,
-                NewsTitle = DisplayTitle,
-                NewsSummary = Brief,
-                NewsFrom = ClsNewsResource.NewsFromName,
-                NewsTime = NewsTime,
-                NewsKeyword = string.Join(",", Subjects),
-                NewsContentJson = JsonUtil.GetJson(segments),
-                NewsContentText = string.Join("\n", segments
-                    .Where(item => item.ValueType == NewsContentSegment.TextType)
-                    .Select(item => item.Value))
-            },
-            Images = imageUrls.Select(imageUrl => new SpiderNewsImageListModel
-            {
-                NewsUrl = NewsUrl,
-                ImageResourceUrl = imageUrl,
-                ImageName = HttpUrlTools.GetUrlLastPath(imageUrl)
-            }).ToList()
-        };
+        // 用 JsonUtil 序列化 : JsonNode.ToJsonString 会把中文转义成 \uXXXX , 与已入库 JSON 的风格不一致
+        return result.Count > 0 ? JsonUtil.GetJson(result) : null;
     }
 
     /// <summary>

@@ -1,20 +1,19 @@
 using System.Text.Json.Nodes;
 using KSpider.Json;
 using KSpider.Model;
-using KSpider.Spider.News;
-using KSpider.Tool.Http;
+using KSpider.Spider.FlashNews;
 
 namespace KSpider.Spider.WscnNews.Model;
 
 /// <summary>
-///     华尔街见闻 live 的单条快讯 ( 列表即全文 , 无单条接口 )
+///     华尔街见闻 live 的单条快讯 ( 列表即全文 ) , 直接映射为可入库的快讯记录
 /// </summary>
 public class WscnLiveItem
 {
     /// <summary>
-    ///     接口没有摘要字段 , 用正文截断作为列表摘要 ( 供消费端预览 )
+    ///     接口没有标题时用正文截断的长度
     /// </summary>
-    private const int SummaryMaxLength = 200;
+    private const int TitleMaxLength = 60;
 
     /// <summary>
     ///     接口 display_time 为 unix 秒 ( 北京时间 ) , 固定按东八区换算 , 不依赖宿主时区
@@ -37,11 +36,14 @@ public class WscnLiveItem
 
     public string Uri { get; set; } = "";
 
+    /// <summary>
+    ///     重要度标记 , 实测 score=2 的条目为重要新闻 ( 商务部回应等 )
+    /// </summary>
+    public int Score { get; set; }
+
     public List<string> Images { get; set; } = [];
 
     public List<string> Tags { get; set; } = [];
-
-    public List<string> Channels { get; set; } = [];
 
     public string NewsUrl => string.IsNullOrEmpty(Uri)
         ? string.Format(WscnNewsResource.FallbackNewsUrlTemplate, Id)
@@ -49,7 +51,12 @@ public class WscnLiveItem
 
     public DateTime NewsTime => DateTimeOffset.FromUnixTimeSeconds(DisplayTime).ToOffset(ChinaOffset).DateTime;
 
-    private string DisplayTitle => string.IsNullOrEmpty(Title) ? Truncate(ContentText, 60) : Title;
+    private string DisplayTitle => string.IsNullOrEmpty(Title) ? Truncate(ContentText, TitleMaxLength) : Title;
+
+    /// <summary>
+    ///     重要度映射 : score 2→2 重要 , 其余→1 普通
+    /// </summary>
+    private short FlashLevel => (short)(Score >= 2 ? 2 : 1);
 
     public static WscnLiveItem FromJson(JsonNode node)
     {
@@ -60,83 +67,28 @@ public class WscnLiveItem
             ContentText = node["content_text"]?.ToString() ?? "",
             DisplayTime = long.TryParse(node["display_time"]?.ToString(), out var time) ? time : 0,
             Uri = node["uri"]?.ToString() ?? "",
+            Score = int.TryParse(node["score"]?.ToString(), out var score) ? score : 1,
             Images = ReadStringArray(node["images"]),
-            Tags = ReadStringArray(node["tags"]),
-            Channels = ReadStringArray(node["channels"])
+            Tags = ReadStringArray(node["tags"])
         };
     }
 
-    public SpiderNewsListModel ToSpiderNewListModel()
+    public SpiderFlashNewsModel ToFlashNewsModel(string itemJson)
     {
-        return new SpiderNewsListModel
+        return new SpiderFlashNewsModel
         {
             FromMedia = (int)FromTypeOfNews.WscnMedia,
+            Category = WscnNewsResource.LiveCategoryNumber,
             NewsUrl = NewsUrl,
-            NewsTitle = DisplayTitle,
-            NewsSummary = Truncate(ContentText, SummaryMaxLength),
-            NewsFrom = WscnNewsResource.NewsFromName,
             NewsTime = NewsTime,
-            NewsDownloadTime = DateTime.Now,
-            Category = WscnNewsResource.LiveCategoryNumber
-        };
-    }
-
-    /// <summary>
-    ///     快讯列表项本身即全文 , 原始内容直接取列表返回的条目 JSON
-    /// </summary>
-    public NewsContentOrigin ToContentOrigin(string itemJson)
-    {
-        return new NewsContentOrigin
-        {
-            NewsUrl = NewsUrl,
-            OriginType = NewsContentOriginType.Json,
-            NewsOriginContent = itemJson,
-            Status = NewsContentOriginStatus.Success
-        };
-    }
-
-    public NewsContentParseResult ToParseResult()
-    {
-        var segments = new List<NewsContentSegment>();
-        foreach (var line in ContentText.Split('\n',
-                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            segments.Add(new NewsContentSegment
-            {
-                TagType = "P",
-                Value = line,
-                ValueType = NewsContentSegment.TextType
-            });
-        foreach (var imageUrl in Images)
-            segments.Add(new NewsContentSegment
-            {
-                TagType = "P",
-                Value = "",
-                ValueType = NewsContentSegment.ImgType,
-                ResourceUri = imageUrl
-            });
-
-        return new NewsContentParseResult
-        {
-            Content = new SpiderNewsContentModel
-            {
-                NewsUrl = NewsUrl,
-                NewsTitle = DisplayTitle,
-                NewsSummary = Truncate(ContentText, SummaryMaxLength),
-                NewsFrom = WscnNewsResource.NewsFromName,
-                NewsTime = NewsTime,
-                // 只用业务标签 ; 频道 channels 是内部英文 slug , 不放进关键字 ( 原始 JSON 里保留 )
-                NewsKeyword = string.Join(",", Tags),
-                NewsContentJson = JsonUtil.GetJson(segments),
-                NewsContentText = string.Join("\n", segments
-                    .Where(item => item.ValueType == NewsContentSegment.TextType)
-                    .Select(item => item.Value))
-            },
-            Images = Images.Select(imageUrl => new SpiderNewsImageListModel
-            {
-                NewsUrl = NewsUrl,
-                ImageResourceUrl = imageUrl,
-                ImageName = HttpUrlTools.GetUrlLastPath(imageUrl)
-            }).ToList()
+            Title = DisplayTitle,
+            Content = ContentText,
+            // 只用业务标签 ; 频道 channels 是内部英文 slug , 不放进关键字 ( 原始 JSON 里保留 )
+            Keyword = string.Join(",", Tags),
+            Level = FlashLevel,
+            StockList = null,
+            ImageUrls = Images.Count > 0 ? JsonUtil.GetJson(Images) : null,
+            RawContent = itemJson
         };
     }
 

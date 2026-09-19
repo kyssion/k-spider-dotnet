@@ -3,8 +3,9 @@ using KSpider.Model;
 namespace KSpider.Spider.News;
 
 /// <summary>
-///     新闻源爬虫 : 一个源一个实现 , 新增源时实现本接口并在 NewsSpiderRegistry 注册一行
-///     列表 / 原始内容 / 解析三段各自独立 , 由公共 Job 按 from_media 分发调用
+///     网页抓取型新闻源爬虫 : 有独立详情页的源 ( 列表 → 原始内容 → 解析三段 ) ,
+///     一个源一个实现 , 新增源时实现本接口并在 NewsSpiderRegistry 注册一行。
+///     "列表即全文"的实时快讯源走 IFlashNewsSpider , 不要实现本接口。
 /// </summary>
 public interface INewsSpider
 {
@@ -25,8 +26,7 @@ public interface INewsSpider
     Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor);
 
     /// <summary>
-    ///     下载单条新闻的原始内容
-    ///     列表接口已带全文的源可直接用列表数据构造返回 ( 不发起网络请求 )
+    ///     下载单条新闻的原始内容 ( 详情页 / 详情接口 )
     /// </summary>
     Task<NewsContentOrigin> GetContentOrigin(SpiderNewsListModel newsItem);
 
