@@ -49,7 +49,8 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 
 | 任务 | 间隔 / Cron | 单轮批量 | 说明 |
 |---|---|---|---|
-| `NewsListJob` | 2 分钟 | 每栏目最多 4 页 × 200 条 | **各源并发**抓列表（源内仍串行翻页），见下 |
+| `FlashNewsJob` | 15 秒 | 每栏目最多 4 页 × 50 条 | **快讯源并发**拉取，直写 `spider_flash_news`（拉到即终态） |
+| `NewsListJob` | 2 分钟 | 每栏目最多 4 页 × 200 条 | **网页型源并发**抓列表（源内仍串行翻页），见下 |
 | `NewsContentOriginJob` | 3 秒 | 200 条 | 全源 FIFO 下载原始内容 |
 | `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
 | `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 |
@@ -95,7 +96,8 @@ src/k-spider-dotnet/
 ├── Job/              # SpiderJob 基类 + News/ + Check/ + Stock/ 定时任务
 ├── Spider/           # 抓取与解析
 │   ├── DataResource.cs   # 来源枚举 / 状态机枚举 / 分类定义
-│   ├── News/             # 多源抽象 : INewsSpider / NewsSpiderRegistry / 公共模型
+│   ├── News/             # 网页型抽象 : INewsSpider / NewsSpiderRegistry / 公共模型
+│   ├── FlashNews/        # 快讯型抽象 : IFlashNewsSpider / FlashNewsSpiderRegistry
 │   ├── DfNews/           # 东财新闻源 ( 含 Playwright 兜底 )
 │   ├── ClsNews/          # 财联社电报源
 │   ├── SinaNews/         # 新浪财经 7x24 快讯源
@@ -119,7 +121,7 @@ src/k-spider-dotnet/
 | 表结构不用 CodeFirst，DDL 手工维护 + DbFirst 反向生成实体 | 索引 / 部分索引 / 触发器 / 约束这些是对生产库有实际影响的对象，交给 DDL 更可控 | 改表要 Model 与 DDL 两处同步 |
 | 多源抽象在出现第二个源时才提取 | 避免为假想扩展点提前设计（见 principles） | 东财单源时期的历史代码需要一次性改造 |
 | 快讯型源在列表阶段直接落原始内容并置 `status=3` | 这类源没有可回查的单条接口，原始内容只能在列表响应里拿到 | 列表行与原始内容必须同事务写入 |
-| 轮询热路径依赖部分索引 | 轮询每 3 秒一次，全表扫描会拖垮库 | 索引变更要按 `db/optimization.md` 用 `CONCURRENTLY` 上线 |
+| 轮询热路径依赖部分索引 | 轮询每 3 秒一次，全表扫描会拖垮库 | 索引变更要用 `CREATE INDEX CONCURRENTLY` 上线（普通建索引的写锁会卡住 3 秒轮询） |
 | 测试分"离线夹具 + 真实连通性"两层 | 门禁要确定性，接口是否还活着要能真实检验 | 联网用例需能从门禁排除 |
 
 ## 六、扩展点
@@ -128,6 +130,6 @@ src/k-spider-dotnet/
 |---|---|
 | 新闻源 | 实现 `Spider/News/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md) |
 | 定时任务 | 继承 `Job/SpiderJob.cs`（只需实现 `Execute`）→ 构造函数注入 DAO/Pg/`ILogger<T>` → `Program.AddSpiderJobs` 加 `AddJob` + `AddTrigger` 两行（`DisallowConcurrentExecution` 必加） |
-| 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k-script-spider-datasource.sql` |
+| 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k_script_spider.sql` |
 | 同步到本地的表 | `k-spider-sync` 的 `TransferSpiderData.DoTransfer` 加一行 `SyncTableSafely<T>`（实体需实现 `ILongIdEntity` + `IUpdateTimeEntity`） |
 | 需要浏览器渲染的页面 | `Spider/DfNews/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |

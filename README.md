@@ -4,8 +4,8 @@
 
 ## 功能
 
-- **新闻管线**（三段接力，状态机驱动，失败自动重试）：列表发现 → 原始内容下载 → 结构化解析（段落/图片/列表/表格），按 `news_url` 全局去重；**多源通用**，新增源只需实现 `INewsSpider` 并注册（见 `Spider/News/`）。列表接口已带全文的源（快讯型，如财联社电报）由列表任务直接把原始内容与列表行同事务落库、跳过下载阶段。
-- **已接入新闻源**：东方财富（`DfNewsSpider`，35 个栏目，页码翻页 + 详情接口）、财联社电报（`ClsNewsSpider`）、新浪财经 7x24（`SinaNewsSpider`）、华尔街见闻 live（`WscnNewsSpider`）、金十数据快讯（`Jin10NewsSpider`）——后四个都是"列表即全文"的快讯型源，原始内容随列表落库、跳过下载阶段。
+- **网页新闻管线**（三段接力，状态机驱动，失败自动重试）：列表发现 → 原始内容下载 → 结构化解析（段落/图片/列表/表格），按 `news_url` 全局去重，当前接入东方财富 35 个栏目。
+- **实时快讯管线**（15 秒一轮，独立于网页管线）：财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯——"列表即全文"型源，拉到即终态直写 `spider_flash_news`（含重要度/关联标的），发布到入库最坏延迟约 16 秒；`NewsCheckJob` 按源监控实时性滞后。
 - **股票管线**：A股（沪/深北）与港股的当日 Level1 归档快照，Cron 工作日收盘后执行，按 `(date, stock_id)` 去重（默认停用，按需启用）。
 - **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计（每 5 分钟）。
 - **数据搬运**：独立进程 `k-spider-sync` 将远端库的 4 张新闻表增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
@@ -14,7 +14,7 @@
 
 ```
 k-spider-dotnet/                 仓库根 = 解决方案根
-├── db/                          DDL + 优化 SQL（k-script-spider-datasource.sql / optimization.sql + 手册）
+├── db/                          建库 DDL（k_script_spider.sql）
 ├── deploy/                      systemd 服务模板
 ├── docs/                        设计文档（设计原则 / 架构 / 新闻管线 / 股票管线 / 数据模型 / 运维手册）
 ├── scripts/                     verify.sh 一键验证
@@ -35,7 +35,7 @@ k-spider-dotnet/                 仓库根 = 解决方案根
 
 ```bash
 # 1. 初始化数据库（表结构 + 触发器 + 索引）
-psql -h 127.0.0.1 -U postgres -f db/k-script-spider-datasource.sql k_script_spider
+psql -h 127.0.0.1 -U postgres -f db/k_script_spider.sql k_script_spider
 
 # 2. 配置 : 默认 Development 环境连本机 127.0.0.1:5432/k_script_spider
 #    编辑 src/k-spider-dotnet/appsettings.Development.json 或用环境变量覆盖
@@ -65,7 +65,8 @@ dotnet run --project src/k-spider-dotnet
 
 | Job | 间隔 | 说明 | 默认 |
 |---|---|---|---|
-| `NewsListJob` | 2 分钟 | 遍历全部源的栏目抓列表，批量 ON CONFLICT 写入，自适应翻页 | 启用 |
+| `FlashNewsJob` | 15 秒 | 各快讯源并行拉取，直写 `spider_flash_news`（拉到即终态） | 启用 |
+| `NewsListJob` | 2 分钟 | 网页型源抓列表，批量 ON CONFLICT 写入，自适应翻页 | 启用 |
 | `NewsContentOriginJob` | 3 秒 | 按源分发下载原始内容（全源 FIFO，失败重试 ≤3 次） | 启用 |
 | `NewsContentJob` | 1 分钟 | 按源分发解析原始内容为结构化内容（失败重试 ≤3 次） | 启用 |
 | `NewsCheckJob` | 5 分钟 | 各源栏目接口探测 + 分源积压统计 | 启用 |
@@ -77,17 +78,19 @@ dotnet run --project src/k-spider-dotnet
 ## 数据流
 
 ```
-各源列表 API ──NewsListJob──▶ spider_news_list (status=0 , from_media 标识来源)
-                                   │ NewsContentOriginJob (0→3 , 失败→4 可重试)
-                                   ▼
-                             spider_news_content_origin (原始内容)
-                                   │ NewsContentJob (3→1 , 失败→2 可重试)
-                                   ▼
-                         spider_news_content (结构化片段+纯文本)
-                         spider_news_image_list (图片 URL)
+网页抓取型 ( 东财 )                     实时快讯型 ( 财联社/新浪/见闻/金十 )
+────────────────────────              ────────────────────────
+各源列表 API ──NewsListJob──▶          快讯 API ──FlashNewsJob(15秒)──▶ spider_flash_news
+spider_news_list (status=0)            ( 完整记录 : 标题/正文/标签/重要度/关联标的/原始JSON )
+       │ NewsContentOriginJob (0→3)    拉到即终态 , 无状态机 ; 修正随下一轮回填
+       ▼
+spider_news_content_origin
+       │ NewsContentJob (3→1)
+       ▼
+spider_news_content + spider_news_image_list
 ```
 
-状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。快讯型源（列表即全文）在列表阶段就直接写成 `status=3`，不经过下载 Job。8 张表完整 DDL 见 [db/k-script-spider-datasource.sql](db/k-script-spider-datasource.sql)。
+状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。快讯型源（列表即全文）在列表阶段就直接写成 `status=3`，不经过下载 Job。8 张表完整 DDL 见 [db/k_script_spider.sql](db/k_script_spider.sql)。
 
 ## 部署（Linux）
 

@@ -83,7 +83,7 @@ SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
 
 | 症状 | 排查步骤 | 处置 |
 |---|---|---|
-| **某个源一行数据都没有，其它源正常** | 查该源是否"列表即全文"型（会写 origin），再查 origin 表的唯一约束是否还在：<br>`SELECT t.relname, a.attname FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ANY(i.indkey) WHERE i.indisunique AND t.relname IN ('spider_news_list','spider_news_content_origin','spider_news_content','spider_news_image_list');` | 批量 upsert 用 `ON CONFLICT (列)`，该列缺唯一约束时 PostgreSQL 整批报错；列表行与 origin 同事务，异常会把该源整批写入回滚。按 `db/k-script-spider-datasource.sql` 补建唯一约束即可恢复（进程启动时的 `CheckBatchUpsertUniqueIndexes` 会显式告警，见下） |
+| **某个源一行数据都没有，其它源正常** | 查该源是否"列表即全文"型（会写 origin），再查 origin 表的唯一约束是否还在：<br>`SELECT t.relname, a.attname FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ANY(i.indkey) WHERE i.indisunique AND t.relname IN ('spider_news_list','spider_news_content_origin','spider_news_content','spider_news_image_list');` | 批量 upsert 用 `ON CONFLICT (列)`，该列缺唯一约束时 PostgreSQL 整批报错；列表行与 origin 同事务，异常会把该源整批写入回滚。按 `db/k_script_spider.sql` 补建唯一约束即可恢复（进程启动时的 `CheckBatchUpsertUniqueIndexes` 会显式告警，见下） |
 | 某个源完全没有新新闻 | 1. 跑连通性用例 `dotnet test ... --filter "TestCategory=Live"`；2. 看 `NewsCheckJob` 该源的栏目探测日志 | 接口能连上却拿不到数据 → 源改版，按 [news-pipeline.md](news-pipeline.md) 的源明细核对参数与解析规则；网络不通 → 先解决出口网络 |
 | 财联社报 `errno 10012 签名错误` | 看 `NewsCheckJob` 日志是否有 10012 | 前端版本号变更，更新 `ClsNewsResource.Sv` 并跑 `SignMatchesVerifiedVector` 用例核对算法 |
 | 财联社突然返回空数组（errno 仍为 0） | 检查请求参数里的 `rn` | `rn > 50` 会被静默返回空，`MaxPageSize` 已钳制，确认没被改大 |
@@ -111,4 +111,4 @@ SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
 - 本地不存在的 Id 不做兜底插入（避免与"新行通道"冲突产生重复），新行一律由 `Id` 通道负责。
 - 更新时忽略时间戳列，本地 `update_time` 由本地触发器重新维护。
 
-**注意**：同步只搬运数据，**不传播 DELETE**。远端删除行不会让本地删行；治理类 SQL（清理、约束变更）需要在两边各自执行一遍（见 `db/optimization.md` 的说明）。
+**注意**：同步只搬运数据，**不传播 DELETE**。远端删除行不会让本地删行；治理类 SQL（清理、约束变更）需要在两边各自执行一遍。

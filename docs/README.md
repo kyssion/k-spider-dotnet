@@ -31,7 +31,7 @@
 |---|---|
 | 新增 / 修改新闻源（`Spider/*/`） | [news-pipeline.md](news-pipeline.md) 的源明细表；AGENTS.md 的新闻源套路 |
 | 新增 / 修改定时任务（`Job/`、`Program.AddSpiderJobs`） | [architecture.md](architecture.md) 任务表、[operations.md](operations.md) 任务清单、README 任务表 |
-| 表结构 / 索引 / 唯一键变更（`Model/`、`db/`、`Pg.EnsureSpiderNewsListDbObjects`） | [data-model.md](data-model.md)、`db/k-script-spider-datasource.sql` |
+| 表结构 / 索引 / 唯一键变更（`Model/`、`db/`、`Pg.EnsureSpiderNewsListDbObjects`） | [data-model.md](data-model.md)、`db/k_script_spider.sql` |
 | 状态机 / 重试语义 / 落库语义变更 | [news-pipeline.md](news-pipeline.md) |
 | 配置键 / 环境变量 / 部署方式变更 | [operations.md](operations.md)、README 配置章节 |
 | 分层、约定、测试策略变更 | [principles.md](principles.md)、AGENTS.md 代码约定 |

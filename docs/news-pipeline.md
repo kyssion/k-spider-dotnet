@@ -1,8 +1,11 @@
 # 新闻管线设计
 
-新闻管线是**多源通用**的三段接力：列表发现 → 原始内容下载 → 结构化解析，全部由 `spider_news_list.download_status_code` 状态机驱动。
+新闻抓取按数据形态分**两条独立管线**：
 
-## 一、状态机
+- **网页抓取型**（有独立详情页，当前只有东财）：三段接力（列表发现 → 原始内容下载 → 结构化解析），由 `spider_news_list.download_status_code` 状态机驱动，源注册在 `NewsSpiderRegistry`，本文一~三章与六~八章描述该管线。
+- **实时快讯型**（"列表即全文"：财联社电报 / 新浪 7x24 / 见闻 live / 金十快讯）：`FlashNewsJob` 每 15 秒各源并发拉一页即完整数据，直写 `spider_flash_news`（唯一键 `(from_media, news_url)`，已存在行更新内容字段以吸收源侧修正），拉到即终态、无状态机、无下载/解析阶段，源注册在 `FlashNewsSpiderRegistry`。字段与各源映射见第四章"源成熟度"之后的快讯表说明与各源小节。
+
+## 一、状态机（网页抓取型）
 
 ```
                  ┌──────────────── 失败重试 ( fail_count < 3 ) ───────────────┐
@@ -83,10 +86,10 @@ public interface INewsSpider
 | 源 | 标识 | 当前栏目 | 翻页模型 | 原始内容 | 备注 |
 |---|---|---|---|---|---|
 | 东方财富 | `DfMedia = 1` | 35 个栏目，映射到 22 个分类号 | `page_index` 页码翻页 | 详情接口 `newsinfo.eastmoney.com/kuaixun/v2/api/article/{id}` | 时间格式强绑定（见下） |
-| 财联社电报 | `ClsMedia = 2` | 1 个栏目「电报」，`category = 101` | `last_time` 时间游标（严格小于） | 列表响应本身即全文，无单条接口 | 需要签名，单页上限 50 |
-| 新浪财经 7x24 | `SinaMedia = 3` | 1 个栏目「7x24」，`category = 201` | `page` 页码翻页 | 列表即全文 | 无鉴权，正文以【标题】开头 |
-| 华尔街见闻 live | `WscnMedia = 4` | 1 个栏目「全球宏观」，`category = 301` | 接口自带 `next_cursor` | 列表即全文 | 无鉴权，约 1/3 条目无标题 |
-| 金十快讯 | `Jin10Media = 5` | 1 个栏目「快讯」，`category = 401` | `max_time` 时间游标（含边界） | 列表即全文 | 必须带客户端标识头；约 20% 为 PLUS 专享 |
+| 财联社电报 | `ClsMedia = 2` | 1 个栏目「电报」，`category = 101` | `last_time` 时间游标（严格小于） | **快讯管线**：拉到即终态 | 需要签名，单页上限 50；重要度 A/B/C → 3/2/1；带关联标的 |
+| 新浪财经 7x24 | `SinaMedia = 3` | 1 个栏目「7x24」，`category = 201` | `page` 页码翻页 | **快讯管线**：拉到即终态 | 无鉴权，正文以【标题】开头；`ext.stocks` 提取关联标的 |
+| 华尔街见闻 live | `WscnMedia = 4` | 1 个栏目「全球宏观」，`category = 301` | 接口自带 `next_cursor` | **快讯管线**：拉到即终态 | 无鉴权，约 1/3 条目无标题；`score=2` → 重要度 2 |
+| 金十快讯 | `Jin10Media = 5` | 1 个栏目「快讯」，`category = 401` | `max_time` 时间游标（含边界） | **快讯管线**：拉到即终态 | 必须带客户端标识头；约 20% 为 PLUS 专享（有 vip_title 的保留标题、无任何公开信息的跳过）；`important` → 重要度 2 |
 
 > **「当前栏目」是开发进度，不是源的能力上限**。东财是开发最完整的源（35 个栏目），其余四个源目前每个只接了 1 个栏目，
 > 但它们都能扩展出更多栏目：
@@ -226,4 +229,4 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
 | 跨源 URL 碰撞未防护 | 四个快讯源共用 `spider_news_content_origin` 表且都用 `ON CONFLICT (news_url) DO UPDATE`。若两个源产出同一 URL（当前实测各源域名互不重叠，尚未发生），后写的会覆盖先写的原始内容，而两源解析器不同（东财是 `Art_Content` 的 JSON、快讯源是条目 JSON），覆盖后解析必然失败。另外三张表（`content_origin` / `content` / `image_list`）没有 `from_media` 列，无法按源隔离 | 真出现碰撞时给这三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
-| 原文与图片表只增不删 | `spider_news_content_origin` 存整篇原始响应，长期运行需要归档 | 用 `db/optimization.sql` 的清理段做定期治理 |
+| 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |
