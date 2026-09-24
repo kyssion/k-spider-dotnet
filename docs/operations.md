@@ -37,7 +37,7 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj \
 
 产物用 `deploy/` 下的 systemd 模板托管：
 
-- 模板已设 `TZ=Asia/Shanghai`（股票任务与"当日"判断都依赖时区，UTC 机器上日期会错）。
+- 模板已设 `TZ=Asia/Shanghai`（快讯滞后计算等"当日/当前时刻"判断都依赖时区，UTC 机器上会算错）。
 - 拷贝到 `/etc/systemd/system/` 后 `systemctl enable --now k-spider-dotnet`。
 - 轻量场景可直接用产物目录内的 `run.sh`。
 
@@ -90,7 +90,6 @@ SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
 | 待处理数量持续上涨 | 查分源状态计数与最老待处理时间 | 若 `status = 0/4` 堆积在某个源：该源接口异常；若 `status = 2` 堆积：解析规则与源改版不匹配，改完解析后**直接用已存的 origin 重跑**（不必重抓） |
 | 解析失败突然增多 | 抽样看 `spider_news_content_origin` 里的原始内容 | 源页面结构变更 → 更新解析规则；改完把对应行的 `download_status_code` 置回 `3` 即可重跑解析 |
 | 出现大量 `KDbException` / 连接异常 | 检查数据库可用性与连接串 | 数据库抖动不会消耗重试次数，恢复后自动续跑；本地无 PG 时各 Job 每轮抛异常属预期噪音 |
-| 股票数据日期不对 | 确认进程时区 | systemd 模板已设 `TZ=Asia/Shanghai`；自管进程需自行设置 |
 | 重复行 | 查 `news_url` 唯一键是否仍在 | 三张新闻表的去重都依赖唯一键，重建表时要带上约束 |
 
 ## 五、数据同步（`k-spider-sync`）

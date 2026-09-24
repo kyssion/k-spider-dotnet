@@ -27,7 +27,6 @@ public static class Program
         builder.Services.AddSingleton<Pg>();
         builder.Services.AddSingleton<SpiderNewsDao>();
         builder.Services.AddSingleton<SpiderNewsBatchDao>();
-        builder.Services.AddSingleton<StockDao>();
         builder.Services.AddQuartz(AddSpiderJobs);
         // 优雅停机 : 收到退出信号后等待在跑任务完成
         builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
@@ -41,7 +40,7 @@ public static class Program
     }
 
     /// <summary>
-    ///     集中注册定时任务 ( 间隔 / Cron 与旧版 Starter 一致 ) ; 股票任务按需取消注释启用
+    ///     集中注册定时任务 ( 间隔 / Cron 与旧版 Starter 一致 )
     /// </summary>
     private static void AddSpiderJobs(IServiceCollectionQuartzConfigurator quartz)
     {
@@ -67,13 +66,5 @@ public static class Program
         quartz.AddJob<NewsCheckJob>(j => j.WithIdentity("NewsCheckJob").DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("NewsCheckJob.Trigger").ForJob("NewsCheckJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()));
-
-        // 股票任务 : 按需启用 ( Cron 工作日 20:00 )
-        // quartz.AddJob<StockCnJob>(j => j.WithIdentity("StockCnJob").DisallowConcurrentExecution())
-        //     .AddTrigger(t => t.WithIdentity("StockCnJob.Trigger").ForJob("StockCnJob").StartNow()
-        //         .WithCronSchedule("0 0 20 ? * MON-FRI"));
-        // quartz.AddJob<StockHkJob>(j => j.WithIdentity("StockHkJob").DisallowConcurrentExecution())
-        //     .AddTrigger(t => t.WithIdentity("StockHkJob.Trigger").ForJob("StockHkJob").StartNow()
-        //         .WithCronSchedule("0 0 20 ? * MON-FRI"));
     }
 }

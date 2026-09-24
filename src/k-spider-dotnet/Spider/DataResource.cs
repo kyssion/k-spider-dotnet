@@ -188,11 +188,3 @@ public enum NewsContentOriginStatus
     Success = 1,
     Failed = 2
 }
-
-public enum StockExchangeChannel
-{
-    SzBjStockExchangeChannel = 0,
-    ShangHStockExchangeChannel = 1,
-    HkStockExchangeChannel = 2,
-    UsaStockExchangeChannel = 3,
-}

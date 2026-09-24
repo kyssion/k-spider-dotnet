@@ -19,8 +19,7 @@
 | [principles.md](principles.md) | 设计原则与工程约定：分层、数据访问、错误处理与重试、测试分层、命名 |
 | [architecture.md](architecture.md) | 系统架构：项目分层、运行时模型、模块职责、关键设计决策、扩展点 |
 | [news-pipeline.md](news-pipeline.md) | 新闻管线：状态机、多源抽象、已接入源明细、落库与去重、已知限制 |
-| [stock-pipeline.md](stock-pipeline.md) | 股票管线：股票池、Level1 归档抓取、停用状态与启用方式 |
-| [data-model.md](data-model.md) | 数据模型：9 张表的职责、唯一键、索引、迁移与数据治理 |
+| [data-model.md](data-model.md) | 数据模型：5 张表的职责、唯一键、索引、迁移与数据治理 |
 | [operations.md](operations.md) | 运行运维：配置、部署、监控、排障手册、数据同步 |
 
 ## 文档与代码同步规则

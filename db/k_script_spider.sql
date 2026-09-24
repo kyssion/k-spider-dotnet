@@ -112,105 +112,6 @@ COMMENT ON COLUMN "public"."spider_news_list"."category" IS '新闻类型';
 COMMENT ON COLUMN "public"."spider_news_list"."download_status_code" IS '详情数据是否下载 0 没有下载 1 已下载';
 CREATE INDEX "idx_news_list_download_status" ON "public"."spider_news_list" USING btree ("download_status_code", "id") WHERE (download_status_code = ANY (ARRAY[0, 2, 3, 4]));
 
-DROP TABLE IF EXISTS "public"."stock_cn_introduction" CASCADE;
-
-CREATE SEQUENCE IF NOT EXISTS "public"."stock_introduction_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
-
-CREATE TABLE "public"."stock_cn_introduction" (
-  "id" bigserial NOT NULL,
-  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "stock_id" character varying(200),
-  "stock_name" character varying(200),
-  "exchange_channel" integer,
-  CONSTRAINT "stock_cn_introduction_pkey" PRIMARY KEY (id),
-  CONSTRAINT "uk_stock_cn_introduction" UNIQUE (stock_id)
-);
-
-DROP TABLE IF EXISTS "public"."stock_cn_level1_archived_daily_origin" CASCADE;
-
-CREATE SEQUENCE IF NOT EXISTS "public"."stock_cn_level1_archived_daliy_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
-
-CREATE TABLE "public"."stock_cn_level1_archived_daily_origin" (
-  "id" bigserial NOT NULL,
-  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "stock_id" character varying(200) NOT NULL,
-  "exchange_channel" integer NOT NULL,
-  "date" date NOT NULL,
-  "archived" text,
-  "data_from" integer,
-  CONSTRAINT "stock_cn_level1_archived_daliy_pkey" PRIMARY KEY (id),
-  CONSTRAINT "uk_cn_daily_stock" UNIQUE (date, stock_id)
-);
-COMMENT ON TABLE "public"."stock_cn_level1_archived_daily_origin" IS '中国股市信息天级别表归档';
-CREATE UNIQUE INDEX "stock_cn_id_date" ON "public"."stock_cn_level1_archived_daily_origin" USING btree ("stock_id", "date");
-
-DROP TABLE IF EXISTS "public"."stock_hk_level1_archived_daily_origin" CASCADE;
-
-CREATE SEQUENCE IF NOT EXISTS "public"."stock_hk_level1_archived_daliy_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
-
-CREATE TABLE "public"."stock_hk_level1_archived_daily_origin" (
-  "id" bigserial NOT NULL,
-  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "stock_id" character varying(200) NOT NULL,
-  "exchange_channel" integer NOT NULL,
-  "date" date NOT NULL,
-  "archived" text,
-  "data_from" integer,
-  CONSTRAINT "stock_hk_level1_archived_daliy_pkey" PRIMARY KEY (id),
-  CONSTRAINT "uk_hk_daily_stock" UNIQUE (date, stock_id)
-);
-COMMENT ON TABLE "public"."stock_hk_level1_archived_daily_origin" IS '香港股市信息天级别level1原始数据';
-CREATE UNIQUE INDEX "stock_hk_id_date" ON "public"."stock_hk_level1_archived_daily_origin" USING btree ("stock_id", "date");
-
-DROP TABLE IF EXISTS "public"."stock_usa_level1_archived_daliy_origin" CASCADE;
-
-CREATE SEQUENCE IF NOT EXISTS "public"."stock_usa_level1_archived_daliy_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
-
-CREATE TABLE "public"."stock_usa_level1_archived_daliy_origin" (
-  "id" bigserial NOT NULL,
-  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "stock_id" character varying(200) NOT NULL,
-  "exchange_channel" integer NOT NULL,
-  "date" date NOT NULL,
-  "archived" text,
-  "data_from" integer,
-  CONSTRAINT "stock_usa_level1_archived_daliy_pkey" PRIMARY KEY (id),
-  CONSTRAINT "uk_usa_daily_stock" UNIQUE (date, stock_id)
-);
-COMMENT ON TABLE "public"."stock_usa_level1_archived_daliy_origin" IS '美股股市信息天级别level1归档原始数据';
-
 ALTER SEQUENCE "public"."spider_news_content_id_seq" OWNED BY "public"."spider_news_content"."id";
 
 ALTER SEQUENCE "public"."spider_news_content_origin_id_seq" OWNED BY "public"."spider_news_content_origin"."id";
@@ -218,14 +119,6 @@ ALTER SEQUENCE "public"."spider_news_content_origin_id_seq" OWNED BY "public"."s
 ALTER SEQUENCE "public"."spider_news_image_list_id_seq" OWNED BY "public"."spider_news_image_list"."id";
 
 ALTER SEQUENCE "public"."spider_news_list_id_seq" OWNED BY "public"."spider_news_list"."id";
-
-ALTER SEQUENCE "public"."stock_cn_level1_archived_daliy_id_seq" OWNED BY "public"."stock_cn_level1_archived_daily_origin"."id";
-
-ALTER SEQUENCE "public"."stock_hk_level1_archived_daliy_id_seq" OWNED BY "public"."stock_hk_level1_archived_daily_origin"."id";
-
-ALTER SEQUENCE "public"."stock_introduction_id_seq" OWNED BY "public"."stock_cn_introduction"."id";
-
-ALTER SEQUENCE "public"."stock_usa_level1_archived_daliy_id_seq" OWNED BY "public"."stock_usa_level1_archived_daliy_origin"."id";
 
 SELECT setval('"public"."spider_news_content_id_seq"', GREATEST(COALESCE(MAX("id"), 1254085), 1254085), true) FROM "public"."spider_news_content";
 
@@ -250,13 +143,6 @@ CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_news_content_origi
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_news_image_list FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_news_list FOR EACH ROW EXECUTE FUNCTION update_time_func();
-
-CREATE TRIGGER update_modified_column BEFORE UPDATE ON stock_cn_level1_archived_daily_origin FOR EACH ROW EXECUTE FUNCTION update_time_func();
-
-CREATE TRIGGER update_function BEFORE UPDATE ON stock_hk_level1_archived_daily_origin FOR EACH ROW EXECUTE FUNCTION update_time_func();
-
-CREATE TRIGGER update_time BEFORE UPDATE ON stock_usa_level1_archived_daliy_origin FOR EACH ROW EXECUTE FUNCTION update_time_func();
-
 
 --
 -- 实时快讯 ( 2026-09 新增 : 列表即全文的快讯源 , 拉到即终态 , 无状态机 )

@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯）与股票 Level1 日线快照（A股/港股），存入 PostgreSQL。解决方案共 3 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯），存入 PostgreSQL。解决方案共 3 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -42,7 +42,7 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 
 | 项目 | 类型 | 职责 |
 |---|---|---|
-| `src/k-spider-dotnet` | Exe | 主爬虫：新闻/股票抓取、解析、落库、Quartz 托管调度；含 Playwright（特殊页面抓取与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
+| `src/k-spider-dotnet` | Exe | 主爬虫：新闻抓取、解析、落库、Quartz 托管调度；含 Playwright（特殊页面抓取与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
 | `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 5 张新闻表（4 张网页新闻 + `spider_flash_news`）同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
 | `src/k-spider-test` | 类库 | MSTest 单元测试（全部离线） |
 
@@ -61,14 +61,12 @@ src/k-spider-dotnet/
 │   ├── News/Web/              #   网页型三段 : NewsListJob / NewsContentOriginJob / NewsContentJob
 │   ├── News/Flash/            #   快讯型 : FlashNewsJob ( 15 秒 )
 │   ├── Check/                 #   NewsCheckJob
-│   └── Stock/                 #   StockCnJob / StockHkJob / StockUsaJob ( 默认停用 , Usa 未在 Program 注册 )
 ├── Spider/                    # 爬虫实现 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs        #   中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/                  #   ── 新闻域 ──
 │   │   ├── NewsSpiderModel.cs #     跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/               #     网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/
 │   │   └── Flash/             #     实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
-│   ├── Stock/                 #   ── 股票域 ── : IStockSpider + Eastmoney/
 │   └── Report/                #   ── 研报域 ── : Eastmoney/ ( 预留扩展 )
 ├── Tool/                      # Html/（HtmlTools、HtmlTagName）+ Http/（HttpClient 伪装头、URL 工具）
 ├── Common/                    # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/
@@ -114,7 +112,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 
 状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 解析失败 / 4 下载失败`。失败态在 `fail_count < NewsPipelineConst.MaxFailCount(3)` 时自动重试；数据库异常（KDbException）不消耗重试次数。
 
-股票管线：`StockCnJob/StockHkJob`（Job/Stock/，Cron 工作日 20:00）读 `stock_cn_introduction` 股票池 → SSE 接口取当日 Level1 归档首帧（空数据跳过不落库）→ `stock_*_level1_archived_daily_origin`。
+股票管线已移除（2026-09）：原 `StockCnJob/StockHkJob` 与 `stock_*` 表逻辑已从代码与 DDL 删除，历史实现与表结构可从 git 历史找回；`Spider/Report/`（研报域）与快讯表的 `stock_list`（关联标的）是两回事，不要混淆。
 
 ## 代码约定
 
@@ -136,7 +134,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - 新增 NuGet 包：`Directory.Packages.props` 加 `PackageVersion` + 项目 csproj 加无版本 `PackageReference`。
 - **测试夹具**：接口真实响应放 `src/k-spider-test/TestData/`（csproj 已配置 `CopyToOutputDirectory`），解析回归优先用真实响应而不是手搓 JSON；新增夹具时在同目录 `README.md` 登记来源接口、抓取时间与参数，接口改版或解析变更时同步重抓并更新断言。
 - **真实接口连通性用例**：`LiveConnectivityTest`（`[TestCategory("Live")]`）直接请求线上 URL，验证"能调通 + 能拿到数据集 + 能解析"，排障（源改版、签名失效）时先跑它。网络不可达/超时报告为跳过，接口能连上却拿不到数据则判失败；`verify.sh` 与 CI 用 `--filter "TestCategory!=Live"` 排除，门禁保持离线确定。
-- 新增数据源爬虫参考 `Spider/Stock/IStockSpider.cs` 的接口 + 模板方法模式；爬虫实现一律放 `Spider/` 目录。
+- 爬虫实现一律放 `Spider/` 目录 , 按下方网页抓取型 / 实时快讯型两条套路接入。
 - **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（`FromTypeOfNews` 枚举加值）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）。
   - 翻页走 `GetListPage(column, pageSize, cursor)` 的不透明游标，`NextCursor = null` 表示没有更多。
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
@@ -160,7 +158,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 ## 数据库
 
 - 库名 `k_script_spider`，9 张表的完整 DDL 在 `db/k_script_spider.sql`（DBX 导出 + 增量演进段），新环境用它初始化。
-- 唯一键约定：新闻三表以 `news_url` 去重，图片表以 `image_resource_url`，股票日线以 `(date, stock_id)`。
+- 唯一键约定：新闻三表以 `news_url` 去重，图片表以 `image_resource_url`，快讯表以 `(from_media, news_url)`。
 - 表**不是** CodeFirst 管理；`Data/Devtools/PgDevelop.cs` 可从库反向重新生成 SqlSugar 实体（DbFirst）。
 - 所有表有 `update_time_func()` 触发器自动刷新 `update_time`，upsert 时 ignore 这三列即可。
 - 轮询热路径依赖部分索引 `idx_news_list_download_status`（启动时自动创建）。
@@ -169,19 +167,17 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 
 1. **SqlSugar `ToSqlString` 默认 200 行限制**：批量生成 INSERT 会自动分页。`SpiderNewsBatchDao`（Data/）里有绕过实现（`IsNoPage = true` + 手拼 `ON CONFLICT`），写批量 SQL 时照抄它。**单条数据时 `ToSqlString` 以 `VALUES` 段结尾且不带分号**（多条以 `;` 结尾，均无 returning），去尾统一用 `SpiderNewsBatchDao.TrimInsertSqlTail`；不要用 `[..LastIndexOf(';')]` 截断——单条时 LastIndexOf 返回 -1 会抛参数越界（有单测锁定该边界）。
 2. **手拼 `ON CONFLICT (列)` 要求该列上有唯一索引 / 约束**，缺失时 PostgreSQL 整批报错（`there is no unique or exclusion constraint matching the ON CONFLICT specification`）。列表任务里列表行与原始内容同事务，异常会一起回滚，表现为"该源一行数据都进不来、其它源正常"。`Pg.CheckBatchUpsertUniqueIndexes` 在启动时会显式告警；缺约束时按 docs/operations.md 的巡检 SQL 核对并手工补建（批量 upsert 依赖四张表的唯一列）。
-3. `Program.AddSpiderJobs` 里股票 Job 被注释停用（`StockCnJob/StockHkJob`）——这是有意的按需启用，不要顺手全部打开。
-4. 本地无 PG 时运行主程序，各 Job 每轮抛连接异常并按间隔重试，属预期噪音；验证代码改动用 `dotnet test`，不要靠运行主程序判断对错。
-5. 时间格式强绑定：列表接口 `yyyy-MM-dd HH:mm:ss`、详情接口 `yyyy/MM/dd HH:mm:ss`（`DfListInfo`/`DfContentInfo` 的 `To*Model()` 各自使用 `TimeTools` 常量），格式不匹配会抛 `FormatException`。
-6. 股票 Job 的 `DateTime.Today` 依赖服务器时区，UTC 服务器上日期会错（systemd 模板已设 TZ=Asia/Shanghai，自管进程需确认）。
-7. `Data/Devtools/`（DbFirst 生成器）与 `Spider/Stock/Eastmoney/Devtools/`（一次性下载工具）是开发期工具，不参与生产链路。
-8. 主项目 `Lark/` 下的飞书 SDK 当前无调用方（推送功能已移除），保留备用；重新启用时凭据走 `DatabaseOptions` 同款 Options 模式加回配置节。
-9. `spider_news_content_origin` 存整篇原始 JSON、图片表只增不删，长期运行需自行归档清理（原 `db/optimization.sql` 已移除，清理 SQL 可从 git 历史找回）。
-10. 命名空间刻意用复数 `KSpider.Exceptions`（避开与 `System.Exception` 类型撞名）；`KSpider.Spider.News.Web.Eastmoney.Playwright` 下调用 Playwright 库同理需全限定。
-11. 环境变量前缀是 `K_SPIDER__`（含双下划线）：`K_SPIDER__DATABASE__CONNECTIONSTRING` → `Database:ConnectionString`。此前缀写错会静默失效（曾踩过）。
-12. **财联社签名绑定前端版本号**：`sign = MD5(SHA1(参数按 key 升序拼接))`，其中 `sv`（前端版本号，当前 8.7.9）写死在 `ClsNewsResource`。财联社升级前端后接口会开始返回 `errno 10012 签名错误`（`NewsCheckJob` 探测日志会暴露），更新 `Sv` 即可；`ClsNewsSpiderTest.SignMatchesVerifiedVector` 锁了一组实测向量，改算法必须同步该用例。
-13. **财联社电报列表 `rn` 超过 50 会静默返回空数组**（errno 仍为 0，看起来像"没有新闻"），已在 `ClsNewsResource.MaxPageSize` 钳制。另外它的时间游标是**严格小于**语义，`NextCursor` 取本页最老一条 ctime + 1，否则同一秒内的其它条目会被永久跳过（边界条目重复由 `ON CONFLICT DO NOTHING` 吸收）。
-14. **金十快讯接口必须带 `x-app-id` / `x-version` 头**，缺失直接 502（值写在 `Jin10NewsResource`，被拒时对照网页端请求更新）。它的 `max_time` 游标是**含边界**语义（`NextCursor` 直接用最老一条时间，边界重复由去重吸收）；约 20% 条目是 PLUS 专享，正文为空、只有 `vip_title` 可用（实现已兜底，详见 docs/news-pipeline.md）。
-15. 四个快讯源（财联社/新浪/见闻/金十）走独立的 `FlashNewsJob` 管线写 `spider_flash_news`（15 秒一轮、拉到即终态），与网页抓取型管线（三张表 + 状态机）完全分离；不要把快讯源注册进 `NewsSpiderRegistry`。加新快讯源时照抄 `Spider/News/Flash/Cls/` 或 `Spider/News/Flash/Jin10/` 的结构。
+3. 本地无 PG 时运行主程序，各 Job 每轮抛连接异常并按间隔重试，属预期噪音；验证代码改动用 `dotnet test`，不要靠运行主程序判断对错。
+4. 时间格式强绑定：列表接口 `yyyy-MM-dd HH:mm:ss`、详情接口 `yyyy/MM/dd HH:mm:ss`（`DfListInfo`/`DfContentInfo` 的 `To*Model()` 各自使用 `TimeTools` 常量），格式不匹配会抛 `FormatException`。
+5. `Data/Devtools/`（DbFirst 生成器）是开发期工具，不参与生产链路。
+6. 主项目 `Lark/` 下的飞书 SDK 当前无调用方（推送功能已移除），保留备用；重新启用时凭据走 `DatabaseOptions` 同款 Options 模式加回配置节。
+7. `spider_news_content_origin` 存整篇原始 JSON、图片表只增不删，长期运行需自行归档清理（原 `db/optimization.sql` 已移除，清理 SQL 可从 git 历史找回）。
+8. 命名空间刻意用复数 `KSpider.Exceptions`（避开与 `System.Exception` 类型撞名）；`KSpider.Spider.News.Web.Eastmoney.Playwright` 下调用 Playwright 库同理需全限定。
+9. 环境变量前缀是 `K_SPIDER__`（含双下划线）：`K_SPIDER__DATABASE__CONNECTIONSTRING` → `Database:ConnectionString`。此前缀写错会静默失效（曾踩过）。
+10. **财联社签名绑定前端版本号**：`sign = MD5(SHA1(参数按 key 升序拼接))`，其中 `sv`（前端版本号，当前 8.7.9）写死在 `ClsNewsResource`。财联社升级前端后接口会开始返回 `errno 10012 签名错误`（`NewsCheckJob` 探测日志会暴露），更新 `Sv` 即可；`ClsNewsSpiderTest.SignMatchesVerifiedVector` 锁了一组实测向量，改算法必须同步该用例。
+11. **财联社电报列表 `rn` 超过 50 会静默返回空数组**（errno 仍为 0，看起来像"没有新闻"），已在 `ClsNewsResource.MaxPageSize` 钳制。另外它的时间游标是**严格小于**语义，`NextCursor` 取本页最老一条 ctime + 1，否则同一秒内的其它条目会被永久跳过（边界条目重复由 `ON CONFLICT DO NOTHING` 吸收）。
+12. **金十快讯接口必须带 `x-app-id` / `x-version` 头**，缺失直接 502（值写在 `Jin10NewsResource`，被拒时对照网页端请求更新）。它的 `max_time` 游标是**含边界**语义（`NextCursor` 直接用最老一条时间，边界重复由去重吸收）；约 20% 条目是 PLUS 专享，正文为空、只有 `vip_title` 可用（实现已兜底，详见 docs/news-pipeline.md）。
+13. 四个快讯源（财联社/新浪/见闻/金十）走独立的 `FlashNewsJob` 管线写 `spider_flash_news`（15 秒一轮、拉到即终态），与网页抓取型管线（三张表 + 状态机）完全分离；不要把快讯源注册进 `NewsSpiderRegistry`。加新快讯源时照抄 `Spider/News/Flash/Cls/` 或 `Spider/News/Flash/Jin10/` 的结构。
 
 ## 提交规范
 
@@ -198,7 +194,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 
 | type | 用途 |
 | --- | --- |
-| feat | 新功能（scope 标注模块，如 `feat(news): …`、`feat(stock): …`、`feat(sync): …`） |
+| feat | 新功能（scope 标注模块，如 `feat(news): …`、`feat(sync): …`） |
 | fix | 缺陷修复 |
 | docs | 仅文档变更 |
 | refactor | 重构（不改行为） |
@@ -221,7 +217,7 @@ git status             # 无产物文件混入（bin/obj/.idea 等）
 ```
 
 文档同步：结构性 / 约定性变更须同步更新 README.md、AGENTS.md 与 `docs/` 对应章节。
-`docs/` 是面向维护者的设计文档（设计原则 / 架构 / 新闻管线 / 股票管线 / 数据模型 / 运维手册），
+`docs/` 是面向维护者的设计文档（设计原则 / 架构 / 新闻管线 / 数据模型 / 运维手册），
 其中 [docs/README.md](docs/README.md) 有"代码变更 → 必须更新哪份文档"的映射表，改代码前先扫一眼那张表。
 
 凭据红线：不向仓库提交真实凭据；环境相关值进配置/Options，由部署方用环境变量覆盖。

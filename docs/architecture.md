@@ -7,7 +7,7 @@
 ┌──────────────────┐      ┌──────────────────────┐      ┌──────────────────┐      ┌──────────────────┐
 │ 东方财富 列表/正文 │      │  k-spider-dotnet     │      │  PostgreSQL      │      │  PostgreSQL      │
 │ 财联社   电报     │─────▶│  Generic Host + DI   │─────▶│  远端库           │─────▶│  本地库           │
-│ 东财股票 Level1   │ HTTP │  Quartz 托管调度      │  ORM │  9 张表 + 触发器  │ 2 分钟│  (k-spider-sync) │
+│ 新浪/见闻/金十    │ HTTP │  Quartz 托管调度      │  ORM │  5 张表 + 触发器  │ 2 分钟│  (k-spider-sync) │
 └──────────────────┘      └──────────────────────┘      └──────────────────┘      └──────────────────┘
 ```
 
@@ -35,7 +35,7 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 
 1. `DOTNET_ENVIRONMENT` 未设置时默认 `Development`（Host 标准环境选择）。
 2. `Host.CreateApplicationBuilder` 装配配置：`appsettings.json` → `appsettings.{环境}.json` → `K_SPIDER__` 前缀环境变量 → 代码默认值。
-3. DI 注册：`DatabaseOptions`（IOptions）、`Pg`、`SpiderNewsDao`、`SpiderNewsBatchDao`、`StockDao`（均 Singleton）。
+3. DI 注册：`DatabaseOptions`（IOptions）、`Pg`、`SpiderNewsDao`、`SpiderNewsBatchDao`（均 Singleton）。
 4. `AddQuartz(AddSpiderJobs)` 集中注册任务与触发器；`AddQuartzHostedService(WaitForJobsToComplete = true)` 保证收到退出信号后等在跑任务收尾。
 5. `host.Build()` 后先执行 `Pg.EnsureSpiderNewsListDbObjects()` 幂等补齐库对象（库不可用时仅记日志，不阻断进程），再 `RunAsync()`。
 
@@ -54,7 +54,6 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 | `NewsContentOriginJob` | 3 秒 | 200 条 | 全源 FIFO 下载原始内容 |
 | `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
 | `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 |
-| `StockCnJob` / `StockHkJob` | Cron 工作日 20:00 | 全股票池 | **默认停用**（`Program.cs` 中注释），按需启用 |
 | `TransferSpiderDataJob`（sync 进程） | 2 分钟 | 2000 行 / 批 | 远端 → 本地增量同步 |
 
 任务停用/启用只改 `Program.AddSpiderJobs` 里的注释，不要在别处加开关。
@@ -96,15 +95,13 @@ src/k-spider-dotnet/
 ├── Job/              # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
 │   ├── News/Web/     #   网页型三段任务
 │   ├── News/Flash/   #   FlashNewsJob ( 15 秒 )
-│   ├── Check/        #   NewsCheckJob
-│   └── Stock/        #   StockCnJob / StockHkJob ( 默认停用 )
+│   └── Check/        #   NewsCheckJob
 ├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs   # 中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/             # ── 新闻域 ──
 │   │   ├── NewsSpiderModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
 │   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
-│   ├── Stock/            # ── 股票域 ── : IStockSpider + Eastmoney/ ( China/ Hk/ Usa/ )
 │   └── Report/           # ── 研报域 ── : Eastmoney/ ( 当前无调用方 , 预留扩展 )
 ├── Tool/             # Http/ ( 伪装头客户端与 URL 工具 ) + Html/ ( 标签枚举与解析工具 )
 ├── Common/           # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/

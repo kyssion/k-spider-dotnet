@@ -1,5 +1,5 @@
 [Unit]
-Description=k-spider-dotnet 金融数据爬虫 ( 东方财富新闻/股票 )
+Description=k-spider-dotnet 金融数据爬虫 ( 财经新闻与实时快讯 )
 After=network-online.target
 Wants=network-online.target
 
@@ -9,7 +9,7 @@ WorkingDirectory=/opt/k-spider
 ExecStart=/opt/k-spider/k-spider-dotnet
 # 与发布产物的环境配置对齐 ( dotnet publish -p:SpiderEnvironment=Production )
 Environment=DOTNET_ENVIRONMENT=Production
-# 股票任务依赖本地日期 , 必须为上海时区
+# 快讯滞后计算等 "当前时刻" 判断依赖时区 , 必须为上海时区
 Environment=TZ=Asia/Shanghai
 Restart=always
 RestartSec=10
