@@ -18,7 +18,13 @@ public static class Program
         System.Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT",
             System.Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development");
 
-        var builder = Host.CreateApplicationBuilder(args);
+        // 配置根固定为程序所在目录 : Host 默认用当前工作目录找 appsettings ,
+        // 从仓库根执行 dotnet run --project 时工作目录是仓库根 , 会静默找不到配置并回退代码默认连接串 ( 曾踩坑 )
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+        {
+            Args = args,
+            ContentRootPath = AppContext.BaseDirectory
+        });
         // K_SPIDER__ 前缀环境变量覆盖 ( Host 默认只映射 DOTNET_ 前缀 )
         builder.Configuration.AddEnvironmentVariables("K_SPIDER__");
 
