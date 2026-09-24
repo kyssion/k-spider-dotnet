@@ -43,7 +43,7 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 | 项目 | 类型 | 职责 |
 |---|---|---|
 | `src/k-spider-dotnet` | Exe | 主爬虫：新闻/股票抓取、解析、落库、Quartz 托管调度；含 Playwright（特殊页面抓取与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
-| `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 4 张新闻表同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
+| `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 5 张新闻表（4 张网页新闻 + `spider_flash_news`）同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
 | `src/k-spider-test` | 类库 | MSTest 单元测试（全部离线） |
 
 依赖方向：`k-spider-sync → k-spider-dotnet`（复用 `Model/` 实体、`Data/Pg` 连接工厂与 `Job/SpiderJob` 基类）；test 引用主项目。**实体只有一套**（主项目 `Model/`）。
@@ -61,7 +61,7 @@ src/k-spider-dotnet/
 │   ├── News/Web/              #   网页型三段 : NewsListJob / NewsContentOriginJob / NewsContentJob
 │   ├── News/Flash/            #   快讯型 : FlashNewsJob ( 15 秒 )
 │   ├── Check/                 #   NewsCheckJob
-│   └── Stock/                 #   StockCnJob / StockHkJob ( 默认停用 )
+│   └── Stock/                 #   StockCnJob / StockHkJob / StockUsaJob ( 默认停用 , Usa 未在 Program 注册 )
 ├── Spider/                    # 爬虫实现 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs        #   中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/                  #   ── 新闻域 ──
@@ -106,7 +106,7 @@ NewsContentJob (每1分钟, 按Id先进先出)
 FlashNewsJob (每15秒, Job/News/)
   各源并行 , 每源独立连接 ; 拉一页即完整数据
   → 批量 ON CONFLICT (from_media, news_url) 写 spider_flash_news ( 拉到即终态 )
-  已存在行更新内容字段 ( 快讯发布后数分钟内的修正随下一轮 poll 回填 )
+  已存在行仅当 raw_content 变化时更新内容字段 ( 快讯发布后数分钟内的修正随下一轮 poll 回填 , 未变不空转更新 )
   失败记日志 , 下一轮 ( 15 秒后 ) 自然重试 ; 停机回补按游标最多翻 4 页
 ```
 
@@ -167,7 +167,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 
 ## 已知坑（改代码前必读）
 
-1. **SqlSugar `ToSqlString` 默认 200 行限制**：批量生成 INSERT 会自动分页。`SpiderNewsBatchDao`（Data/）里有绕过实现（`IsNoPage = true` + 手拼 `ON CONFLICT`），写批量 SQL 时照抄它。**单条数据时 `ToSqlString` 会以 `returning "id"` 结尾且不带分号**，而现有实现用 `[..LastIndexOf(';')]` 截断——写新的批量方法时注意这个边界。
+1. **SqlSugar `ToSqlString` 默认 200 行限制**：批量生成 INSERT 会自动分页。`SpiderNewsBatchDao`（Data/）里有绕过实现（`IsNoPage = true` + 手拼 `ON CONFLICT`），写批量 SQL 时照抄它。**单条数据时 `ToSqlString` 以 `VALUES` 段结尾且不带分号**（多条以 `;` 结尾，均无 returning），去尾统一用 `SpiderNewsBatchDao.TrimInsertSqlTail`；不要用 `[..LastIndexOf(';')]` 截断——单条时 LastIndexOf 返回 -1 会抛参数越界（有单测锁定该边界）。
 2. **手拼 `ON CONFLICT (列)` 要求该列上有唯一索引 / 约束**，缺失时 PostgreSQL 整批报错（`there is no unique or exclusion constraint matching the ON CONFLICT specification`）。列表任务里列表行与原始内容同事务，异常会一起回滚，表现为"该源一行数据都进不来、其它源正常"。`Pg.CheckBatchUpsertUniqueIndexes` 在启动时会显式告警；缺约束时按 docs/operations.md 的巡检 SQL 核对并手工补建（批量 upsert 依赖四张表的唯一列）。
 3. `Program.AddSpiderJobs` 里股票 Job 被注释停用（`StockCnJob/StockHkJob`）——这是有意的按需启用，不要顺手全部打开。
 4. 本地无 PG 时运行主程序，各 Job 每轮抛连接异常并按间隔重试，属预期噪音；验证代码改动用 `dotnet test`，不要靠运行主程序判断对错。

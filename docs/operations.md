@@ -95,7 +95,7 @@ SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
 
 ## 五、数据同步（`k-spider-sync`）
 
-每 2 分钟一轮，把远端库的 4 张新闻表搬到本地库，`DisallowConcurrentExecution` + 优雅停机，与主爬虫互不影响。
+每 2 分钟一轮，把远端库的 5 张新闻表（4 张网页新闻 + `spider_flash_news`）搬到本地库，`DisallowConcurrentExecution` + 优雅停机，与主爬虫互不影响。
 
 **两条同步通道**：
 

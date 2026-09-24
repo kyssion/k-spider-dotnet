@@ -8,7 +8,7 @@
 - **实时快讯管线**（15 秒一轮，独立于网页管线）：财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯——"列表即全文"型源，拉到即终态直写 `spider_flash_news`（含重要度/关联标的），发布到入库最坏延迟约 16 秒；`NewsCheckJob` 按源监控实时性滞后。
 - **股票管线**：A股（沪/深北）与港股的当日 Level1 归档快照，Cron 工作日收盘后执行，按 `(date, stock_id)` 去重（默认停用，按需启用）。
 - **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计（每 5 分钟）。
-- **数据搬运**：独立进程 `k-spider-sync` 将远端库的 4 张新闻表增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
+- **数据搬运**：独立进程 `k-spider-sync` 将远端库的 5 张新闻表（4 张网页新闻 + 快讯表）增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
 
 ## 解决方案结构
 
@@ -90,7 +90,7 @@ spider_news_content_origin
 spider_news_content + spider_news_image_list
 ```
 
-状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。快讯型源（列表即全文）在列表阶段就直接写成 `status=3`，不经过下载 Job。8 张表完整 DDL 见 [db/k_script_spider.sql](db/k_script_spider.sql)。
+状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。快讯型源（列表即全文）在列表阶段就直接写成 `status=3`，不经过下载 Job。9 张表完整 DDL 见 [db/k_script_spider.sql](db/k_script_spider.sql)。
 
 ## 部署（Linux）
 

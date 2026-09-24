@@ -3,7 +3,7 @@
 新闻抓取按数据形态分**两条独立管线**：
 
 - **网页抓取型**（有独立详情页，当前只有东财）：三段接力（列表发现 → 原始内容下载 → 结构化解析），由 `spider_news_list.download_status_code` 状态机驱动，源注册在 `NewsSpiderRegistry`，本文一~三章与六~八章描述该管线。
-- **实时快讯型**（"列表即全文"：财联社电报 / 新浪 7x24 / 见闻 live / 金十快讯）：`FlashNewsJob` 每 15 秒各源并发拉一页即完整数据，直写 `spider_flash_news`（唯一键 `(from_media, news_url)`，已存在行更新内容字段以吸收源侧修正），拉到即终态、无状态机、无下载/解析阶段，源注册在 `FlashNewsSpiderRegistry`。字段与各源映射见第四章"源成熟度"之后的快讯表说明与各源小节。
+- **实时快讯型**（"列表即全文"：财联社电报 / 新浪 7x24 / 见闻 live / 金十快讯）：`FlashNewsJob` 每 15 秒各源并发拉一页即完整数据，直写 `spider_flash_news`（唯一键 `(from_media, news_url)`，已存在行仅当原始 JSON 变化时更新内容字段以吸收源侧修正），拉到即终态、无状态机、无下载/解析阶段，源注册在 `FlashNewsSpiderRegistry`。字段与各源映射见第四章"源成熟度"之后的快讯表说明与各源小节。
 
 ## 一、状态机（网页抓取型）
 
@@ -176,7 +176,7 @@ public interface INewsSpider
 ## 六、落库与去重
 
 - 新闻三表都以 `news_url` 为唯一键，图片表以 `image_resource_url`，跨源也全局去重（同一 URL 只落一次）。
-- 各表的 upsert 语义不同（列表 `DO NOTHING` / 原始内容与详情 `DO UPDATE`），原因见 [principles.md](principles.md) 的"数据访问约定"。
+- 各表的 upsert 语义不同（列表 `DO NOTHING` / 原始内容与详情 `DO UPDATE` / 快讯 `DO UPDATE` 且仅当原始 JSON 变化才更新），原因见 [principles.md](principles.md) 的"数据访问约定"。
 - `from_media` 标识来源，`category` 是源内部栏目分类号。
 - 结构化内容片段（`spider_news_content.news_content_json`）是跨源共用的格式，定义为 `NewsContentSegment`：
 
@@ -227,6 +227,6 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 金十 PLUS 专享条目只有标题 | 实测约 20% 条目正文需付费账号，实现用 `vip_title` 兜底，正文与标题相同 | 需要正文时接付费通道，或在下游按 `data.lock` 过滤 |
 | 新浪快讯图片未解析 | 图片在 `multimedia` 字段，实测 100 条仅 1 条非空 | 出现高频图片时补该字段解析 |
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
-| 跨源 URL 碰撞未防护 | 四个快讯源共用 `spider_news_content_origin` 表且都用 `ON CONFLICT (news_url) DO UPDATE`。若两个源产出同一 URL（当前实测各源域名互不重叠，尚未发生），后写的会覆盖先写的原始内容，而两源解析器不同（东财是 `Art_Content` 的 JSON、快讯源是条目 JSON），覆盖后解析必然失败。另外三张表（`content_origin` / `content` / `image_list`）没有 `from_media` 列，无法按源隔离 | 真出现碰撞时给这三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
+| 跨源 URL 碰撞风险收窄但未根除 | 快讯源已独立写 `spider_flash_news`（唯一键含 `from_media`，源间天然隔离）；剩余风险在网页型三表——`ON CONFLICT (news_url)` 跨源全局去重，若未来新增的网页型源产出与东财相同的 URL，后写的会覆盖先写的原始内容（当前仅东财一个网页型源，实测各源域名互不重叠） | 真出现碰撞时给三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |

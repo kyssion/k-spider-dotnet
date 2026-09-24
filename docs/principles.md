@@ -48,7 +48,8 @@ Data/ (连接工厂 + DAO)  →  Model/ (SqlSugar 实体)
   | 写列表行 | `ON CONFLICT (news_url) DO NOTHING` | 已存在的行由后续阶段推进状态，不能被列表重抓覆盖 |
   | 写原始内容 | `ON CONFLICT (news_url) DO UPDATE` | 重新下载的原始内容应覆盖旧值 |
   | 写结构化详情 | `ON CONFLICT (news_url) DO UPDATE` | 解析规则升级后重跑应能修正历史数据 |
-- **批量写入用手拼 `ON CONFLICT`**：SqlSugar 的 `ToSqlString` 默认 200 行分页，批量场景需要 `IsNoPage = true`，实现集中在 `Data/SpiderNewsBatchDao.cs`，要写批量 SQL 时照抄它。
+  | 写实时快讯 | `ON CONFLICT (from_media, news_url) DO UPDATE` + `WHERE raw_content IS DISTINCT FROM EXCLUDED.raw_content` | 源侧修正随 15 秒轮询回填；原始 JSON 未变则不更新，update_time 保持"最后修改"语义，同步侧也不搬运未变的行 |
+- **批量写入用手拼 `ON CONFLICT`**：SqlSugar 的 `ToSqlString` 默认 200 行分页，批量场景需要 `IsNoPage = true`；去尾统一用 `SpiderNewsBatchDao.TrimInsertSqlTail`（单条输出不带分号，不能按分号下标截断），实现集中在 `Data/SpiderNewsBatchDao.cs`，要写批量 SQL 时照抄它。
 - **异常统一包装**：数据访问异常包成 `KDbException`，抓取/解析异常包成 `DownloadHttpException` 族（`HtmlFormException` 等）。分开的目的是让上层能区分**数据库抖一下**和**数据本身有问题**——两者的重试策略不同（见下）。
 
 ## 四、错误处理与重试约定
