@@ -4,6 +4,7 @@ using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Flash.Jin10;
 using KSpider.Spider.News.Web;
+using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Flash.Sina;
 using KSpider.Spider.News.Flash.Wscn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,13 +19,23 @@ namespace KSpider.Test.Spider;
 public class NewsSourceRegistryTest
 {
     [TestMethod]
-    public void WebRegistryOnlyContainsDfSource()
+    public void WebRegistryContainsAllWebSources()
     {
-        var spider = NewsSpiderRegistry.Get((int)FromTypeOfNews.DfMedia);
+        var expected = new (FromTypeOfNews FromMedia, Type SpiderType)[]
+        {
+            (FromTypeOfNews.DfMedia, typeof(DfNewsSpider)),
+            (FromTypeOfNews.ClsArticleMedia, typeof(ClsArticleSpider))
+        };
 
-        Assert.IsNotNull(spider);
-        Assert.IsInstanceOfType<DfNewsSpider>(spider);
-        Assert.AreEqual(1, NewsSpiderRegistry.All.Count);
+        foreach (var (fromMedia, spiderType) in expected)
+        {
+            var spider = NewsSpiderRegistry.Get((int)fromMedia);
+            Assert.IsNotNull(spider, $"{fromMedia} 未在 NewsSpiderRegistry 注册");
+            Assert.AreEqual(spiderType, spider.GetType());
+            Assert.IsTrue(spider.Columns.Count > 0, $"{fromMedia} 没有配置任何栏目");
+        }
+
+        Assert.AreEqual(expected.Length, NewsSpiderRegistry.All.Count);
     }
 
     [TestMethod]
@@ -100,7 +111,8 @@ public class NewsSourceRegistryTest
         var rangeBySource = new Dictionary<FromTypeOfNews, (int Min, int Max)>
         {
             [FromTypeOfNews.DfMedia] = (1, 22),
-            [FromTypeOfNews.ClsMedia] = (101, 199),
+            [FromTypeOfNews.ClsMedia] = (101, 101),
+            [FromTypeOfNews.ClsArticleMedia] = (102, 199),
             [FromTypeOfNews.SinaMedia] = (201, 299),
             [FromTypeOfNews.WscnMedia] = (301, 399),
             [FromTypeOfNews.Jin10Media] = (401, 499)
@@ -125,6 +137,14 @@ public class NewsSourceRegistryTest
             var number = resourceItem.CategoryInfo.CategoryNumber;
             var (min, max) = rangeBySource[FromTypeOfNews.DfMedia];
             Assert.IsTrue(number >= min && number <= max, $"东财栏目分类号越界 : {number}");
+        }
+
+        // 财联社文章频道的分类号全部落在 102-199 内 ( 接在电报 101 之后 )
+        foreach (var channel in ClsArticleResource.ArticleChannelResourceList)
+        {
+            var (min, max) = rangeBySource[FromTypeOfNews.ClsArticleMedia];
+            Assert.IsTrue(channel.CategoryNumber >= min && channel.CategoryNumber <= max,
+                $"财联社文章频道分类号越界 : {channel.ChannelName} = {channel.CategoryNumber}");
         }
 
         // 各源编号段互不重叠

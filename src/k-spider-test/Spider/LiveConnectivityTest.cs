@@ -4,6 +4,7 @@ using KSpider.Spider;
 using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
+using KSpider.Spider.News.Web.Cls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
@@ -73,6 +74,36 @@ public class LiveConnectivityTest
     public async Task Jin10LiveFetchFlashPage()
     {
         await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Jin10.Jin10NewsSpider(), "金十快讯");
+    }
+
+    [TestMethod]
+    public async Task ClsArticleLiveFetchListOriginAndParse()
+    {
+        var spider = new ClsArticleSpider();
+        var column = spider.Columns[0];
+
+        var listPage = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, null));
+        Assert.IsTrue(listPage.Items.Count > 0, "财联社文章频道列表接口未返回任何数据");
+        AssertRealNewsRows(listPage.Items.Select(item => (item.NewsUrl, item.NewsTitle, item.NewsFrom,
+            item.NewsTime, item.FromMedia, item.Category)).ToList());
+
+        // 详情 : 真实下载原始内容 ( 详情页 __NEXT_DATA__ ) , 再解析成结构化正文
+        var newsItem = listPage.Items[0];
+        var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
+        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+
+        var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText), "解析后正文为空");
+
+        // 游标续拉 : 用第一页游标能取到后续数据
+        if (listPage.NextCursor != null)
+        {
+            var olderPage = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, listPage.NextCursor));
+            Assert.IsTrue(olderPage.Items.Count > 0, "用游标翻页未取到数据 ( 游标语义可能已变更 )");
+        }
+
+        TestContext.WriteLine($"财联社文章 {column.ColumnName} : {listPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
     }
 
     /// <summary>

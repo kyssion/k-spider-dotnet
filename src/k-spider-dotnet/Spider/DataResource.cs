@@ -144,7 +144,7 @@ public enum FromTypeOfNews
     // 东方财富
     DfMedia = 1,
 
-    // 财联社 ( 电报 )
+    // 财联社 ( 电报 , 实时快讯型管线 )
     ClsMedia = 2,
 
     // 新浪财经 ( 7x24 快讯 )
@@ -154,7 +154,10 @@ public enum FromTypeOfNews
     WscnMedia = 4,
 
     // 金十数据 ( 快讯 )
-    Jin10Media = 5
+    Jin10Media = 5,
+
+    // 财联社 ( 文章/深度频道 , 网页抓取型管线 : /v3/depth/list + 详情页 )
+    ClsArticleMedia = 6
 }
 
 public enum NewsDownloadStatusCode

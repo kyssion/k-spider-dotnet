@@ -87,6 +87,7 @@ public interface INewsSpider
 |---|---|---|---|---|---|
 | 东方财富 | `DfMedia = 1` | 35 个栏目，映射到 22 个分类号 | `page_index` 页码翻页 | 详情接口 `newsinfo.eastmoney.com/kuaixun/v2/api/article/{id}` | 时间格式强绑定（见下） |
 | 财联社电报 | `ClsMedia = 2` | 1 个栏目「电报」，`category = 101` | `last_time` 时间游标（严格小于） | **快讯管线**：拉到即终态 | 需要签名，单页上限 50；重要度 A/B/C → 3/2/1；带关联标的 |
+| 财联社文章频道 | `ClsArticleMedia = 6` | 13 个频道（头条 102 / A股 103 / 港股 104 / 环球 105 / 公司 106 / 券商 107 / 基金ETF 108 / 地产 109 / 金融 110 / 汽车 111 / 科创 112 / 期货 113 / 投教 114） | `last_time` 时间游标（**不保证单调**，见下） | 详情页 SSR `__NEXT_DATA__` | 同一签名算法；列表自带 `is_ad`；品见/招财号未接入 |
 | 新浪财经 7x24 | `SinaMedia = 3` | 1 个栏目「7x24」，`category = 201` | `page` 页码翻页 | **快讯管线**：拉到即终态 | 无鉴权，正文以【标题】开头；`ext.stocks` 提取关联标的 |
 | 华尔街见闻 live | `WscnMedia = 4` | 1 个栏目「全球宏观」，`category = 301` | 接口自带 `next_cursor` | **快讯管线**：拉到即终态 | 无鉴权，约 1/3 条目无标题；`score=2` → 重要度 2 |
 | 金十快讯 | `Jin10Media = 5` | 1 个栏目「快讯」，`category = 401` | `max_time` 时间游标（含边界） | **快讯管线**：拉到即终态 | 必须带客户端标识头；约 20% 为 PLUS 专享（有 vip_title 的保留标题、无任何公开信息的跳过）；`important` → 重要度 2 |
@@ -98,7 +99,7 @@ public interface INewsSpider
 > |---|---|---|
 > | 华尔街见闻 | `global-channel` / `a-stock-channel` / `forex-channel` / `commodity-channel` / `bond-channel` / `hk-stock-channel` / `us-stock-channel` 等 8 个以上频道 | 实测换 `channel` 参数均能取到数据 |
 > | 金十 | 快讯条目自带 5 个频道分类（`channel` 字段取值 1-5） | 响应字段实测 |
-> | 财联社 | 电报之外还有多个内容频道 | 接口支持 `category` 参数（v1 未验证分频道取数） |
+> | 财联社 | 电报之外的文章频道已接入（见上表 `ClsArticleMedia`）；电报 roll 接口本身未验证分频道取数 | 2026-09 实测 |
 > | 新浪 | 直播接口支持 `zhibo_id` / `tag_id` 切换不同直播与标签 | 接口参数 |
 >
 > **补栏目不是"加一行配置"那么轻**：这四个源目前把频道参数与 `category` 都写死在各自的 `*NewsResource` 常量里
@@ -124,6 +125,15 @@ public interface INewsSpider
 - **游标是严格小于语义**：`NextCursor` 取本页最老一条 `ctime + 1`，否则同一秒内的其它条目会被永久跳过；边界那一条会被下一页重复取回，由入库去重吸收。
 - 字段映射：`news_url = https://www.cls.cn/detail/{id}`（不用响应里的 `shareurl`，它带 `sv` 参数、版本一变去重键就变）；标题为空时用 `brief` 兜底（约半数电报没有标题）；`ctime` 是 unix 秒，固定按东八区换算，不依赖宿主时区；`subjects[].subject_name` 拼成关键字。
 - 实测量级：约 370 条/天，50 条约覆盖 3.3 小时；图片属低频（50 条里约 1 条带图）。
+
+### 财联社文章频道（`Spider/News/Web/Cls/`）
+
+- 财联社官网顶部导航的**文章频道**（头条/A股/港股/环球/公司/券商/基金ETF/地产/金融/汽车/科创/期货/投教），与电报是同一网站的两类内容：电报是"列表即全文"快讯（走快讯管线），这些频道是**有独立详情页的文章**（走网页型管线）。两者的 FromMedia 值分开（`ClsMedia=2` / `ClsArticleMedia=6`），维持"一个源只属于一种管线"的约定；CLS 的文章与电报共用一套全局 id（一个 id 只属于一种内容类型），`news_url = https://www.cls.cn/detail/{id}` 落不同表，不会撞键。
+- 频道清单来自 `GET /v2/base/common_config` 的 `column_bar` 字段（与官网导航逐项对应）；**列表** `GET /v3/depth/list/{channel_id}?id=&last_time=&rn=20`，签名算法与电报同款（`sv=8.7.9` 实测有效）。
+- **翻页语义（实测）**：列表按 `SortScore` 编辑混排、不严格按 ctime 排序——服务端不按 `rn` 裁剪响应（恒返回约 30 行，头条首页可达 50+），所以"短页"不可用作末页判断，**空页才是末页**；两页之间有重叠（实测 30 行里 13 行与上一页重叠）且游标不保证单调向早，`NextCursor` 取本页最老 ctime 作"续拉记号"，重叠全部交给入库去重吸收，任务侧"单页全部已存在即停 + 最多 4 页"兜底。
+- **详情**：`https://www.cls.cn/detail/{id}` 为服务端渲染，正文 HTML 内嵌在页面 `__NEXT_DATA__` 的 `articleDetail.content`（实测正文标签只有 p/strong/img/h 等简单形态）；origin 存提取出的 `__NEXT_DATA__` JSON（`origin_type = Json`），解析按纯 JSON 重跑。
+- 字段映射：`source` 是记者/编辑名（投稿/转载条目可能为空，回退"财联社"平台名）；`visibleTags[].name` 拼关键字；详情 `images` 为封面图数组（不在正文时补进图片列表）；`is_ad=1` 与 `external_link` 非空（站外跳转，无 /detail/{id}）的条目在列表阶段跳过。
+- 品见（1160）走专用接口 `/v5/web/pinjian/assembled2`、招财号是独立入口，均未接入（见已知限制）。
 
 ### 新浪财经 7x24（`Spider/News/Flash/Sina/`）
 
@@ -155,7 +165,7 @@ public interface INewsSpider
 | 源 | 成熟度 | 说明 |
 |---|---|---|
 | 东方财富 | **完整** | 35 个栏目全部接入，详情接口 + HTML 结构化解析（段落/图片/表格/列表）、Playwright 兜底、时间格式强绑定 |
-| 财联社 | **最小可用** | 只接「电报」1 个栏目；签名算法已逆向并有实测向量锁定 |
+| 财联社 | **电报最小可用 + 文章频道已接入** | 电报只接「电报」1 个栏目；签名算法已逆向并有实测向量锁定；文章频道 2026-09 接入 13 个栏目（`ClsArticleMedia`），品见/招财号未接入 |
 | 新浪 7x24 | **最小可用** | 只接「7x24」1 个栏目；图片字段（`multimedia`）未解析 |
 | 华尔街见闻 | **最小可用** | 只接「全球宏观」1 个栏目；单条接口未利用（见已知限制） |
 | 金十 | **最小可用** | 只接「快讯」1 个栏目；PLUS 专享条目只有标题 |
@@ -228,5 +238,7 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 新浪快讯图片未解析 | 图片在 `multimedia` 字段，实测 100 条仅 1 条非空 | 出现高频图片时补该字段解析 |
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
 | 跨源 URL 碰撞风险收窄但未根除 | 快讯源已独立写 `spider_flash_news`（唯一键含 `from_media`，源间天然隔离）；剩余风险在网页型三表——`ON CONFLICT (news_url)` 跨源全局去重，若未来新增的网页型源产出与东财相同的 URL，后写的会覆盖先写的原始内容（当前仅东财一个网页型源，实测各源域名互不重叠） | 真出现碰撞时给三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
+| 财联社品见 / 招财号未接入 | 品见走专用接口 `/v5/web/pinjian/assembled2`（实测可取数），招财号是独立内容入口；两者暂无抓取价值评估 | 有需求时按网页型源接入规范流程侦察接入 |
+| 财联社文章频道无重要度 | depth 列表条目 `level` 为空字符串，与电报的 A/B/C 重要度体系不同，落库统一为普通（1） | 若源侧开始下发重要度，在 `ClsArticleListItem` 补映射 |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |

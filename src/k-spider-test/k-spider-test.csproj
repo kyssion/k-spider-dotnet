@@ -17,7 +17,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- 真实抓取数据夹具 : 各源接口的真实响应 , 供解析回归测试离线使用 -->
+        <!-- 真实抓取数据夹具 : 各源接口的真实响应 , 供解析回归测试离线使用 ( json 为接口响应 , html 为 SSR 详情页 ) -->
         <Content Include="TestData\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="TestData\**\*.html" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>
