@@ -42,8 +42,10 @@ public class SpiderNewsDao
     {
         try
         {
+            // 按 ( news_url , image_resource_url ) 去重 : 一篇文章有多张图 , 只按 news_url 去重会把图丢到只剩一张
             spiderNewsImageList =
-                spiderNewsImageList.GroupBy(item => item.NewsUrl).Select(item => item.First()).ToList();
+                spiderNewsImageList.GroupBy(item => new { item.NewsUrl, item.ImageResourceUrl })
+                    .Select(item => item.First()).ToList();
 
             var storageAble = connection.Storageable(spiderNewsImageList).WhereColumns(it => it.ImageResourceUrl)
                 .ToStorage();
