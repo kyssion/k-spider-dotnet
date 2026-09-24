@@ -102,7 +102,7 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 ## AI 辅助开发
 
 - **[AGENTS.md](AGENTS.md)**：AI 代理操作手册（结构、命令、约定、扩展套路、已知坑），ZCode / Claude Code / Cursor 自动读取。
-- **[docs/](docs/README.md)**：面向维护者的设计文档（[设计原则](docs/principles.md) / [架构](docs/architecture.md) / [新闻管线](docs/news-pipeline.md) / [数据模型](docs/data-model.md) / [运维手册](docs/operations.md)），含"代码变更 → 必须更新哪份文档"的映射。
+- **[docs/](docs/README.md)**：面向维护者的设计文档（[设计原则](docs/principles.md) / [架构](docs/architecture.md) / [新闻管线](docs/news-pipeline.md) / [数据模型](docs/data-model.md) / [运维手册](docs/operations.md) / [网页型源接入规范](docs/web-source-playbook.md)），含"代码变更 → 必须更新哪份文档"的映射。
 - **全部测试**：`dotnet test src/k-spider-test/k-spider-test.csproj` —— 含真实接口连通性用例（直接请求两源线上 URL，验证能调通、能拿到数据集、能解析；断网时自动跳过）。
 - **离线测试**：`dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"` 不依赖网络与数据库，基于 `TestData/` 里的真实响应夹具做解析回归。
 - **连通性排障**：`dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"`（源改版、财联社签名失效时先跑它）。

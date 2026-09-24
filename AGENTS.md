@@ -135,7 +135,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - **测试夹具**：接口真实响应放 `src/k-spider-test/TestData/`（csproj 已配置 `CopyToOutputDirectory`），解析回归优先用真实响应而不是手搓 JSON；新增夹具时在同目录 `README.md` 登记来源接口、抓取时间与参数，接口改版或解析变更时同步重抓并更新断言。
 - **真实接口连通性用例**：`LiveConnectivityTest`（`[TestCategory("Live")]`）直接请求线上 URL，验证"能调通 + 能拿到数据集 + 能解析"，排障（源改版、签名失效）时先跑它。网络不可达/超时报告为跳过，接口能连上却拿不到数据则判失败；`verify.sh` 与 CI 用 `--filter "TestCategory!=Live"` 排除，门禁保持离线确定。
 - 爬虫实现一律放 `Spider/` 目录 , 按下方网页抓取型 / 实时快讯型两条套路接入。
-- **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（`FromTypeOfNews` 枚举加值）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）。
+- **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（`FromTypeOfNews` 枚举加值）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。侦察流程与验收标准见 [docs/web-source-playbook.md](docs/web-source-playbook.md)。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）。
   - 翻页走 `GetListPage(column, pageSize, cursor)` 的不透明游标，`NextCursor = null` 表示没有更多。
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
   - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 201、见闻 301、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
@@ -178,7 +178,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 11. **财联社电报列表 `rn` 超过 50 会静默返回空数组**（errno 仍为 0，看起来像"没有新闻"），已在 `ClsNewsResource.MaxPageSize` 钳制。另外它的时间游标是**严格小于**语义，`NextCursor` 取本页最老一条 ctime + 1，否则同一秒内的其它条目会被永久跳过（边界条目重复由 `ON CONFLICT DO NOTHING` 吸收）。
 12. **金十快讯接口必须带 `x-app-id` / `x-version` 头**，缺失直接 502（值写在 `Jin10NewsResource`，被拒时对照网页端请求更新）。它的 `max_time` 游标是**含边界**语义（`NextCursor` 直接用最老一条时间，边界重复由去重吸收）；约 20% 条目是 PLUS 专享，正文为空、只有 `vip_title` 可用（实现已兜底，详见 docs/news-pipeline.md）。
 13. 四个快讯源（财联社/新浪/见闻/金十）走独立的 `FlashNewsJob` 管线写 `spider_flash_news`（15 秒一轮、拉到即终态），与网页抓取型管线（三张表 + 状态机）完全分离；不要把快讯源注册进 `NewsSpiderRegistry`。加新快讯源时照抄 `Spider/News/Flash/Cls/` 或 `Spider/News/Flash/Jin10/` 的结构。
-14. **财联社一个网站两种管线**：电报在快讯注册表（`ClsMedia=2`），文章频道在网页注册表（`ClsArticleMedia=6`，`Spider/News/Web/Cls/`），两者 FromMedia 分开以维持"一个源只属于一种管线"；文章与电报共用一套全局 id（一个 id 只属一种内容类型），`/detail/{id}` 落不同表不会撞键。文章频道的**翻页游标不保证单调**（列表按 SortScore 编辑混排、服务端不按 rn 裁页），末页只以空页为准，重叠靠入库去重吸收；`source` 可空（回退"财联社"）；品见/招财号未接入。
+14. **财联社一个网站两种管线**：电报在快讯注册表（`ClsMedia=2`），文章频道在网页注册表（`ClsArticleMedia=6`，`Spider/News/Web/Cls/`），两者 FromMedia 分开以维持"一个源只属于一种管线"；文章与电报共用一套全局 id（一个 id 只属一种内容类型），`/detail/{id}` 落不同表不会撞键。文章频道的**翻页游标不保证单调**（列表按 SortScore 编辑混排、服务端不按 rn 裁页），末页只以空页为准，重叠靠入库去重吸收；`source` 可空（回退"财联社"）；品见/招财号未接入。侦察与接入方法论见 docs/web-source-playbook.md。
 
 ## 提交规范
 
@@ -218,7 +218,7 @@ git status             # 无产物文件混入（bin/obj/.idea 等）
 ```
 
 文档同步：结构性 / 约定性变更须同步更新 README.md、AGENTS.md 与 `docs/` 对应章节。
-`docs/` 是面向维护者的设计文档（设计原则 / 架构 / 新闻管线 / 数据模型 / 运维手册），
+`docs/` 是面向维护者的设计文档（设计原则 / 架构 / 新闻管线 / 数据模型 / 运维手册 / 网页型源接入规范），
 其中 [docs/README.md](docs/README.md) 有"代码变更 → 必须更新哪份文档"的映射表，改代码前先扫一眼那张表。
 
 凭据红线：不向仓库提交真实凭据；环境相关值进配置/Options，由部署方用环境变量覆盖。

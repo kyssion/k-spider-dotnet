@@ -134,6 +134,7 @@ public interface INewsSpider
 - **详情**：`https://www.cls.cn/detail/{id}` 为服务端渲染，正文 HTML 内嵌在页面 `__NEXT_DATA__` 的 `articleDetail.content`（实测正文标签只有 p/strong/img/h 等简单形态）；origin 存提取出的 `__NEXT_DATA__` JSON（`origin_type = Json`），解析按纯 JSON 重跑。
 - 字段映射：`source` 是记者/编辑名（投稿/转载条目可能为空，回退"财联社"平台名）；`visibleTags[].name` 拼关键字；详情 `images` 为封面图数组（不在正文时补进图片列表）；`is_ad=1` 与 `external_link` 非空（站外跳转，无 /detail/{id}）的条目在列表阶段跳过。
 - 品见（1160）走专用接口 `/v5/web/pinjian/assembled2`、招财号是独立入口，均未接入（见已知限制）。
+- 接入方法论与验收标准见 [web-source-playbook.md](web-source-playbook.md)。
 
 ### 新浪财经 7x24（`Spider/News/Flash/Sina/`）
 
@@ -238,7 +239,7 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 新浪快讯图片未解析 | 图片在 `multimedia` 字段，实测 100 条仅 1 条非空 | 出现高频图片时补该字段解析 |
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
 | 跨源 URL 碰撞风险收窄但未根除 | 快讯源已独立写 `spider_flash_news`（唯一键含 `from_media`，源间天然隔离）；剩余风险在网页型三表——`ON CONFLICT (news_url)` 跨源全局去重，若未来新增的网页型源产出与东财相同的 URL，后写的会覆盖先写的原始内容（当前仅东财一个网页型源，实测各源域名互不重叠） | 真出现碰撞时给三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
-| 财联社品见 / 招财号未接入 | 品见走专用接口 `/v5/web/pinjian/assembled2`（实测可取数），招财号是独立内容入口；两者暂无抓取价值评估 | 有需求时按网页型源接入规范流程侦察接入 |
+| 财联社品见 / 招财号未接入 | 品见走专用接口 `/v5/web/pinjian/assembled2`（实测可取数），招财号是独立内容入口；两者暂无抓取价值评估 | 有需求时按 [web-source-playbook.md](web-source-playbook.md) 流程侦察接入 |
 | 财联社文章频道无重要度 | depth 列表条目 `level` 为空字符串，与电报的 A/B/C 重要度体系不同，落库统一为普通（1） | 若源侧开始下发重要度，在 `ClsArticleListItem` 补映射 |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |
