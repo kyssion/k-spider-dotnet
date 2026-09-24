@@ -94,7 +94,9 @@ public class LiveConnectivityTest
 
         var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
         Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
-        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText), "解析后正文为空");
+        // 投教频道存在纯图片公告 ( 正文只有一个 img 段落 , 实测 id=2492095 ) : 文本与图片有其一即为有效解析
+        Assert.IsTrue(!string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText) || parseResult.Images.Count > 0,
+            "解析后正文与图片均为空");
 
         // 游标续拉 : 用第一页游标能取到后续数据
         if (listPage.NextCursor != null)
