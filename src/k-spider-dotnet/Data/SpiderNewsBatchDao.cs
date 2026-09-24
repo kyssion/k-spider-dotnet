@@ -8,6 +8,18 @@ namespace KSpider.Data;
 public class SpiderNewsBatchDao
 {
 
+    /// <summary>
+    ///     去掉 ToSqlString 输出尾部的分号 , 以便手拼 ON CONFLICT 子句。
+    ///     实测 ( SqlSugar 5.1.4.216 , IsNoPage = true ) : 多条 ( ≥2 ) 以 ";" 结尾 ,
+    ///     单条以 VALUES 段结尾不带分号 ( 也无 returning ) ;
+    ///     不要用 [..LastIndexOf(';')] 截断 —— 单条时 LastIndexOf 返回 -1 会抛参数越界 ( 有单测锁定 )。
+    /// </summary>
+    public static string TrimInsertSqlTail(string insertSql)
+    {
+        var sql = insertSql.TrimEnd();
+        return sql.EndsWith(';') ? sql[..^1] : sql;
+    }
+
     public int UpsetSpiderNewsContentOnConflict(SqlSugarClient connection,
         List<SpiderNewsContentModel> contentInfo, int maxBatchNumber)
     {
@@ -28,12 +40,10 @@ public class SpiderNewsBatchDao
                 return allNumber;
             }
 
+            // IsNoPage : 绕过 ToSqlString 默认 200 行自动分页 , 整批生成一条 INSERT 再手拼 ON CONFLICT
             var item = connection.Insertable(contentInfo).IgnoreColumns("id", "create_time", "update_time");
-            // todo 这里是一个坑 ， sqlsurge tostring 默认使用的200 行的 导出也就是说每200个数据就会有一个insert 不能重用需要重写一下 。 
             item.InsertBuilder.IsNoPage = true;
-            item.InsertBuilder.IsReturnPkList = true;
-            var insertSql = item.ToSqlString();
-            insertSql = insertSql[..insertSql.LastIndexOf(';')];
+            var insertSql = TrimInsertSqlTail(item.ToSqlString());
 
             var sqlTemple = $"""
                              {insertSql}
@@ -75,11 +85,8 @@ public class SpiderNewsBatchDao
             }
 
             var item = connection.Insertable(contentInfo).IgnoreColumns("id", "create_time", "update_time");
-            // todo 这里是一个坑 ， sqlsurge tostring 默认使用的200 行的 导出也就是说每200个数据就会有一个insert 不能重用需要重写一下 。 
             item.InsertBuilder.IsNoPage = true;
-            item.InsertBuilder.IsReturnPkList = true;
-            var insertSql = item.ToSqlString();
-            insertSql = insertSql[..insertSql.LastIndexOf(';')];
+            var insertSql = TrimInsertSqlTail(item.ToSqlString());
             var sqlTemple = $"""
                              {insertSql}
                              ON CONFLICT (news_url) DO UPDATE SET news_url              = EXCLUDED.news_url,
@@ -107,7 +114,7 @@ public class SpiderNewsBatchDao
                     .Select(item => item.First()).ToList();
 
             // 替换之前使用 WhereColumns 方法 , 这个方法本质上是会查询一下url , 对数据库压力会变大
-            // connection.Storageable(itemList).WhereColumns(it => it.NewsUrl).ExecuteCommand()
+            // connection.Storageable(itemList).WhereColumns(it => it.ImageResourceUrl).ExecuteCommand()
             if (spiderNewsImageList.Count == 0) return 0;
             if (spiderNewsImageList.Count > maxBatchNumber)
             {
@@ -121,17 +128,14 @@ public class SpiderNewsBatchDao
             }
 
             var item = connection.Insertable(spiderNewsImageList).IgnoreColumns("id", "create_time", "update_time");
-            // todo 这里是一个坑 ， sqlsurge tostring 默认使用的200 行的 导出也就是说每200个数据就会有一个insert 不能重用需要重写一下 。 
             item.InsertBuilder.IsNoPage = true;
-            item.InsertBuilder.IsReturnPkList = true;
-            var insertSql = item.ToSqlString();
-            insertSql = insertSql[..insertSql.LastIndexOf(';')];
+            var insertSql = TrimInsertSqlTail(item.ToSqlString());
             var sqlTemple = $"""
                              {insertSql}
                              ON CONFLICT (image_resource_url) DO UPDATE SET news_url    = EXCLUDED.news_url,
                                                                   image_resource_url    = EXCLUDED.image_resource_url,
                                                                   image_name            = EXCLUDED.image_name
-                                                                  
+
                              """;
             return connection.Ado.ExecuteCommand(sqlTemple);
         }
@@ -143,7 +147,8 @@ public class SpiderNewsBatchDao
 
     public int UpsertSpiderNewsListOnConflict(SqlSugarClient connection, List<SpiderNewsListModel> newsList,
         int maxBatchNumber)
-    {        try
+    {
+        try
         {
             newsList = newsList.GroupBy(item => item.NewsUrl).Select(item => item.First()).ToList();
 
@@ -161,11 +166,8 @@ public class SpiderNewsBatchDao
             }
 
             var item = connection.Insertable(newsList).IgnoreColumns("id", "create_time", "update_time");
-            // todo 这里是一个坑 ， sqlsurge tostring 默认使用的200 行的 导出也就是说每200个数据就会有一个insert 不能重用需要重写一下 。
             item.InsertBuilder.IsNoPage = true;
-            item.InsertBuilder.IsReturnPkList = true;
-            var insertSql = item.ToSqlString();
-            insertSql = insertSql[..insertSql.LastIndexOf(';')];
+            var insertSql = TrimInsertSqlTail(item.ToSqlString());
             var sqlTemple = $"""
                              {insertSql}
                              ON CONFLICT (news_url) DO NOTHING;
@@ -182,6 +184,10 @@ public class SpiderNewsBatchDao
     ///     实时快讯批量写入 : 新行插入 , 已存在行更新内容字段 ( 快讯常在发布后数分钟内修正/补充 ,
     ///     首页每轮重拉 , DO UPDATE 让修正随下一轮 15 秒 poll 自然回填 )。
     ///     唯一键是 (from_media, news_url)。
+    ///     WHERE raw_content IS DISTINCT FROM : 原始 JSON 未变就不更新 —— 各落库字段都派生自原始 JSON ,
+    ///     避免每轮重拉首页对既有行的空转 UPDATE 刷 update_time ( 触发器只应在内容真变时刷新 ,
+    ///     否则 update_time 失去"最后修改时间"语义 , 同步侧也会反复搬运未变的行 ) ;
+    ///     附带效果是返回的影响行数只统计真实插入与更新。
     /// </summary>
     public int UpsertFlashNewsOnConflict(SqlSugarClient connection, List<SpiderFlashNewsModel> flashNews,
         int maxBatchNumber)
@@ -203,10 +209,7 @@ public class SpiderNewsBatchDao
 
             var item = connection.Insertable(flashNews).IgnoreColumns("id", "create_time", "update_time");
             item.InsertBuilder.IsNoPage = true;
-            var insertSql = item.ToSqlString().TrimEnd();
-            // 单条数据时 ToSqlString 不带分号 ( 也不带 returning ) , 按结尾字符条件去分号 ,
-            // 不要照抄其它方法的 [..LastIndexOf(';')] —— 那个写法遇到单条会抛参数越界
-            if (insertSql.EndsWith(';')) insertSql = insertSql[..^1];
+            var insertSql = TrimInsertSqlTail(item.ToSqlString());
             var sqlTemple = $"""
                              {insertSql}
                              ON CONFLICT (from_media, news_url) DO UPDATE SET title       = EXCLUDED.title,
@@ -216,6 +219,7 @@ public class SpiderNewsBatchDao
                                                                           stock_list  = EXCLUDED.stock_list,
                                                                           image_urls  = EXCLUDED.image_urls,
                                                                           raw_content = EXCLUDED.raw_content
+                             WHERE spider_flash_news.raw_content IS DISTINCT FROM EXCLUDED.raw_content
                              """;
             return connection.Ado.ExecuteCommand(sqlTemple);
         }
