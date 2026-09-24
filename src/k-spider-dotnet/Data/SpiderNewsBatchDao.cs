@@ -60,7 +60,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException($"[UpsetSpiderNewsContentOnConflict] err : {e}", e);
         }
     }
 
@@ -99,7 +99,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException($"[UpsetSpiderNewsContentOriginOnConflict] err : {e}", e);
         }
     }
 
@@ -141,7 +141,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException($"[UpsetSpiderNewsImageListOnConflict] err : {e}", e);
         }
     }
 
@@ -176,7 +176,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsImageList] err : {e}", e);
+            throw new KDbException($"[UpsertSpiderNewsListOnConflict] err : {e}", e);
         }
     }
 
@@ -225,7 +225,7 @@ public class SpiderNewsBatchDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsertFlashNewsOnConflict] err : {e}", e);
+            throw new KDbException($"[UpsertFlashNewsOnConflict] err : {e}", e);
         }
     }
 }

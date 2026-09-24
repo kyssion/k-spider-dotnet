@@ -19,7 +19,7 @@ public class StockDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsContentOrigin] err : {e}", e);
+            throw new KDbException($"[UpsetStockCnIntroduction] err : {e}", e);
         }
     }
 
@@ -34,7 +34,7 @@ public class StockDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsContentOrigin] err : {e}", e);
+            throw new KDbException($"[BatchUpsetCnLevel1ArchivedDaily] err : {e}", e);
         }
     }
     public int UpsetCnLevel1ArchivedDaily(SqlSugarClient connection,
@@ -48,7 +48,7 @@ public class StockDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsContentOrigin] err : {e}", e);
+            throw new KDbException($"[UpsetCnLevel1ArchivedDaily] err : {e}", e);
         }
     }
     
@@ -64,7 +64,7 @@ public class StockDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsContentOrigin] err : {e}", e);
+            throw new KDbException($"[BatchUpsetHkLevel1ArchivedDaily] err : {e}", e);
         }
     }
     public int UpsetHkLevel1ArchivedDaily(SqlSugarClient connection,
@@ -78,7 +78,7 @@ public class StockDao
         }
         catch (Exception e)
         {
-            throw new KDbException("[UpsetSpiderNewsContentOrigin] err : {e}", e);
+            throw new KDbException($"[UpsetHkLevel1ArchivedDaily] err : {e}", e);
         }
     }
 }
