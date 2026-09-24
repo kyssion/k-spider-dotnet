@@ -133,6 +133,21 @@ public class ClsArticleSpiderTest
     }
 
     [TestMethod]
+    public void ParseContentKeepsBlockquoteAndLinkText()
+    {
+        // 真实夹具 ( id=2492703 ) 正文含 blockquote 引用块 : 引用是内容的一部分 ,
+        // 不能按"未知标签"丢弃 ( 批量实测 20 篇里 blockquote 与顶层 a 各有出现 )
+        var spider = new ClsArticleSpider();
+        var originJson = ClsArticleSpider.ExtractNextDataJson(ReadFixture("cls_article_detail_rich.html"));
+
+        var result = spider.ParseContent(originJson, "https://www.cls.cn/detail/2492703");
+
+        Assert.AreEqual("甲骨文重磅项目现风险信号：据称正为数据中心延期留后路", result.Content.NewsTitle);
+        Assert.IsTrue(result.Content.NewsContentText!.Contains("不可抗力"), "引用块文本应进入纯文本聚合");
+        Assert.IsTrue(result.Content.NewsContentJson!.Contains("blockquote"), "片段 TagType 应保留引用块溯源标记");
+    }
+
+    [TestMethod]
     public void ParseContentThrowsOnBrokenOrigin()
     {
         var spider = new ClsArticleSpider();

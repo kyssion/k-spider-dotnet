@@ -131,7 +131,8 @@ public interface INewsSpider
 - 财联社官网顶部导航的**文章频道**（头条/A股/港股/环球/公司/券商/基金ETF/地产/金融/汽车/科创/期货/投教），与电报是同一网站的两类内容：电报是"列表即全文"快讯（走快讯管线），这些频道是**有独立详情页的文章**（走网页型管线）。两者的 FromMedia 值分开（`ClsMedia=2` / `ClsArticleMedia=6`），维持"一个源只属于一种管线"的约定；CLS 的文章与电报共用一套全局 id（一个 id 只属于一种内容类型），`news_url = https://www.cls.cn/detail/{id}` 落不同表，不会撞键。
 - 频道清单来自 `GET /v2/base/common_config` 的 `column_bar` 字段（与官网导航逐项对应）；**列表** `GET /v3/depth/list/{channel_id}?id=&last_time=&rn=20`，签名算法与电报同款（`sv=8.7.9` 实测有效）。
 - **翻页语义（实测）**：列表按 `SortScore` 编辑混排、不严格按 ctime 排序——服务端不按 `rn` 裁剪响应（恒返回约 30 行，头条首页可达 50+），所以"短页"不可用作末页判断，**空页才是末页**；两页之间有重叠（实测 30 行里 13 行与上一页重叠）且游标不保证单调向早，`NextCursor` 取本页最老 ctime 作"续拉记号"，重叠全部交给入库去重吸收，任务侧"单页全部已存在即停 + 最多 4 页"兜底。
-- **详情**：`https://www.cls.cn/detail/{id}` 为服务端渲染，正文 HTML 内嵌在页面 `__NEXT_DATA__` 的 `articleDetail.content`（实测正文标签只有 p/strong/img/h 等简单形态）；origin 存提取出的 `__NEXT_DATA__` JSON（`origin_type = Json`），解析按纯 JSON 重跑。
+- **详情**：`https://www.cls.cn/detail/{id}` 为服务端渲染，正文 HTML 内嵌在页面 `__NEXT_DATA__` 的 `articleDetail.content`；origin 存提取出的 `__NEXT_DATA__` JSON（`origin_type = Json`），解析按纯 JSON 重跑。
+- **详情格式（2026-09 批量实测 30+ 篇，走生产代码路径 12/12 通过）**：页面形态单一，`articleDetail` 必在（抽样 `isFree` 全为 true、`status=1`、正文 428~5653 字符无空文）；正文**顶层**标签分布 `p / strong / img / a / h1-h3 / blockquote`——`blockquote` 与顶层 `a` 取内联文本进正文（引用是内容的一部分，不能按未知标签丢弃，真实夹具 `cls_article_detail_rich.html` 锁定）；`/detail/{id}` 路由电报与文章共用（电报正文是纯文本），解析只处理 depth 列表产出的文章 id，互不影响。
 - 字段映射：`source` 是记者/编辑名（投稿/转载条目可能为空，回退"财联社"平台名）；`visibleTags[].name` 拼关键字；详情 `images` 为封面图数组（不在正文时补进图片列表）；`is_ad=1` 与 `external_link` 非空（站外跳转，无 /detail/{id}）的条目在列表阶段跳过。
 - 品见（1160）走专用接口 `/v5/web/pinjian/assembled2`、招财号是独立入口，均未接入（见已知限制）。
 - 接入方法论与验收标准见 [web-source-playbook.md](web-source-playbook.md)。

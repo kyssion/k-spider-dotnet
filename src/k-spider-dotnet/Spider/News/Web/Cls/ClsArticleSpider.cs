@@ -223,6 +223,14 @@ public partial class ClsArticleSpider : INewsSpider
                 continue;
             }
 
+            // 财联社正文实测还有引用块与链接两种顶层标签 ( 东财枚举之外 ) : 取内联文本 , 不当作未知标签丢弃
+            var nodeName = node.Name.ToLowerInvariant();
+            if (nodeName is "blockquote" or "a")
+            {
+                AddTextSegment(segments, node.InnerText, nodeName);
+                continue;
+            }
+
             if (!Enum.TryParse<HtmlTagName>(ti.ToTitleCase(node.Name), true, out var tagName) ||
                 !Enum.IsDefined(typeof(HtmlTagName), tagName))
             {
