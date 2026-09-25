@@ -14,7 +14,7 @@ public static class NewsSpiderRegistry
 {
     private static readonly Dictionary<FromTypeOfNews, INewsSpider> Map = new()
     {
-        { FromTypeOfNews.DfMedia, new DfNewsSpider() },
+        // { FromTypeOfNews.DfMedia, new DfNewsSpider() },
         { FromTypeOfNews.ClsArticleMedia, new ClsArticleSpider() }
     };
 

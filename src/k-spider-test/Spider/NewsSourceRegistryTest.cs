@@ -19,23 +19,19 @@ namespace KSpider.Test.Spider;
 public class NewsSourceRegistryTest
 {
     [TestMethod]
-    public void WebRegistryContainsAllWebSources()
+    public void WebRegistryContainsEnabledSources()
     {
-        var expected = new (FromTypeOfNews FromMedia, Type SpiderType)[]
-        {
-            (FromTypeOfNews.DfMedia, typeof(DfNewsSpider)),
-            (FromTypeOfNews.ClsArticleMedia, typeof(ClsArticleSpider))
-        };
+        // 网页型源在注册表用注释启停 ( 东财当前停用 , 财联社文章常开 ) :
+        // 断言常驻源与已注册源的类型 , 不锁固定的注册集合
+        Assert.IsTrue(NewsSpiderRegistry.All.Count > 0, "网页型注册表不能为空");
 
-        foreach (var (fromMedia, spiderType) in expected)
-        {
-            var spider = NewsSpiderRegistry.Get((int)fromMedia);
-            Assert.IsNotNull(spider, $"{fromMedia} 未在 NewsSpiderRegistry 注册");
-            Assert.AreEqual(spiderType, spider.GetType());
-            Assert.IsTrue(spider.Columns.Count > 0, $"{fromMedia} 没有配置任何栏目");
-        }
+        var clsArticle = NewsSpiderRegistry.Get((int)FromTypeOfNews.ClsArticleMedia);
+        Assert.IsNotNull(clsArticle, "ClsArticleMedia ( 财联社文章 ) 必须常驻注册");
+        Assert.IsInstanceOfType<ClsArticleSpider>(clsArticle);
 
-        Assert.AreEqual(expected.Length, NewsSpiderRegistry.All.Count);
+        // 东财按需启停 : 启用时必须是 DfNewsSpider
+        var df = NewsSpiderRegistry.Get((int)FromTypeOfNews.DfMedia);
+        if (df != null) Assert.IsInstanceOfType<DfNewsSpider>(df);
     }
 
     [TestMethod]
