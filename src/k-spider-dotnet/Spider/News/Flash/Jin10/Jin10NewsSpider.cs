@@ -5,7 +5,7 @@ using KSpider.Model;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Flash.Jin10.Model;
-using KSpider.Tool.Http;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Flash.Jin10;
@@ -29,16 +29,16 @@ public class Jin10NewsSpider : IFlashNewsSpider
                   $"&vip=1{maxTimeParam}";
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            // 接口必须带客户端标识头 , 否则 502
-            request.Headers.Add("x-app-id", Jin10NewsResource.AppId);
-            request.Headers.Add("x-version", Jin10NewsResource.Version);
-            using var response = await HttpClientTools.CreateByHost(Jin10NewsResource.ResourceHost)
-                .SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-                throw new HtmlFormException(url,
-                    $"[Jin10NewsSpider GetFlashPage] 接口返回状态码 {(int)response.StatusCode}");
-            return ParseFlashPage(await response.Content.ReadAsStringAsync(), pageSize);
+            // 传请求工厂而不是请求实例 : 过完验证要重放请求 , 而 HttpRequestMessage 不能重复发送
+            var responseString = await VerifiedHttp.SendStringAsync(Jin10NewsResource.ResourceHost, () =>
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                // 接口必须带客户端标识头 , 否则 502
+                request.Headers.Add("x-app-id", Jin10NewsResource.AppId);
+                request.Headers.Add("x-version", Jin10NewsResource.Version);
+                return request;
+            });
+            return ParseFlashPage(responseString, pageSize);
         }
         catch (Exception e)
         {

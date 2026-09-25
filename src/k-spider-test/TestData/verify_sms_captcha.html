@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>手机验证</title>
+</head>
+<body>
+<form action="/login/verify" method="post">
+    <input type="text" name="mobile" placeholder="请输入手机号">
+    <input type="text" name="smsCode" placeholder="请输入短信验证码" maxlength="6">
+    <button type="button" id="sendSmsCode">获取验证码</button>
+</form>
+</body>
+</html>

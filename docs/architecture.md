@@ -53,7 +53,7 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 | `NewsListJob` | 2 分钟 | 每栏目最多 4 页 × 200 条 | **网页型源并发**抓列表（源内仍串行翻页），见下 |
 | `NewsContentOriginJob` | 3 秒 | 200 条 | 全源 FIFO 下载原始内容 |
 | `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
-| `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 |
+| `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 + 反爬验证阻塞告警 |
 | `TransferSpiderDataJob`（sync 进程） | 2 分钟 | 2000 行 / 批 | 远端 → 本地增量同步 |
 
 任务停用/启用只改 `Program.AddSpiderJobs` 里的注释，不要在别处加开关。
@@ -102,6 +102,9 @@ src/k-spider-dotnet/
 │   │   ├── NewsSpiderModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
 │   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
+│   ├── Verify/           # 反爬验证 ( 数据域无关 ) : 识别器 + 通过策略 + 会话缓存 + 管线 + VerifiedHttp
+│   │   ├── Detector/      #   识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
+│   │   └── Solver/        #   通过策略 : 浏览器过挑战 / 滑块 / 人工升级
 │   └── Report/           # ── 研报域 ── : Eastmoney/ ( 当前无调用方 , 预留扩展 )
 ├── Tool/             # Http/ ( 伪装头客户端与 URL 工具 ) + Html/ ( 标签枚举与解析工具 )
 ├── Common/           # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/
@@ -127,6 +130,8 @@ src/k-spider-dotnet/
 | 要加什么 | 怎么做 |
 |---|---|
 | 新闻源 | 实现 `Spider/News/Web/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md) |
+| 反爬验证识别方式 / 通过手段 | `Spider/Verify/` 下实现 `IVerificationDetector` 或 `IVerificationSolver` → 在 `VerificationRegistry` 注册一行（识别器位置即优先级）→ `VerificationKind` 按需加值；按源调整策略用 `VerificationRegistry.SetPolicy`。参考 [anti-bot-verification.md](anti-bot-verification.md) |
+| 抓取层的 HTTP 请求 | 一律走 `VerifiedHttp.GetStringAsync` / `SendStringAsync`（自带会话回放与自动过验证），不要直接调 `HttpClientTools`；需要自定义请求头时传请求工厂（`HttpRequestMessage` 不能重发） |
 | 定时任务 | 继承 `Job/SpiderJob.cs`（只需实现 `Execute`）→ 构造函数注入 DAO/Pg/`ILogger<T>` → `Program.AddSpiderJobs` 加 `AddJob` + `AddTrigger` 两行（`DisallowConcurrentExecution` 必加） |
 | 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k_script_spider.sql` |
 | 同步到本地的表 | `k-spider-sync` 的 `TransferSpiderData.DoTransfer` 加一行 `SyncTableSafely<T>`（实体需实现 `ILongIdEntity` + `IUpdateTimeEntity`） |

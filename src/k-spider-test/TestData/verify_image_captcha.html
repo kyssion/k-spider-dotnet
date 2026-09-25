@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>请输入验证码</title>
+</head>
+<body>
+<form action="/verify" method="post">
+    <img id="captcha_img" src="/captcha?t=1789752848" alt="captcha">
+    <input type="text" name="captcha" placeholder="请输入验证码" maxlength="4">
+    <a href="javascript:;" onclick="refreshCaptcha()">看不清，换一张</a>
+    <button type="submit">提交</button>
+</form>
+</body>
+</html>

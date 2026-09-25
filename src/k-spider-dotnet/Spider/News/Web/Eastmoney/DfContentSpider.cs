@@ -8,6 +8,7 @@ using KSpider.Common.Logger;
 using KSpider.Exceptions;
 using KSpider.Spider.News.Web.Eastmoney.Model;
 using KSpider.Spider.News.Web;
+using KSpider.Spider.Verify;
 using KSpider.Tool.Html;
 using KSpider.Tool.Http;
 using Microsoft.Extensions.Logging;
@@ -44,8 +45,7 @@ public partial class DfContentSpider
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         try
         {
-            var responseString = await HttpClientTools.CreateByHost(DfNewsResource.ContextApiResourceHost)
-                .GetStringAsync(newUrl);
+            var responseString = await VerifiedHttp.GetStringAsync(DfNewsResource.ContextApiResourceHost, newUrl);
             ans.NewsOriginContent = responseString;
             ans.Status = NewsContentOriginStatus.Success;
             return ans;
@@ -69,7 +69,7 @@ public partial class DfContentSpider
         try
         {
             return GetContentInfoByJson(
-                await HttpClientTools.CreateByHost(DfNewsResource.ContextApiResourceHost).GetStringAsync(newUrl), url);
+                await VerifiedHttp.GetStringAsync(DfNewsResource.ContextApiResourceHost, newUrl), url);
         }
         catch (DownloadHttpRequestException)
         {

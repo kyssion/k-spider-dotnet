@@ -3,6 +3,8 @@ using KSpider.Data;
 using KSpider.Job.Check;
 using KSpider.Job.News.Flash;
 using KSpider.Job.News.Web;
+using KSpider.Spider.News.Web.Cls;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,6 +40,11 @@ public static class Program
         builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
         var host = builder.Build();
+        // 财联社详情页 ( /detail/* SSR ) 被阿里云 WAF 人机验证拦截 , 纯 HTTP 一律拿到滑块页 :
+        // 该源显式放开滑块的浏览器自动处理 ( 滑块仍不在全局默认放行集 , 其它源不受影响 ,
+        // 见 VerificationPolicy.DefaultAllowedKinds ; 实测挑战页对干净指纹的浏览器会脚本自动放行 , 无需人工 )
+        VerificationRegistry.SetPolicy(ClsArticleResource.ResourceHost,
+            VerificationPolicy.WithKinds(VerificationKind.SliderCaptcha));
         // 启动时幂等补齐 fail_count 列与轮询索引 ( 库不可用时仅记录日志不阻断 )
         host.Services.GetRequiredService<Pg>().EnsureSpiderNewsListDbObjects();
         // 实时快讯表幂等建表 ( 表 + 实时消费索引 + update_time 触发器 )

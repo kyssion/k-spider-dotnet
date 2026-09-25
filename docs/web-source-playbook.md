@@ -8,7 +8,7 @@
 > 不是某个接口的具体形态。遇到以下情况时，以实测为准灵活处理，并把结论回填到本文与 [news-pipeline.md](news-pipeline.md)：
 > - 源站改版（接口路径 / 参数 / 页面模板 / 数据内嵌方式变化）
 > - 鉴权或签名升级（如财联社 `sv` 版本号变更导致 `errno 10012`）
-> - 反爬收紧（新增请求头校验、频控、验证码）
+> - 反爬收紧（新增请求头校验、频控、验证码）—— 验证模块见 [anti-bot-verification.md](anti-bot-verification.md)
 > - 出现新内容形态（现有两种管线无法描述，如纯视频、纯图集、需要登录的内容）
 > 排障时优先跑 `dotnet test --filter "TestCategory=Live"` 定位是接口层还是解析层变了，再决定改代码还是改规范。
 
@@ -47,9 +47,11 @@
 
 ### 3. 反爬侧（怎么"不被拦"）
 
-- 请求头伪装走 `HttpClientTools.CreateByHost`（按 host 复用客户端）；**不要手动设 `Accept-Encoding`**（会关掉自动解压）。
-- 域名不固定（列表与详情不同 host）时分别建客户端。
-- 频控不需要爬虫侧实现：调度间隔（2 分钟）+ 每栏目最多 4 页 + "整页已存在即停"已经封顶。
+- 抓取请求一律走 `Spider/Verify/VerifiedHttp`（**不要直接调 `HttpClientTools`**）：它按 host 复用客户端、自动带已通过验证的会话 cookie，并在被拦住时识别验证类型、自动过验证后重放请求。请求头伪装仍由 `HttpClientTools.CreateByHost` 负责（按 host 复用客户端）；**不要手动设 `Accept-Encoding`**（会关掉自动解压）。
+- 域名不固定（列表与详情不同 host）时分别建客户端，并分别确认是否被拦。
+- **侦察时顺手确认反爬形态**（判据见 [anti-bot-verification.md](anti-bot-verification.md) 的识别器表）：用 curl 打一次列表接口，看状态码、响应头（`cf-mitigated` / `Server` / `Retry-After`）与响应体是不是薄壳页；返回 200 但载荷里带 `msg`/`message` 提示语的，先确认不是风控再当解析问题查。
+- 若新源用的是本模块还不认识的验证方案：按 [anti-bot-verification.md](anti-bot-verification.md) 的扩展套路补一个识别器（纯判定）+ 一个通过策略，并在夹具目录加一个特征样本。
+- 频控不需要爬虫侧实现：调度间隔（2 分钟）+ 每栏目最多 4 页 + "整页已存在即停"已经封顶；被限流（429）时验证模块会按 `Retry-After` 退避并告警，不要靠加大请求量去"撞过去"。
 
 ### 4. 落库侧（数据长什么样）
 
@@ -70,7 +72,7 @@
 
 1. `<源>NewsResource.cs`（端点 / host / 栏目与分类号常量，把实测到的边界语义写成注释）；
 2. `Model/<源>SpiderModel.cs`（接口响应模型 + `To*Model()` 映射，时间转换在这里做，可空字段写兜底）；
-3. `<源>Spider.cs` 实现 `INewsSpider` 三段；列表与解析方法抽成 `public static` 供离线测试；**不得用可变实例字段存请求状态**（Job 按源并行）；
+3. `<源>Spider.cs` 实现 `INewsSpider` 三段；列表与解析方法抽成 `public static` 供离线测试；**不得用可变实例字段存请求状态**（Job 按源并行）；HTTP 调用走 `VerifiedHttp`（需要自定义请求头时传请求工厂，`HttpRequestMessage` 不能重发）；
 4. `FromTypeOfNews` 加枚举值 + `NewsSpiderRegistry` 注册一行；
 5. 夹具入库 + 离线解析回归（`ClsArticleSpiderTest` 是最新范例：字段映射 / 过滤分支 / 游标语义 / 详情解析 / 坏数据抛错六个用例）；
 6. `LiveConnectivityTest` 加一条"列表 → 原始 → 解析 → 游标续拉"全链路用例；
@@ -86,7 +88,7 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live" 
 - 离线回归：真实夹具驱动，字段映射、过滤分支、游标语义、坏数据路径都有断言；
 - Live 用例：能调通、有数据、字段完整（url/from/time/from_media/category）、正文非空、游标能续拉；
 - 注册表约束：`NewsSourceRegistryTest` 全绿（一源一管线、分类号段不越界不重叠）；
-- 运行观察：首轮 `NewsCheckJob` 探测日志里新源每个栏目都返回有效数据，无未知标签告警。
+- 运行观察：首轮 `NewsCheckJob` 探测日志里新源每个栏目都返回有效数据，无未知标签告警，且没有 `VerificationRequiredException` / 验证冷却告警。
 
 ## 六、历史参照
 

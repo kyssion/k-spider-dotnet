@@ -5,7 +5,7 @@ using KSpider.Model;
 using KSpider.Spider.News.Flash.Cls.Model;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
-using KSpider.Tool.Http;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Flash.Cls;
@@ -39,7 +39,7 @@ public class ClsNewsSpider : IFlashNewsSpider
         var url = $"{ClsNewsResource.RollListUrl}?{queryString}&sign={ClsSignature.Sign(queryString)}";
         try
         {
-            var responseString = await HttpClientTools.CreateByHost(ClsNewsResource.ResourceHost).GetStringAsync(url);
+            var responseString = await VerifiedHttp.GetStringAsync(ClsNewsResource.ResourceHost, url);
             return ParseFlashPage(responseString, requestSize);
         }
         catch (Exception e)

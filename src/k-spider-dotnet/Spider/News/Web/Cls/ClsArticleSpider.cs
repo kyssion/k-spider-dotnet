@@ -10,6 +10,7 @@ using KSpider.Model;
 using KSpider.Spider.News.Flash.Cls;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Web.Cls.Model;
+using KSpider.Spider.Verify;
 using KSpider.Tool.Html;
 using KSpider.Tool.Http;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,7 @@ public partial class ClsArticleSpider : INewsSpider
         var url = $"{string.Format(ClsArticleResource.DepthListUrl, channel.ChannelId)}?{queryString}&sign={ClsSignature.Sign(queryString)}";
         try
         {
-            var responseString = await HttpClientTools.CreateByHost(ClsArticleResource.ResourceHost).GetStringAsync(url);
+            var responseString = await VerifiedHttp.GetStringAsync(ClsArticleResource.ResourceHost, url);
             return ParseListPage(responseString, channel.CategoryNumber);
         }
         catch (Exception e)
@@ -115,7 +116,7 @@ public partial class ClsArticleSpider : INewsSpider
         };
         try
         {
-            var html = await HttpClientTools.CreateByHost(ClsArticleResource.ResourceHost).GetStringAsync(url);
+            var html = await VerifiedHttp.GetStringAsync(ClsArticleResource.ResourceHost, url);
             // 只存 __NEXT_DATA__ 载荷 ( 页面本身是服务端渲染 , 数据全在里面 ) , 解析按纯 JSON 重跑
             ans.NewsOriginContent = ExtractNextDataJson(html);
             ans.Status = NewsContentOriginStatus.Success;

@@ -16,4 +16,12 @@ public class LogFactory
     {
         return Factory.CreateLogger<T>();
     }
+
+    /// <summary>
+    ///     静态类不能作泛型类型参数 , 这类调用方 ( 如 VerifiedHttp ) 用本重载传 typeof
+    /// </summary>
+    public static ILogger GetLogger(Type type)
+    {
+        return Factory.CreateLogger(type);
+    }
 }

@@ -41,11 +41,23 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj \
 - 拷贝到 `/etc/systemd/system/` 后 `systemctl enable --now k-spider-dotnet`。
 - 轻量场景可直接用产物目录内的 `run.sh`。
 
+**Chromium（反爬验证用，可选但推荐装）**：正常抓取是纯 HTTP，只有被 JS / Cloudflare 类挑战拦住时
+`BrowserChallengeSolver` 才会启动 Chromium 过验证。未安装时该策略会失败并在日志里提示，
+识别与告警仍然生效，抓取链路不受影响。安装：
+
+```bash
+dotnet build src/k-spider-dotnet        # 让 Playwright 的构建目标就位
+pwsh src/k-spider-dotnet/bin/Debug/net10.0/playwright.ps1 install chromium --with-deps
+```
+
+自包含发布产物同理（用产物目录里的 `playwright.ps1`，或在同版本 SDK 环境执行一次后把浏览器缓存目录带到目标机）。
+Linux 上 `--with-deps` 需要 root，装完浏览器缓存在 `~/.cache/ms-playwright`。
+
 `k-spider-sync` 是独立进程，单独发布与部署（`src/k-spider-sync/k-spider-sync.csproj`），与主爬虫互不影响。
 
 ## 三、监控与巡检
 
-- **日志是主要的监控手段**：`NewsCheckJob` 每 5 分钟输出（a）逐源逐栏目接口探测结果，空数据记错误日志；（b）分源各状态数量与全库最老未处理新闻时间。
+- **日志是主要的监控手段**：`NewsCheckJob` 每 5 分钟输出（a）逐源逐栏目接口探测结果，空数据记错误日志；（b）分源各状态数量与全库最老未处理新闻时间；（c）处于反爬验证冷却期的源（识别到验证但自动通过失败），有则逐条告警。另有 `VerificationPipeline` 在识别到验证、策略未通过、进入冷却时各记一条日志。
 - **启动自检**：`Pg.EnsureSpiderNewsListDbObjects()` 除补齐列与索引外，还会检查批量 upsert 依赖的唯一约束是否齐全（`CheckBatchUpsertUniqueIndexes`）。缺约束时打印明确错误（表名 + 列名），因为这种缺失会让"列表即全文"型源整批写入失败、且不影响其它源，从数据现象上极难定位。
 - 目前**没有**指标上报与告警通道（飞书 SDK 保留在 `Lark/` 但无调用方）。判断系统是否健康靠以下 SQL 与日志：
 
@@ -91,6 +103,9 @@ SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
 | 解析失败突然增多 | 抽样看 `spider_news_content_origin` 里的原始内容 | 源页面结构变更 → 更新解析规则；改完把对应行的 `download_status_code` 置回 `3` 即可重跑解析 |
 | 出现大量 `KDbException` / 连接异常 | 检查数据库可用性与连接串 | 数据库抖动不会消耗重试次数，恢复后自动续跑；本地无 PG 时各 Job 每轮抛异常属预期噪音 |
 | 重复行 | 查 `news_url` 唯一键是否仍在 | 三张新闻表的去重都依赖唯一键，重建表时要带上约束 |
+| 日志出现 `VerificationRequiredException` / `[ManualEscalationSolver]` | 看日志里的 `kind` 与 `依据`（命中的特征片段） | 按验证类型处置：JS 门禁 / Cloudflare → 确认 Chromium 是否装了（`playwright install chromium`）；滑块 → 确认该源是否已按 [anti-bot-verification.md](anti-bot-verification.md) 放开；图形 / 短信验证码 → 只能人工；`RiskControl` / `RateLimited` → 属退避类，等冷却结束自动重试，持续出现再核对请求头与签名参数是否随源站前端版本变化 |
+| `NewsCheckJob` 报某 host 处于验证冷却期 | 看 `[VerificationPipeline]` 的识别与策略失败日志 | 冷却期内该源不会重试（默认 10 分钟；限流按源站 `Retry-After` 退避），期间数据按失败计数；等冷却结束自动恢复，或人工确认后重启进程清掉会话缓存与冷却状态 |
+| 浏览器策略报 `Executable doesn't exist` | 目标机没装 Chromium | 按本文"二、部署"的 Chromium 小节安装；不装也能跑，只是 JS 类挑战过不去 |
 
 ## 五、数据同步（`k-spider-sync`）
 

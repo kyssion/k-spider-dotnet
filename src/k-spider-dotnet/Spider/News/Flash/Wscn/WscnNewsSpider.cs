@@ -5,7 +5,7 @@ using KSpider.Model;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Flash.Wscn.Model;
-using KSpider.Tool.Http;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Flash.Wscn;
@@ -30,8 +30,7 @@ public class WscnNewsSpider : IFlashNewsSpider
                   $"&client={WscnNewsResource.Client}&limit={requestSize}{cursorParam}";
         try
         {
-            var responseString = await HttpClientTools.CreateByHost(WscnNewsResource.ResourceHost)
-                .GetStringAsync(url);
+            var responseString = await VerifiedHttp.GetStringAsync(WscnNewsResource.ResourceHost, url);
             return ParseFlashPage(responseString);
         }
         catch (Exception e)

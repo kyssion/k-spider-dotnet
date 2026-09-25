@@ -3,6 +3,7 @@ using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SqlSugar;
@@ -14,6 +15,7 @@ namespace KSpider.Job.Check;
 ///     1. 各源栏目接口可用性探测 ( 网页型 + 快讯型 )
 ///     2. 网页型流水线积压 / 失败统计
 ///     3. 快讯源实时性滞后监控 ( 最新一条距现在多久 )
+///     4. 反爬验证阻塞告警 ( 识别到验证但自动通过失败 )
 /// </summary>
 public class NewsCheckJob(Pg pg, ILogger<NewsCheckJob> logger) : SpiderJob
 {
@@ -24,6 +26,7 @@ public class NewsCheckJob(Pg pg, ILogger<NewsCheckJob> logger) : SpiderJob
             await CheckListApiAlive();
             CheckPipelineBacklog();
             CheckFlashNewsLag();
+            CheckVerificationBlocked();
         });
     }
 
@@ -131,5 +134,24 @@ public class NewsCheckJob(Pg pg, ILogger<NewsCheckJob> logger) : SpiderJob
         {
             logger.LogError("[NewsCheckJob CheckFlashNewsLag] err : {}", e);
         }
+    }
+
+    /// <summary>
+    ///     反爬验证阻塞 : 处于验证冷却期的源会持续拿不到数据 , 必须让人看见 ——
+    ///     被反爬拦住最糟的结果不是失败 , 而是悄悄返回空数据、看起来一切正常。
+    /// </summary>
+    private void CheckVerificationBlocked()
+    {
+        var blockedHosts = VerificationRegistry.Pipeline.BlockedHosts();
+        if (blockedHosts.Count == 0)
+        {
+            logger.LogInformation("[NewsCheckJob CheckVerificationBlocked] no host blocked by verification");
+            return;
+        }
+
+        foreach (var block in blockedHosts)
+            logger.LogWarning(
+                "[NewsCheckJob CheckVerificationBlocked] host : {Host} , kind : {Kind} , until : {Until:yyyy-MM-dd HH:mm:ss} , reason : {Reason}",
+                block.Host, block.Kind, block.Until, block.Reason);
     }
 }

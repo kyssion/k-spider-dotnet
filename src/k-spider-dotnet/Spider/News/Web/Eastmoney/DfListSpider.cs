@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using KSpider.Common.Logger;
 using KSpider.Exceptions;
 using KSpider.Spider.News.Web.Eastmoney.Model;
-using KSpider.Tool.Http;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Eastmoney;
@@ -40,7 +40,7 @@ public class DfListSpider
             DateTime.Now.Millisecond);
         try
         {
-            var responseString = await HttpClientTools.CreateByHost(DfNewsResource.ListResourceHost).GetStringAsync(urlNow);
+            var responseString = await VerifiedHttp.GetStringAsync(DfNewsResource.ListResourceHost, urlNow);
             return ParseListResponse(responseString, dfListResourceInfo.CategoryInfo.CategoryNumber);
         }
         catch (Exception e)

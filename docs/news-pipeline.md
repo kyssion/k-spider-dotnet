@@ -80,6 +80,7 @@ public interface INewsSpider
   原子性是硬要求——否则会留下"状态 3 却没有 origin"的悬空行，而这类源无法重拉。
 - `NewsSpiderRegistry` 是唯一的装配点：新增源在这里加一行映射，任务、健康检查自动覆盖。
 - 各源 `category` 用**独立编号段**（东财 1-22、财联社 101 起），不复用别源的语义。
+- 各源的 HTTP 请求统一走 `Spider/Verify/VerifiedHttp`（自带会话回放与反爬验证的自动识别/通过），不要直接调 `HttpClientTools`；被拦住时抛 `VerificationRequiredException`（带验证类型），过不了的源会在 `NewsCheckJob` 里汇总告警。设计见 [anti-bot-verification.md](anti-bot-verification.md)。
 
 ## 四、已接入的源
 
@@ -205,6 +206,7 @@ public interface INewsSpider
 
 1. 遍历每个源的每个栏目，抓一页（10 条）验证接口仍返回有效数据；空数据即记错误日志——防的是"接口看起来 200 但内容没了"的静默失效。
 2. 按源统计各状态数量，并输出全库最老未处理新闻的时间（用于判断积压）。
+3. 反爬验证阻塞巡检：输出处于验证冷却期的源（识别到验证但自动通过失败）。这类源会持续拿不到数据，必须让人看见——被反爬拦住最糟的结果不是失败，而是悄悄返回空数据。设计见 [anti-bot-verification.md](anti-bot-verification.md)。
 
 人工巡检常用 SQL：
 
@@ -244,3 +246,4 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 财联社文章频道无重要度 | depth 列表条目 `level` 为空字符串，与电报的 A/B/C 重要度体系不同，落库统一为普通（1） | 若源侧开始下发重要度，在 `ClsArticleListItem` 补映射 |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |
+| 被反爬拦住时过不了就只能等 | JS / Cloudflare 类挑战能自动过，滑块需按源显式放行，图形 / 短信验证码只能人工；过不了时该源进冷却期并告警 | 见 [anti-bot-verification.md](anti-bot-verification.md) 的扩展套路与已知限制 |

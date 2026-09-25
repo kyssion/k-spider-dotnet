@@ -5,7 +5,7 @@ using KSpider.Model;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Flash.Sina.Model;
-using KSpider.Tool.Http;
+using KSpider.Spider.Verify;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Flash.Sina;
@@ -30,8 +30,7 @@ public class SinaNewsSpider : IFlashNewsSpider
                   $"&zhibo_id={SinaNewsResource.ZhiboId}&tag_id=0&dire=f&dpc=1";
         try
         {
-            var responseString = await HttpClientTools.CreateByHost(SinaNewsResource.ResourceHost)
-                .GetStringAsync(url);
+            var responseString = await VerifiedHttp.GetStringAsync(SinaNewsResource.ResourceHost, url);
             return ParseFlashPage(responseString, requestSize, pageNumber);
         }
         catch (Exception e)

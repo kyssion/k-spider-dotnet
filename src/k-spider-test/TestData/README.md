@@ -20,3 +20,24 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 
 维护方式：接口改版或解析逻辑变更时重新抓一份覆盖同名文件，并同步用例里依赖夹具的固定值
 （财联社游标 `1789746672`、正文时间 `2026/09/19 01:09:08` 等）。
+
+## 反爬验证特征样本（`verify_*.html`）
+
+下面这批**不是抓取回来的响应**，而是按各反爬方案的公开特征构造的最小样本，用于回归 `Spider/Verify/` 的识别器。
+这么做的原因：真实挑战页只在被拦时出现（不可控），反复触发还会对目标站造成压力；
+而识别器要守的是"**特征命中**"与"**不误判**"两件事 —— 前者用构造样本锁定，
+后者由上面那批真实业务响应夹具锁定（`VerificationDetectorTest.RealBusinessPayloadIsNotChallenge` 把全部真实夹具跑一遍断言不误判），两侧互补。
+
+| 文件 | 对应验证方式 | 锁定的特征 |
+|---|---|---|
+| `verify_cloudflare_challenge.html` | Cloudflare 托管挑战 | `Verifying you are human` / `cf-turnstile` / `_cf_chl_opt` / `cdn-cgi/challenge-platform` |
+| `verify_jsl_clearance.html` | 加速乐（JS 计算 cookie） | `__jsl_clearance` |
+| `verify_acw_sc_v2.html` | 阿里云盾（JS 计算 cookie） | `acw_sc__v2` |
+| `verify_slider_aliyun.html` | 阿里云盾滑块（旧版 NoCaptcha） | `nc-container` / `nc_scale` / `nc_1_n1z` |
+| `verify_aliyun_waf_captcha.html` | 阿里云 WAF 人机验证页（新版 AliyunCaptcha） | `aliyunCaptcha` / `aliyunCaptcha-sliding-slider` / `aliyun_waf_aa`；实测样本来自财联社 `/detail/*`（2026-09-25，见 `docs/anti-bot-verification.md`） |
+| `verify_slider_geetest.html` | 极验滑块 | `geetest_panel` / `geetest_slider_button` |
+| `verify_image_captcha.html` | 图形验证码 | `captcha_img` / `name="captcha"` / `看不清，换一张` |
+| `verify_sms_captcha.html` | 短信验证码 | `smsCode` / `获取验证码` |
+
+维护方式：识别器特征变更时同步更新对应样本与用例；样本只保留判定所需的最小结构，不要往里加无关内容
+（无关内容会掩盖"这个特征是否真的必要"）。

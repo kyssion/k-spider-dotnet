@@ -67,6 +67,9 @@ src/k-spider-dotnet/
 │   │   ├── NewsSpiderModel.cs #     跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/               #     网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/
 │   │   └── Flash/             #     实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
+│   ├── Verify/                #   反爬验证 ( 数据域无关 ) : 识别器 + 通过策略 + 会话缓存 + 管线 + VerifiedHttp
+│   │   ├── Detector/          #     识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
+│   │   └── Solver/            #     通过策略 : 浏览器过挑战 / 滑块 / 人工升级
 │   └── Report/                #   ── 研报域 ── : Eastmoney/ ( 预留扩展 )
 ├── Tool/                      # Html/（HtmlTools、HtmlTagName）+ Http/（HttpClient 伪装头、URL 工具）
 ├── Common/                    # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/
@@ -108,7 +111,9 @@ FlashNewsJob (每15秒, Job/News/)
   失败记日志 , 下一轮 ( 15 秒后 ) 自然重试 ; 停机回补按游标最多翻 4 页
 ```
 
-NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分源流水线状态统计 + 快讯源实时性滞后监控 ( 最新一条距现在多久 )。
+NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分源流水线状态统计 + 快讯源实时性滞后监控 ( 最新一条距现在多久 ) + 反爬验证阻塞告警 ( 处于验证冷却期的源 )。
+
+**抓取层的 HTTP 出口统一是 `Spider/Verify/VerifiedHttp`**（不再直接调 `HttpClientTools`）：它自动带上已通过验证的会话 cookie，识别到反爬拦截时按注册表里的策略自动过验证并重放请求，过不了则抛带验证类型的 `VerificationRequiredException`。新增源照抄现有源的写法即可。
 
 状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 解析失败 / 4 下载失败`。失败态在 `fail_count < NewsPipelineConst.MaxFailCount(3)` 时自动重试；数据库异常（KDbException）不消耗重试次数。
 
@@ -132,7 +137,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - 日志：DI 托管类（Job/DAO/Pg）注入 `ILogger<T>`；Spider 爬虫类与 Devtools 过渡期仍可用 `LogFactory.GetLogger<T>()`（注意：静态类不能作类型参数）。
 - 表结构变更：改主项目 `Model/` 实体 + `db/k_script_spider.sql` 两处；属于"增量演进"的列/索引可加到 `Pg.EnsureSpiderNewsListDbObjects()`（启动时幂等执行）。
 - 新增 NuGet 包：`Directory.Packages.props` 加 `PackageVersion` + 项目 csproj 加无版本 `PackageReference`。
-- **测试夹具**：接口真实响应放 `src/k-spider-test/TestData/`（csproj 已配置 `CopyToOutputDirectory`），解析回归优先用真实响应而不是手搓 JSON；新增夹具时在同目录 `README.md` 登记来源接口、抓取时间与参数，接口改版或解析变更时同步重抓并更新断言。
+- **测试夹具**：接口真实响应放 `src/k-spider-test/TestData/`（csproj 已配置 `CopyToOutputDirectory`），解析回归优先用真实响应而不是手搓 JSON；新增夹具时在同目录 `README.md` 登记来源接口、抓取时间与参数，接口改版或解析变更时同步重抓并更新断言。唯一例外是反爬挑战页样本（`verify_*.html`，按公开特征构造并在 README 里标注），与"真实响应不误判"用例互补。
 - **真实接口连通性用例**：`LiveConnectivityTest`（`[TestCategory("Live")]`）直接请求线上 URL，验证"能调通 + 能拿到数据集 + 能解析"，排障（源改版、签名失效）时先跑它。网络不可达/超时报告为跳过，接口能连上却拿不到数据则判失败；`verify.sh` 与 CI 用 `--filter "TestCategory!=Live"` 排除，门禁保持离线确定。
 - 爬虫实现一律放 `Spider/` 目录 , 按下方网页抓取型 / 实时快讯型两条套路接入。
 - **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（`FromTypeOfNews` 枚举加值）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。侦察流程与验收标准见 [docs/web-source-playbook.md](docs/web-source-playbook.md)。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）。
@@ -140,7 +145,15 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
   - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 201、见闻 301、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
-- **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Tool/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。
+- **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Tool/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。反爬验证的浏览器策略（`Spider/Verify/Solver/`）只在被拦截时按需启动浏览器，平时不参与抓取。
+- **新增反爬验证识别方式 / 通过手段**（模块见 [docs/anti-bot-verification.md](docs/anti-bot-verification.md)）：
+  - 识别方式：`VerificationKind` 按需加值 → 写一个 `IVerificationDetector` 实现（**纯判定、不联网**，否则没法离线回归）→ 在 `VerificationRegistry.DetectorList` 按"特征越具体越靠前"加一行 → 补夹具与用例。
+  - 通过手段：写一个 `IVerificationSolver` 实现（声明 `Kinds` 与 `Cost`，越小越先试）→ 在 `VerificationRegistry.SolverList` 加一行。人机确认类（滑块 / 图形 / 短信）**不要**加进 `VerificationPolicy.DefaultAllowedKinds`，由部署方按源显式放开。
+  - 财联社是当前唯一按源放开滑块的源（`Program.cs` 里 `SetPolicy`）：`/detail/*` 详情页被阿里云 WAF 人机验证拦截（2026-09-25 实测，纯 HTTP 一律拿到 200 + 滑块页，**间歇性出现**——同一 IP 前一天全拦、次日放行），`BrowserSliderSolver` 先等挑战脚本自动放行、等不到再拖滑块；挑战页样本 `verify_aliyun_waf_captcha.html`。
+  - 抓取层一律走 `VerifiedHttp.GetStringAsync` / `SendStringAsync`（需要自定义请求头时传**请求工厂**，`HttpRequestMessage` 不能重发）；不要直接调 `HttpClientTools`。
+  - **误判比漏判贵**（误判 = 白起一次浏览器 + 这条数据失败 + 该主机进冷却），所以：内容型识别器只对 HTML 生效（各源正常响应是 JSON）、中文泛词（如"验证码"）必须配合表单元素才算数、风控提示只在响应 envelope（对象层级）上找而**不进业务数据数组**（一条含 `risk` 字样的快讯就能让整源误判）、词表不放中性词（裸 `risk`/`verify`、`校验`/`请求异常`）、"签名错误"不归风控（它是源改版，有独立处理路径）。
+  - `VerificationPolicy.WithKinds` 是**在默认放行集上追加**；只想收窄就直接构造 `new VerificationPolicy { AllowedKinds = [...] }` —— 别指望它替换（会把该源的 Cloudflare / JS 门禁自动通过静默关掉）。
+  - 限流（`RateLimited`）与载荷级风控（`RiskControl`）没有任何自动手段，唯一合理响应是退避：不要加进 `DefaultAllowedKinds`，也不要让它们升级成"需要人工介入"（见 `VerificationKindTraits.ResolvesByWaiting`）。
 
 ## 配置
 
@@ -180,6 +193,9 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 13. **金十快讯接口必须带 `x-app-id` / `x-version` 头**，缺失直接 502（值写在 `Jin10NewsResource`，被拒时对照网页端请求更新）。它的 `max_time` 游标是**含边界**语义（`NextCursor` 直接用最老一条时间，边界重复由去重吸收）；约 20% 条目是 PLUS 专享，正文为空、只有 `vip_title` 可用（实现已兜底，详见 docs/news-pipeline.md）。
 14. 四个快讯源（财联社/新浪/见闻/金十）走独立的 `FlashNewsJob` 管线写 `spider_flash_news`（15 秒一轮、拉到即终态），与网页抓取型管线（三张表 + 状态机）完全分离；不要把快讯源注册进 `NewsSpiderRegistry`。加新快讯源时照抄 `Spider/News/Flash/Cls/` 或 `Spider/News/Flash/Jin10/` 的结构。
 15. **财联社一个网站两种管线**：电报在快讯注册表，文章频道在网页注册表（`Spider/News/Web/Cls/`），**共用 `ClsMedia=2`**——枚举标识"网站来源"，管线归属由注册表决定；文章与电报共用一套全局 id（一个 id 只属一种内容类型），`/detail/{id}` 落不同表不会撞键。文章频道的**翻页游标不保证单调**（列表按 SortScore 编辑混排、服务端不按 rn 裁页），末页只以空页为准，重叠靠入库去重吸收；`source` 可空（回退"财联社"）；品见/招财号未接入。侦察与接入方法论见 docs/web-source-playbook.md。
+16. **反爬验证的浏览器策略依赖 Chromium**：目标机需执行一次 `playwright install chromium`（步骤见 docs/operations.md 的部署章节）。未安装时 `BrowserChallengeSolver` 失败并在日志里给出该提示，**识别与告警仍然生效**、抓取链路不受影响——别把它当成"验证模块坏了"。
+17. **会话回放走 `HttpClientTools.ApplyCookies`（写进 handler 的 CookieContainer），不要给请求手动加 `Cookie` 头**：手动头会与容器里的同名旧值拼成两份同名 cookie（实测 `sid=SOLVED; sid=STALE`，服务端取哪份未定义，重复 cookie 本身也是注入指纹）。回放只带 cookie、**不带 UA** —— 请求头由 `HttpClientTools` 统一伪装（`DisguiseUserAgent` 常量），浏览器侧必须复用同一串 UA，否则指纹不一致会被再拦一次。注意 `CreateByHost` 的 CookieContainer 是进程内共享的，`ApplyCookies` 会按名清理并覆盖同名项，改这段要连带跑 `VerifiedHttpTest`。
+18. **验证失败的代价**：`VerificationRequiredException` 按"这条数据失败"处理（消耗 `fail_count`），且该主机进冷却期（默认 10 分钟；429 按源站 `Retry-After` 退避）。因此识别器误判的表现是"某个源整批数据失败 + 冷却期内不再尝试"，改识别器特征后务必跑 `VerificationDetectorTest` 的 `RealBusinessPayloadIsNotChallenge` 用例（真实响应全量不误判）。
 
 ## 提交规范
 
@@ -219,7 +235,7 @@ git status             # 无产物文件混入（bin/obj/.idea 等）
 ```
 
 文档同步：结构性 / 约定性变更须同步更新 README.md、AGENTS.md 与 `docs/` 对应章节。
-`docs/` 是面向维护者的设计文档（设计原则 / 架构 / 新闻管线 / 数据模型 / 运维手册 / 网页型源接入规范），
+`docs/` 是面向维护者的设计文档（设计原则 / 架构 / 新闻管线 / 反爬验证 / 数据模型 / 运维手册 / 网页型源接入规范），
 其中 [docs/README.md](docs/README.md) 有"代码变更 → 必须更新哪份文档"的映射表，改代码前先扫一眼那张表。
 
 凭据红线：不向仓库提交真实凭据；环境相关值进配置/Options，由部署方用环境变量覆盖。

@@ -19,6 +19,7 @@
 | [principles.md](principles.md) | 设计原则与工程约定：分层、数据访问、错误处理与重试、测试分层、命名 |
 | [architecture.md](architecture.md) | 系统架构：项目分层、运行时模型、模块职责、关键设计决策、扩展点 |
 | [news-pipeline.md](news-pipeline.md) | 新闻管线：状态机、多源抽象、已接入源明细、落库与去重、已知限制 |
+| [anti-bot-verification.md](anti-bot-verification.md) | 反爬验证：识别与通过的契约、内置识别器/策略、扩展套路、误判防线与已知限制 |
 | [web-source-playbook.md](web-source-playbook.md) | 网页型源接入规范：侦察清单与方法、接入步骤、验收标准（固化快照，遇新情况按需调整） |
 | [data-model.md](data-model.md) | 数据模型：5 张表的职责、唯一键、索引、迁移与数据治理 |
 | [operations.md](operations.md) | 运行运维：配置、部署、监控、排障手册、数据同步 |
@@ -30,6 +31,8 @@
 | 代码变更 | 必须更新 |
 |---|---|
 | 新增 / 修改新闻源（`Spider/*/`） | [news-pipeline.md](news-pipeline.md) 的源明细表；AGENTS.md 的新闻源套路；侦察或解析方法有新发现时回填 [web-source-playbook.md](web-source-playbook.md) |
+| 新增 / 修改反爬验证识别器或通过策略（`Spider/Verify/`） | [anti-bot-verification.md](anti-bot-verification.md) 的识别器/策略表与扩展套路；AGENTS.md 的验证模块套路；测试夹具登记到 `src/k-spider-test/TestData/README.md` |
+| 抓取层 HTTP 调用方式变更（`Tool/Http/`、`Spider/Verify/VerifiedHttp`） | [anti-bot-verification.md](anti-bot-verification.md)、AGENTS.md 的验证模块套路 |
 | 新增 / 修改定时任务（`Job/`、`Program.AddSpiderJobs`） | [architecture.md](architecture.md) 任务表、[operations.md](operations.md) 任务清单、README 任务表 |
 | 表结构 / 索引 / 唯一键变更（`Model/`、`db/`、`Pg.EnsureSpiderNewsListDbObjects`） | [data-model.md](data-model.md)、`db/k_script_spider.sql` |
 | 状态机 / 重试语义 / 落库语义变更 | [news-pipeline.md](news-pipeline.md) |
