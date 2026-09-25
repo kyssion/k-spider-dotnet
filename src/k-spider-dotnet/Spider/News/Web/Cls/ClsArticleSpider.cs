@@ -90,9 +90,9 @@ public partial class ClsArticleSpider : INewsSpider
         foreach (var node in listData)
         {
             if (node == null) continue;
-            var listItem = ClsArticleListItem.FromJson(node);
+            var listItem = ClsArticleListItem.FromJson(node, categoryNumber);
             if (listItem.ShouldSkip) continue;
-            items.Add(listItem.ToSpiderNewListModel(categoryNumber));
+            items.Add(listItem.ToSpiderNewListModel());
             oldestCtime = Math.Min(oldestCtime, listItem.Ctime);
         }
 

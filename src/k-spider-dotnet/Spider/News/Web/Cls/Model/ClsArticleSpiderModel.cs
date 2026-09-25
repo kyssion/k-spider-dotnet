@@ -9,9 +9,11 @@ namespace KSpider.Spider.News.Web.Cls.Model;
 /// <summary>
 ///     频道文章列表接口的单条数据 ( /v3/depth/list ) , 列表只有摘要 , 正文在详情页 ——
 ///     与电报 ( 列表即全文 ) 不同 , 走网页型三段管线。
-///     属性全部是解析时一次性落定的最终值 ( 显式赋值 , 不做实时计算 ) ;
-///     站内内容 id 只在 FromJson 内部用于拼详情页地址 , 不作为属性存在 ——
-///     spider_news_list 的主键由数据库自增生成 , 与站内 id 无关。
+///     字段与 DfListInfo 同款约定 : 覆盖 spider_news_list 列表阶段要写的全部业务字段 ,
+///     在 FromJson 一次性显式赋值 ( ToSpiderNewListModel 只做 1:1 映射 ) ;
+///     站内内容 id 只在 FromJson 内部用于拼详情页地址 , 不作为属性存在 ,
+///     数据库主键 / 时间戳列 / 状态机列 ( id / create_time / update_time / download_status_code / fail_count )
+///     分别由数据库自增、触发器与 Job 层状态机维护 , 不在这里赋值。
 /// </summary>
 public class ClsArticleListItem
 {
@@ -43,10 +45,25 @@ public class ClsArticleListItem
     public string NewsFrom { get; set; } = "";
 
     /// <summary>
-    ///     发布时间 ( 东八区 ) ; 原始 ctime 保留 , 翻页游标取本页最老一条 ctime
+    ///     发布时间 ( 东八区 )
     /// </summary>
     public DateTime NewsTime { get; set; }
 
+    /// <summary>
+    ///     抓取时间 ( 列表响应解析完成时刻 )
+    /// </summary>
+    public DateTime NewsDownloadTime { get; set; }
+
+    public FromTypeOfNews FromMedia { get; set; }
+
+    /// <summary>
+    ///     栏目分类号 , 由频道资源带入 ( 财联社文章 102-114 )
+    /// </summary>
+    public int Category { get; set; }
+
+    /// <summary>
+    ///     原始 ctime ( unix 秒 ) : 不落库 , 翻页游标取本页最老一条 ctime
+    /// </summary>
     public long Ctime { get; set; }
 
     /// <summary>
@@ -54,7 +71,7 @@ public class ClsArticleListItem
     /// </summary>
     public bool ShouldSkip { get; set; }
 
-    public static ClsArticleListItem FromJson(JsonNode node)
+    public static ClsArticleListItem FromJson(JsonNode node, int categoryNumber)
     {
         // 站内全局内容 id ( 电报与文章共用一套 ) , 只用于拼详情页地址 , 不落到任何属性上
         var articleId = ReadLong(node["id"]);
@@ -65,28 +82,31 @@ public class ClsArticleListItem
 
         return new ClsArticleListItem
         {
-            Ctime = ctime,
             NewsUrl = articleId > 0 ? string.Format(ClsArticleResource.DetailUrlTemplate, articleId) : "",
             NewsTitle = string.IsNullOrEmpty(title) ? Truncate(brief, BriefTitleMaxLength) : title,
             NewsSummary = brief,
             NewsFrom = string.IsNullOrEmpty(source) ? ClsNewsResource.NewsFromName : source,
             NewsTime = DateTimeOffset.FromUnixTimeSeconds(ctime).ToOffset(ChinaOffset).DateTime,
+            NewsDownloadTime = DateTime.Now,
+            FromMedia = FromTypeOfNews.ClsArticleMedia,
+            Category = categoryNumber,
+            Ctime = ctime,
             ShouldSkip = (int)(node["is_ad"] ?? 0) == 1 || !string.IsNullOrEmpty(node["external_link"]?.ToString()) || articleId <= 0
         };
     }
 
-    public SpiderNewsListModel ToSpiderNewListModel(int categoryNumber)
+    public SpiderNewsListModel ToSpiderNewListModel()
     {
         return new SpiderNewsListModel
         {
-            FromMedia = (int)FromTypeOfNews.ClsArticleMedia,
+            FromMedia = (int)FromMedia,
             NewsUrl = NewsUrl,
             NewsTitle = NewsTitle,
             NewsSummary = NewsSummary,
             NewsFrom = NewsFrom,
             NewsTime = NewsTime,
-            NewsDownloadTime = DateTime.Now,
-            Category = categoryNumber
+            NewsDownloadTime = NewsDownloadTime,
+            Category = Category
         };
     }
 
