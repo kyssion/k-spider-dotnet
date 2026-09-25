@@ -139,12 +139,14 @@ public struct NewsCategory
 }
 
 // 记录从哪个渠道抓取的新闻
+// 枚举标识"网站来源" , 一个网站一个值 ; 同一网站有两种内容形态时 ( 如财联社的电报 + 文章频道 )
+// 分属两个注册表 ( FlashNewsSpiderRegistry / NewsSpiderRegistry ) , 共用同一个枚举值
 public enum FromTypeOfNews
 {
     // 东方财富
     DfMedia = 1,
 
-    // 财联社 ( 电报 , 实时快讯型管线 )
+    // 财联社 ( 电报走实时快讯型管线 , 文章频道走网页抓取型管线 )
     ClsMedia = 2,
 
     // 新浪财经 ( 7x24 快讯 )
@@ -154,10 +156,7 @@ public enum FromTypeOfNews
     WscnMedia = 4,
 
     // 金十数据 ( 快讯 )
-    Jin10Media = 5,
-
-    // 财联社 ( 文章/深度频道 , 网页抓取型管线 : /v3/depth/list + 详情页 )
-    ClsArticleMedia = 6
+    Jin10Media = 5
 }
 
 public enum NewsDownloadStatusCode

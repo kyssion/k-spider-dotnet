@@ -19,7 +19,7 @@ namespace KSpider.Spider.News.Web.Cls;
 /// <summary>
 ///     财联社文章频道爬虫 ( 网页抓取型三段 ) : 频道列表 → 详情页原始内容 → 解析正文。
 ///     与电报快讯 ( Spider/News/Flash/Cls , 列表即全文 ) 是同一网站的两条管线 ,
-///     从媒体标识上用 ClsArticleMedia 与电报的 ClsMedia 区分 , 互不注册进对方的注册表。
+///     共用 FromTypeOfNews.ClsMedia , 分别注册在 NewsSpiderRegistry 与 FlashNewsSpiderRegistry。
 ///     详情页为服务端渲染 , 正文 HTML 内嵌在 __NEXT_DATA__ 里 , 无需浏览器渲染。
 /// </summary>
 public partial class ClsArticleSpider : INewsSpider
@@ -35,7 +35,7 @@ public partial class ClsArticleSpider : INewsSpider
     private static readonly Dictionary<string, ClsArticleResource.ArticleChannelResource> ChannelResourceMap =
         ClsArticleResource.ArticleChannelResourceList.ToDictionary(item => item.ChannelId.ToString());
 
-    public FromTypeOfNews FromMedia => FromTypeOfNews.ClsArticleMedia;
+    public FromTypeOfNews FromMedia => FromTypeOfNews.ClsMedia;
 
     public IReadOnlyList<NewsColumn> Columns { get; } = ClsArticleResource.ArticleChannelResourceList
         .Select(item => new NewsColumn(item.ChannelId.ToString(), item.ChannelName))

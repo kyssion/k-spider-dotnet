@@ -41,7 +41,7 @@ public class ClsArticleSpiderTest
         Assert.AreEqual("https://www.cls.cn/detail/2492814", first.NewsUrl);
         Assert.AreEqual("谷歌TPU，下周出发去太空", first.NewsTitle);
         Assert.AreEqual("史正丞", first.NewsFrom);
-        Assert.AreEqual((int)FromTypeOfNews.ClsArticleMedia, first.FromMedia);
+        Assert.AreEqual((int)FromTypeOfNews.ClsMedia, first.FromMedia);
         Assert.AreEqual(102, first.Category);
         Assert.AreEqual(new DateTime(2026, 9, 25, 2, 34, 48), first.NewsTime);
     }

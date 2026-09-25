@@ -25,8 +25,8 @@ public class NewsSourceRegistryTest
         // 断言常驻源与已注册源的类型 , 不锁固定的注册集合
         Assert.IsTrue(NewsSpiderRegistry.All.Count > 0, "网页型注册表不能为空");
 
-        var clsArticle = NewsSpiderRegistry.Get((int)FromTypeOfNews.ClsArticleMedia);
-        Assert.IsNotNull(clsArticle, "ClsArticleMedia ( 财联社文章 ) 必须常驻注册");
+        var clsArticle = NewsSpiderRegistry.Get((int)FromTypeOfNews.ClsMedia);
+        Assert.IsNotNull(clsArticle, "ClsMedia ( 财联社文章频道 ) 必须常驻网页型注册表");
         Assert.IsInstanceOfType<ClsArticleSpider>(clsArticle);
 
         // 东财按需启停 : 启用时必须是 DfNewsSpider
@@ -57,17 +57,19 @@ public class NewsSourceRegistryTest
     }
 
     /// <summary>
-    ///     一个源只能属于一种管线 : 快讯源不能出现在网页型注册表里 , 反之亦然
+    ///     同一网站可以同时拥有两条管线 : 枚举标识"网站来源" , 管线归属由注册表决定。
+    ///     财联社共用 ClsMedia —— 电报走快讯注册表 , 文章频道走网页型注册表
     /// </summary>
     [TestMethod]
-    public void SourceBelongsToExactlyOnePipeline()
+    public void SameSiteMayOwnBothPipelines()
     {
-        foreach (var spider in FlashNewsSpiderRegistry.All)
-            Assert.IsNull(NewsSpiderRegistry.Get((int)spider.FromMedia),
-                $"{spider.FromMedia} 不应同时注册在两种管线里");
-        foreach (var spider in NewsSpiderRegistry.All)
-            Assert.IsNull(FlashNewsSpiderRegistry.Get((int)spider.FromMedia),
-                $"{spider.FromMedia} 不应同时注册在两种管线里");
+        var flash = FlashNewsSpiderRegistry.Get((int)FromTypeOfNews.ClsMedia);
+        Assert.IsNotNull(flash, "财联社电报应在 FlashNewsSpiderRegistry");
+        Assert.IsInstanceOfType<ClsNewsSpider>(flash);
+
+        var web = NewsSpiderRegistry.Get((int)FromTypeOfNews.ClsMedia);
+        Assert.IsNotNull(web, "财联社文章频道应在 NewsSpiderRegistry");
+        Assert.IsInstanceOfType<ClsArticleSpider>(web);
     }
 
     [TestMethod]
@@ -107,8 +109,7 @@ public class NewsSourceRegistryTest
         var rangeBySource = new Dictionary<FromTypeOfNews, (int Min, int Max)>
         {
             [FromTypeOfNews.DfMedia] = (1, 22),
-            [FromTypeOfNews.ClsMedia] = (101, 101),
-            [FromTypeOfNews.ClsArticleMedia] = (102, 199),
+            [FromTypeOfNews.ClsMedia] = (101, 199),
             [FromTypeOfNews.SinaMedia] = (201, 299),
             [FromTypeOfNews.WscnMedia] = (301, 399),
             [FromTypeOfNews.Jin10Media] = (401, 499)
@@ -135,10 +136,10 @@ public class NewsSourceRegistryTest
             Assert.IsTrue(number >= min && number <= max, $"东财栏目分类号越界 : {number}");
         }
 
-        // 财联社文章频道的分类号全部落在 102-199 内 ( 接在电报 101 之后 )
+        // 财联社文章频道的分类号全部落在财联社段内 ( 电报 101 在前 , 文章 102-114 接后 )
         foreach (var channel in ClsArticleResource.ArticleChannelResourceList)
         {
-            var (min, max) = rangeBySource[FromTypeOfNews.ClsArticleMedia];
+            var (min, max) = rangeBySource[FromTypeOfNews.ClsMedia];
             Assert.IsTrue(channel.CategoryNumber >= min && channel.CategoryNumber <= max,
                 $"财联社文章频道分类号越界 : {channel.ChannelName} = {channel.CategoryNumber}");
         }

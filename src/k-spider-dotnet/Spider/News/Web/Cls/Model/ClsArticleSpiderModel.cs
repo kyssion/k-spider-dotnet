@@ -88,7 +88,7 @@ public class ClsArticleListItem
             NewsFrom = string.IsNullOrEmpty(source) ? ClsNewsResource.NewsFromName : source,
             NewsTime = DateTimeOffset.FromUnixTimeSeconds(ctime).ToOffset(ChinaOffset).DateTime,
             NewsDownloadTime = DateTime.Now,
-            FromMedia = FromTypeOfNews.ClsArticleMedia,
+            FromMedia = FromTypeOfNews.ClsMedia,
             Category = categoryNumber,
             Ctime = ctime,
             ShouldSkip = (int)(node["is_ad"] ?? 0) == 1 || !string.IsNullOrEmpty(node["external_link"]?.ToString()) || articleId <= 0
