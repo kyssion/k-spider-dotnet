@@ -1,15 +1,17 @@
 using System.Text.Json.Nodes;
 using KSpider.Common.Json;
-using KSpider.Common.Time;
 using KSpider.Model;
 using KSpider.Spider.News.Flash.Cls;
-using KSpider.Tool.Http;
+using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Web.Cls.Model;
 
 /// <summary>
 ///     频道文章列表接口的单条数据 ( /v3/depth/list ) , 列表只有摘要 , 正文在详情页 ——
-///     与电报 ( 列表即全文 ) 不同 , 走网页型三段管线
+///     与电报 ( 列表即全文 ) 不同 , 走网页型三段管线。
+///     属性全部是解析时一次性落定的最终值 ( 显式赋值 , 不做实时计算 ) ;
+///     站内内容 id 只在 FromJson 内部用于拼详情页地址 , 不作为属性存在 ——
+///     spider_news_list 的主键由数据库自增生成 , 与站内 id 无关。
 /// </summary>
 public class ClsArticleListItem
 {
@@ -23,49 +25,53 @@ public class ClsArticleListItem
     /// </summary>
     private static readonly TimeSpan ChinaOffset = TimeSpan.FromHours(8);
 
-    public long Id { get; set; }
+    /// <summary>
+    ///     详情页地址 , 作为 news_url 的稳定去重键 ; 条目 id 缺失时为空
+    /// </summary>
+    public string NewsUrl { get; set; } = "";
+
+    /// <summary>
+    ///     展示标题 : 无标题时用摘要截断兜底
+    /// </summary>
+    public string NewsTitle { get; set; } = "";
+
+    public string NewsSummary { get; set; } = "";
+
+    /// <summary>
+    ///     来源 : source 是记者/编辑名 , 投稿/转载类条目可能为空 , 回退平台名 ( 与电报同款兜底 )
+    /// </summary>
+    public string NewsFrom { get; set; } = "";
+
+    /// <summary>
+    ///     发布时间 ( 东八区 ) ; 原始 ctime 保留 , 翻页游标取本页最老一条 ctime
+    /// </summary>
+    public DateTime NewsTime { get; set; }
 
     public long Ctime { get; set; }
 
-    public string Title { get; set; } = "";
-
-    public string Brief { get; set; } = "";
-
-    public string Source { get; set; } = "";
-
     /// <summary>
-    ///     广告标记 , 站点自带 ( 列表接口比东财多给的一步过滤依据 )
+    ///     广告 ( is_ad ) / 站外跳转 ( external_link 非空 , 没有 /detail/{id} 详情页 ) / 条目 id 缺失 , 不入库
     /// </summary>
-    public int IsAd { get; set; }
-
-    /// <summary>
-    ///     非空时该条目跳转站外 ( 没有 /detail/{id} 详情页 ) , 无法走三段管线
-    /// </summary>
-    public string ExternalLink { get; set; } = "";
-
-    public List<string> TagNames { get; set; } = [];
-
-    public string NewsUrl => string.Format(ClsArticleResource.DetailUrlTemplate, Id);
-
-    public DateTime NewsTime => DateTimeOffset.FromUnixTimeSeconds(Ctime).ToOffset(ChinaOffset).DateTime;
-
-    /// <summary>
-    ///     广告与站外跳转条目不入库
-    /// </summary>
-    public bool ShouldSkip => IsAd == 1 || !string.IsNullOrEmpty(ExternalLink);
+    public bool ShouldSkip { get; set; }
 
     public static ClsArticleListItem FromJson(JsonNode node)
     {
+        // 站内全局内容 id ( 电报与文章共用一套 ) , 只用于拼详情页地址 , 不落到任何属性上
+        var articleId = ReadLong(node["id"]);
+        var ctime = ReadLong(node["ctime"]);
+        var title = node["title"]?.ToString() ?? "";
+        var brief = node["brief"]?.ToString() ?? "";
+        var source = node["source"]?.ToString() ?? "";
+
         return new ClsArticleListItem
         {
-            Id = ReadLong(node["id"]),
-            Ctime = ReadLong(node["ctime"]),
-            Title = node["title"]?.ToString() ?? "",
-            Brief = node["brief"]?.ToString() ?? "",
-            Source = node["source"]?.ToString() ?? "",
-            IsAd = (int)(node["is_ad"] ?? 0),
-            ExternalLink = node["external_link"]?.ToString() ?? "",
-            TagNames = ReadTagNames(node["article_tag"])
+            Ctime = ctime,
+            NewsUrl = articleId > 0 ? string.Format(ClsArticleResource.DetailUrlTemplate, articleId) : "",
+            NewsTitle = string.IsNullOrEmpty(title) ? Truncate(brief, BriefTitleMaxLength) : title,
+            NewsSummary = brief,
+            NewsFrom = string.IsNullOrEmpty(source) ? ClsNewsResource.NewsFromName : source,
+            NewsTime = DateTimeOffset.FromUnixTimeSeconds(ctime).ToOffset(ChinaOffset).DateTime,
+            ShouldSkip = (int)(node["is_ad"] ?? 0) == 1 || !string.IsNullOrEmpty(node["external_link"]?.ToString()) || articleId <= 0
         };
     }
 
@@ -75,25 +81,19 @@ public class ClsArticleListItem
         {
             FromMedia = (int)FromTypeOfNews.ClsArticleMedia,
             NewsUrl = NewsUrl,
-            NewsTitle = string.IsNullOrEmpty(Title) ? Truncate(Brief, BriefTitleMaxLength) : Title,
-            NewsSummary = Brief,
-            // source 是记者/编辑名 , 投稿 / 转载类条目可能为空 , 回退平台名 ( 与电报同款兜底 )
-            NewsFrom = string.IsNullOrEmpty(Source) ? ClsNewsResource.NewsFromName : Source,
+            NewsTitle = NewsTitle,
+            NewsSummary = NewsSummary,
+            NewsFrom = NewsFrom,
             NewsTime = NewsTime,
             NewsDownloadTime = DateTime.Now,
             Category = categoryNumber
         };
     }
 
+    // 接口数值字段可能是数字或数字字符串 , 统一兜底解析
     private static long ReadLong(JsonNode? node)
     {
         return long.TryParse(node?.ToString(), out var value) ? value : 0;
-    }
-
-    private static List<string> ReadTagNames(JsonNode? node)
-    {
-        if (node is not JsonArray tagArray) return [];
-        return tagArray.Select(tag => tag?["name"]?.ToString() ?? "").Where(name => name != "").ToList();
     }
 
     private static string Truncate(string value, int maxLength)
@@ -103,15 +103,12 @@ public class ClsArticleListItem
 }
 
 /// <summary>
-///     详情页 __NEXT_DATA__ 里的 articleDetail ( 详情页为服务端渲染 , 正文 HTML 直接内嵌 )
+///     详情页 __NEXT_DATA__ 里的 articleDetail ( 详情页为服务端渲染 , 正文 HTML 直接内嵌 )。
+///     与列表条目同款约定 : 属性全部是解析时一次性落定的最终值
 /// </summary>
 public class ClsArticleDetailInfo
 {
     private static readonly TimeSpan ChinaOffset = TimeSpan.FromHours(8);
-
-    public long Id { get; set; }
-
-    public long Ctime { get; set; }
 
     public string Title { get; set; } = "";
 
@@ -131,20 +128,20 @@ public class ClsArticleDetailInfo
     /// </summary>
     public List<string> Images { get; set; } = [];
 
-    public DateTime NewsTime => DateTimeOffset.FromUnixTimeSeconds(Ctime).ToOffset(ChinaOffset).DateTime;
+    public DateTime NewsTime { get; set; }
 
     public static ClsArticleDetailInfo FromJson(JsonNode articleDetail)
     {
+        var ctime = long.TryParse(articleDetail["ctime"]?.ToString(), out var ctimeValue) ? ctimeValue : 0;
         return new ClsArticleDetailInfo
         {
-            Id = long.TryParse(articleDetail["id"]?.ToString(), out var id) ? id : 0,
-            Ctime = long.TryParse(articleDetail["ctime"]?.ToString(), out var ctime) ? ctime : 0,
             Title = articleDetail["title"]?.ToString() ?? "",
             Brief = articleDetail["brief"]?.ToString() ?? "",
             Content = articleDetail["content"]?.ToString() ?? "",
             AuthorName = articleDetail["author"]?["name"]?.ToString() ?? "",
             TagNames = ReadTagNames(articleDetail["visibleTags"]),
-            Images = ReadImages(articleDetail["images"])
+            Images = ReadImages(articleDetail["images"]),
+            NewsTime = DateTimeOffset.FromUnixTimeSeconds(ctime).ToOffset(ChinaOffset).DateTime
         };
     }
 

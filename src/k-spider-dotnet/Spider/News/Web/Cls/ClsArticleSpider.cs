@@ -91,7 +91,7 @@ public partial class ClsArticleSpider : INewsSpider
         {
             if (node == null) continue;
             var listItem = ClsArticleListItem.FromJson(node);
-            if (listItem.Id == 0 || listItem.ShouldSkip) continue;
+            if (listItem.ShouldSkip) continue;
             items.Add(listItem.ToSpiderNewListModel(categoryNumber));
             oldestCtime = Math.Min(oldestCtime, listItem.Ctime);
         }
