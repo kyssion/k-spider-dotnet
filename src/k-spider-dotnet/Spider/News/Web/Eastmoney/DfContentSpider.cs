@@ -15,10 +15,15 @@ using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Eastmoney;
 
+/// <summary>
+///     东方财富新闻详情抓取与解析 : 现行管线走详情接口 ( GetDfContentOriginInfoByInterface + GetContentInfoByJson ) ,
+///     GetDfContextInfoByUrl 一族是直接抓详情页 HTML 的路径 , 当前无调用方保留备用
+/// </summary>
 public partial class DfContentSpider
 {
     private static readonly ILogger Log = LogFactory.GetLogger<DfContentSpider>();
 
+    // 清洗文本 : 去除全部空白字符
     [GeneratedRegex(@"\s")]
     private static partial Regex FillWriteLine();
 
@@ -32,6 +37,9 @@ public partial class DfContentSpider
         return lastPath.Split(".", 2)[0].Split(",", 2)[^1];
     }
 
+    /// <summary>
+    ///     详情接口拉取原始内容 : 失败不抛异常 , 填 Failed 状态与 Message 交回状态机重试
+    /// </summary>
     public async Task<DfNewsContentOrigin> GetDfContentOriginInfoByInterface(string url)
     {
         var paramsNumber = GetArticleParamFromUrl(url);
@@ -61,6 +69,9 @@ public partial class DfContentSpider
         return ans;
     }
 
+    /// <summary>
+    ///     详情接口一步到位 ( 下载 + 解析 ) : 下载异常原样上抛 , 其余异常包装为 HtmlFormException
+    /// </summary>
     public async Task<DfContentInfo> GetDfContextInfoByUrlInterface(string url)
     {
         var paramsNumber = GetArticleParamFromUrl(url);
@@ -82,6 +93,10 @@ public partial class DfContentSpider
         }
     }
 
+    /// <summary>
+    ///     解析详情接口 JSON 响应为 DfContentInfo , 正文 HTML 再交 GetDetailInfoByHtml 拆片段
+    ///     ( 独立成公开方法供离线测试 )
+    /// </summary>
     public DfContentInfo GetContentInfoByJson(string responseString, string url)
     {
         try
@@ -92,7 +107,8 @@ public partial class DfContentSpider
             if (jsonData == null)
                 throw new DownloadHttpRequestException(url, "[GetDfContextInfoByInterface] json data not find");
             ans.NewsTitle = jsonData["Art_Title"]?.ToString() ?? "";
-            ans.NewsSummary = jsonData["Art_Title"]?.ToString() ?? "";
+            // 摘要取导语字段 Art_Guidance , 不是标题 ( 此前误读 Art_Title , 摘要恒等于标题 )
+            ans.NewsSummary = jsonData["Art_Guidance"]?.ToString() ?? "";
             ans.NewsFrom = jsonData["Art_Media_Name"]?.ToString() ?? "";
             ans.NewsTime = jsonData["Art_ShowTime"]?.ToString() ?? "";
             ans.NewsKeyword = jsonData["Art_Keyword"]?.ToString() ?? "";
@@ -111,6 +127,9 @@ public partial class DfContentSpider
         }
     }
 
+    /// <summary>
+    ///     正文 HTML 逐节点拆为 NewsContentSegment : 已知名签按语义归类 , 未知标签跳过片段并记日志
+    /// </summary>
     private DfContentInfo GetDetailInfoByHtml(HtmlNode htmlDoc, DfContentInfo ans)
     {
         var txtInfNodes = htmlDoc.ChildNodes;
@@ -350,6 +369,9 @@ public partial class DfContentSpider
     }
 
 
+    /// <summary>
+    ///     直接抓详情页 HTML 并解析 ( 非 JSON 接口路径 , 当前无调用方 )
+    /// </summary>
     public async Task<DfContentInfo> GetDfContextInfoByUrl(string url)
     {
         try
@@ -365,6 +387,9 @@ public partial class DfContentSpider
         }
     }
 
+    /// <summary>
+    ///     详情页 HTML 解析入口 : 按新版 / 旧版模板选择器分流 , 都匹配不上抛 HtmlFormException
+    /// </summary>
     public DfContentInfo GetDfContextInfoByHtml(string url, string responseString)
     {
         var htmlDoc = new HtmlDocument();

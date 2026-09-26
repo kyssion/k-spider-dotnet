@@ -18,6 +18,7 @@ public class DfContentSpiderTest
         var article = new JsonObject
         {
             ["Art_Title"] = "央行宣布降准0.5个百分点",
+            ["Art_Guidance"] = "中国人民银行宣布下调金融机构存款准备金率0.5个百分点",
             ["Art_Media_Name"] = "东方财富网",
             ["Art_ShowTime"] = "2026/09/06 10:30:00",
             ["Art_Keyword"] = "央行,降准",
@@ -33,8 +34,8 @@ public class DfContentSpiderTest
         var info = spider.GetContentInfoByJson(BuildArticleJson("<p>正文第一段。</p>"), NewsUrl);
 
         Assert.AreEqual("央行宣布降准0.5个百分点", info.NewsTitle);
-        // 当前实现摘要直接复用标题
-        Assert.AreEqual(info.NewsTitle, info.NewsSummary);
+        // 摘要来自 Art_Guidance 导语字段 , 与标题是两个字段
+        Assert.AreEqual("中国人民银行宣布下调金融机构存款准备金率0.5个百分点", info.NewsSummary);
         Assert.AreEqual("东方财富网", info.NewsFrom);
         Assert.AreEqual("2026/09/06 10:30:00", info.NewsTime);
         Assert.AreEqual("央行,降准", info.NewsKeyword);
