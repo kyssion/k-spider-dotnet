@@ -1,3 +1,5 @@
+using KSpider.Spider.Verify.Model;
+
 namespace KSpider.Spider.Verify;
 
 /// <summary>

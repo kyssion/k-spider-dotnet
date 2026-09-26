@@ -1,4 +1,4 @@
-namespace KSpider.Spider.Verify;
+namespace KSpider.Spider.Verify.Model;
 
 /// <summary>
 ///     一次"已通过验证"的会话 : 过验证拿到的 cookie , 回放给 HTTP 链路复用。
@@ -17,10 +17,13 @@ public sealed class VerificationSession
 
     public required DateTime ExpiresAt { get; init; }
 
+    /// <summary>是否超过本地缓存上限 ( 真实有效期由服务端决定 , 过期后下一轮识别会再拦一次 )</summary>
     public bool IsExpired => DateTime.Now >= ExpiresAt;
 
+    /// <summary>拼好的 Cookie 请求头 ( 供日志与排障 )</summary>
     public string CookieHeader => string.Join("; ", Cookies.Select(item => $"{item.Key}={item.Value}"));
 
+    /// <summary>组装会话 : 同名 cookie 去重取末值 , TTL 为本地缓存上限</summary>
     public static VerificationSession Create(string host, IEnumerable<KeyValuePair<string, string>> cookies,
         int ttlSeconds)
     {
@@ -37,54 +40,5 @@ public sealed class VerificationSession
             // TTL 只是本地缓存上限 : cookie 的真实有效期由服务端决定 , 过期了下一轮识别会再拦一次
             ExpiresAt = now.AddSeconds(ttlSeconds)
         };
-    }
-}
-
-/// <summary>
-///     已通过验证的会话缓存 , 按主机索引。过验证代价高 ( 要起浏览器 ) ,
-///     所以一次通过后的会话要在进程内复用 , 而不是每个请求都过一遍。
-///     读多写少、按主机隔离 , 直接锁字典即可 ( 主机数量 = 源数量 ) 。
-/// </summary>
-public sealed class VerificationSessionStore
-{
-    private readonly Dictionary<string, VerificationSession> _sessions = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Lock _lock = new();
-
-    /// <summary>取该主机当前有效会话 , 过期即移除并返回 null</summary>
-    public VerificationSession? Get(string host)
-    {
-        if (string.IsNullOrEmpty(host)) return null;
-        lock (_lock)
-        {
-            if (!_sessions.TryGetValue(host, out var session)) return null;
-            if (!session.IsExpired) return session;
-            _sessions.Remove(host);
-            return null;
-        }
-    }
-
-    public void Set(VerificationSession session)
-    {
-        lock (_lock)
-        {
-            _sessions[session.Host] = session;
-        }
-    }
-
-    public void Remove(string host)
-    {
-        lock (_lock)
-        {
-            _sessions.Remove(host);
-        }
-    }
-
-    /// <summary>当前有效会话快照 ( 供日志与排障 )</summary>
-    public IReadOnlyList<VerificationSession> Snapshot()
-    {
-        lock (_lock)
-        {
-            return _sessions.Values.Where(session => !session.IsExpired).ToList();
-        }
     }
 }

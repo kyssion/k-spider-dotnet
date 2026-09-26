@@ -1,15 +1,18 @@
+using KSpider.Spider.Verify.Model;
 using KSpider.Tool.Http;
 using Microsoft.Playwright;
 
-namespace KSpider.Spider.Verify.Solver;
+namespace KSpider.Spider.Verify.Solver.Browser;
 
 /// <summary>
 ///     浏览器会话的公共部分 : 启动 Chromium ( UA / platform / languages 与 HTTP 链路一致 ) 、打开目标地址、导出 cookie。
 ///     两个浏览器策略 ( JS 挑战 / 滑块 ) 共用它 , 差别只在"打开之后怎么过验证"。
+///     Browser/ 目录收纳依赖 Playwright 的通过手段与它们的公共基建 ; 不起浏览器的手段不进这里。
 ///     浏览器只在被拦截时按需启动 , 生产链路仍然只用 HTTP。
 /// </summary>
 internal sealed class BrowserGate : IAsyncDisposable
 {
+    /// <summary>页面导航与 DOM 操作的统一超时</summary>
     private const int BrowserTimeoutMs = 30000;
 
     /// <summary>
@@ -25,8 +28,13 @@ internal sealed class BrowserGate : IAsyncDisposable
         if (!window.chrome) { window.chrome = { runtime: {} }; }
         """;
 
+    /// <summary>Chromium 实例 ( 完整新 headless , 启动参数见 OpenAsync )</summary>
     private readonly IBrowser _browser;
+
+    /// <summary>隔离上下文 : 伪装 UA 与指纹初始化脚本都挂在它上面</summary>
     private readonly IBrowserContext _context;
+
+    /// <summary>Playwright 运行时 , 收尾时随浏览器一并 Dispose</summary>
     private readonly IPlaywright _playwright;
 
     private BrowserGate(IPlaywright playwright, IBrowser browser, IBrowserContext context, IPage page)
@@ -37,8 +45,10 @@ internal sealed class BrowserGate : IAsyncDisposable
         Page = page;
     }
 
+    /// <summary>已打开目标地址的页面 , 策略在它上面等放行 / 找滑块</summary>
     public IPage Page { get; }
 
+    /// <summary>释放浏览器会话 ; 各步收尾失败都吞掉 , 不能盖住真正的处理结果</summary>
     public async ValueTask DisposeAsync()
     {
         // 收尾失败没有补救价值 , 且不能让它盖住真正的处理结果

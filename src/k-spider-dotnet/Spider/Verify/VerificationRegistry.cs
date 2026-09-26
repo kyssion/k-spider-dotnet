@@ -1,5 +1,7 @@
 using KSpider.Spider.Verify.Detector;
+using KSpider.Spider.Verify.Pipeline;
 using KSpider.Spider.Verify.Solver;
+using KSpider.Spider.Verify.Solver.Browser;
 
 namespace KSpider.Spider.Verify;
 

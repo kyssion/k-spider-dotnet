@@ -1,4 +1,5 @@
 using KSpider.Spider.Verify;
+using KSpider.Spider.Verify.Model;
 
 namespace KSpider.Exceptions;
 

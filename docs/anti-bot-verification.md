@@ -52,6 +52,18 @@ VerificationPipeline.Detect        识别器注册表 ( 5 个 , 按具体度排�
 
 ## 三、契约
 
+目录按角色划分，每个区一条准入判据：
+
+| 区 | 准入判据 | 内容 |
+|---|---|---|
+| 根 | 外部调用方需要认识的 | 两个扩展点接口 + `VerifiedHttp` / `VerificationRegistry` / `VerificationPolicy` |
+| `Model/` | 被 ≥2 个区引用、纯数据无行为 | `VerificationKind`(+Traits) / `VerificationProbe` / `VerificationChallenge` / `VerificationSolving`(Request+Result) / `VerificationOutcome`(+Block) / `VerificationSession` |
+| `Pipeline/` | 协调其它组件或持有时效状态 | `VerificationPipeline` + `VerificationSessionStore` |
+| `Detector/` | 回答"被拦住了吗、是哪种" | 识别器实现（纯判定、不联网） |
+| `Solver/` | 回答"怎么过" | 策略实现；`Solver/Browser/` 收纳依赖 Playwright 的手段与公共基建（`BrowserGate`） |
+
+依赖不变量：**家族（Detector / Solver）只依赖根契约与 Model，两个家族互不引用**；跨家族协作（浏览器策略重跑识别器）经根接口注入完成。
+
 | 类型 | 职责 |
 |---|---|
 | `IVerificationDetector` | 识别器：`Detect(VerificationProbe) → VerificationChallenge?`。**纯判定、不联网**，否则没法离线回归 |
@@ -169,4 +181,4 @@ VerificationRegistry.SetPolicy("www.example.com", VerificationPolicy.WithKinds(V
 
 全部离线，随 `./scripts/verify.sh` 与 CI 执行。挑战页夹具是**按公开特征构造的样本**（触发真实挑战不可控，且反复触发会对目标站造成压力），来源与说明登记在 `src/k-spider-test/TestData/README.md`；"不误判"用例用的则是真实抓取响应，两侧互补。
 
-**浏览器策略（`Solver/`）不在离线门禁内**：它依赖真实 Chromium，跑起来是秒级进程启动，放进确定性门禁不合适。改动浏览器策略后手工验证一次（起一个本地自清除挑战页 → 跑 `BrowserChallengeSolver.SolveAsync` → 断言拿到放行 cookie），或直接观察被拦源恢复抓取的日志：成功时输出 `[BrowserChallengeSolver] 通过 ... 拦截`，失败时输出带 `playwright install chromium` 提示的 `浏览器启动 / 加载失败`。滑块策略同理：本地起两个页面 —— 自动放行页（特征若干秒后由脚本移除）与可拖拽滑块页（拖到轨道右端才清除）—— 分别覆盖 `BrowserSliderSolver` 的两段式路径（本次改动即按此方式验证：自动放行 3.9s / 拖拽通过 6.6s，消息分别为"挑战脚本自动放行"与"滑块通过"）。
+**浏览器策略（`Solver/Browser/`）不在离线门禁内**：它依赖真实 Chromium，跑起来是秒级进程启动，放进确定性门禁不合适。改动浏览器策略后手工验证一次（起一个本地自清除挑战页 → 跑 `BrowserChallengeSolver.SolveAsync` → 断言拿到放行 cookie），或直接观察被拦源恢复抓取的日志：成功时输出 `[BrowserChallengeSolver] 通过 ... 拦截`，失败时输出带 `playwright install chromium` 提示的 `浏览器启动 / 加载失败`。滑块策略同理：本地起两个页面 —— 自动放行页（特征若干秒后由脚本移除）与可拖拽滑块页（拖到轨道右端才清除）—— 分别覆盖 `BrowserSliderSolver` 的两段式路径（本次改动即按此方式验证：自动放行 3.9s / 拖拽通过 6.6s，消息分别为"挑战脚本自动放行"与"滑块通过"）。

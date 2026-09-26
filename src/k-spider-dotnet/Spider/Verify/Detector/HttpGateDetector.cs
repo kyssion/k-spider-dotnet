@@ -1,3 +1,5 @@
+using KSpider.Spider.Verify.Model;
+
 namespace KSpider.Spider.Verify.Detector;
 
 /// <summary>
@@ -16,8 +18,13 @@ public sealed class HttpGateDetector : IVerificationDetector
         "waf", "jsl", "check.html", "blocked"
     ];
 
+    /// <summary>识别器名 , 会写进 <see cref="VerificationChallenge.DetectorName" /></summary>
     public string Name => "HttpGateDetector";
 
+    /// <summary>
+    ///     3xx 只认跳向验证页的目标 ; 401 / 403 / 412 按拒访 ,
+    ///     429 按限流 , 503 仅在带 Retry-After ( WAF 限流特征 ) 时算网关拦截。
+    /// </summary>
     public VerificationChallenge? Detect(VerificationProbe probe)
     {
         if (probe.StatusCode is >= 300 and < 400)

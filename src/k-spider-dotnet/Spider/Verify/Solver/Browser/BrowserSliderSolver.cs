@@ -1,8 +1,9 @@
 using KSpider.Common.Logger;
+using KSpider.Spider.Verify.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 
-namespace KSpider.Spider.Verify.Solver;
+namespace KSpider.Spider.Verify.Solver.Browser;
 
 /// <summary>
 ///     滑块验证码策略 : 用浏览器打开验证页 , 先等挑战脚本自动放行 , 等不到再把滑块从起点拖到轨道右端 ,
@@ -37,12 +38,19 @@ public sealed class BrowserSliderSolver(IReadOnlyList<IVerificationDetector> det
     /// <summary>拖完后等待校验结果的秒数</summary>
     private const int VerifyWaitSeconds = 3;
 
+    /// <summary>策略名 , 进日志</summary>
     public string Name => "BrowserSliderSolver";
 
+    /// <summary>代价 20 : 比自动放行贵在要真的碰滑块 , 且各站 DOM 不同不保证一次通过</summary>
     public int Cost => 20;
 
+    /// <summary>只处理滑块 ; 默认策略不放行 , 确认有权抓取后按源显式放开 ( 见 VerificationPolicy.WithKinds )</summary>
     public IReadOnlyCollection<VerificationKind> Kinds => [VerificationKind.SliderCaptcha];
 
+    /// <summary>
+    ///     两段式 : 先每秒等挑战脚本自动放行 ( 干净指纹常被直接放行 ) ,
+    ///     期间出现认识的滑块则拖一次 ; 拖完等 VerifyWaitSeconds 再判 , 超时按失败返回。
+    /// </summary>
     public async Task<VerificationSolveResult> SolveAsync(VerificationSolveRequest request,
         CancellationToken cancellationToken)
     {
@@ -106,6 +114,7 @@ public sealed class BrowserSliderSolver(IReadOnlyList<IVerificationDetector> det
         return detectors.Any(detector => detector.Detect(probe) != null);
     }
 
+    /// <summary>导出目标主机 cookie 组装会话 ; 一个都拿不到按失败处理</summary>
     private async Task<VerificationSolveResult> SolvedAsync(BrowserGate gate, VerificationSolveRequest request,
         string message)
     {

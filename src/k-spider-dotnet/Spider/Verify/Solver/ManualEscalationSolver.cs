@@ -1,4 +1,5 @@
 using KSpider.Common.Logger;
+using KSpider.Spider.Verify.Model;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.Verify.Solver;
@@ -11,15 +12,22 @@ namespace KSpider.Spider.Verify.Solver;
 public sealed class ManualEscalationSolver : IVerificationSolver
 {
     private static readonly ILogger Log = LogFactory.GetLogger<ManualEscalationSolver>();
+    /// <summary>全部验证类型快照 ( 兜底策略不挑类型 , 什么拦住都能升级告警 )</summary>
     private static readonly VerificationKind[] AllKinds = Enum.GetValues<VerificationKind>();
 
+    /// <summary>策略名 , 进日志</summary>
     public string Name => "ManualEscalationSolver";
 
+    /// <summary>代价最高 ( 99 ) : 永远排在最后 , 只在自动手段全部失败后兜底</summary>
     public int Cost => 99;
 
     /// <summary>兜底策略对全部验证类型生效</summary>
     public IReadOnlyCollection<VerificationKind> Kinds => AllKinds;
 
+    /// <summary>
+    ///     不做任何"通过"尝试 : 记 Error 级日志 ( 带验证形态与处置建议 ) ,
+    ///     返回失败并标记需人工介入 , 由 NewsCheckJob 汇总告警。
+    /// </summary>
     public Task<VerificationSolveResult> SolveAsync(VerificationSolveRequest request,
         CancellationToken cancellationToken)
     {
@@ -31,6 +39,7 @@ public sealed class ManualEscalationSolver : IVerificationSolver
             $"{request.Challenge.Kind} 需人工介入", true));
     }
 
+    /// <summary>按验证类型给出人工处置建议 ( 写进日志 )</summary>
     private static string AdviceFor(VerificationKind kind)
     {
         return kind switch

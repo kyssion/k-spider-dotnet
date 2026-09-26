@@ -1,7 +1,8 @@
 using KSpider.Common.Logger;
+using KSpider.Spider.Verify.Model;
 using Microsoft.Extensions.Logging;
 
-namespace KSpider.Spider.Verify;
+namespace KSpider.Spider.Verify.Pipeline;
 
 /// <summary>
 ///     验证处理管线 : 识别 → 按策略选手段 → 逐个尝试 → 落会话 , 并负责"别把目标站打爆"的两件事 ——
@@ -18,9 +19,16 @@ public sealed class VerificationPipeline(
 {
     private static readonly ILogger Log = LogFactory.GetLogger<VerificationPipeline>();
 
+    /// <summary>主机 → 冷却截止时刻 : 冷却期内的主机不再尝试过验证 , 只识别并告警</summary>
     private readonly Dictionary<string, DateTime> _cooldownUntil = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>主机 → 串行闸门 : 同一主机的过验证处理排队进行 , 避免并行起多个浏览器</summary>
     private readonly Dictionary<string, SemaphoreSlim> _hostGates = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>主机 → 最近一次拦截结论 ( 冷却期告警时说明"上次为什么被挡" )</summary>
     private readonly Dictionary<string, VerificationBlock> _lastBlock = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>保护上面三个字典 ( 主机数量 = 源数量 , 锁竞争可忽略 )</summary>
     private readonly Lock _stateLock = new();
 
     /// <summary>
@@ -66,6 +74,7 @@ public sealed class VerificationPipeline(
                 probe.Host, challenge.Kind);
         }
 
+        // 候选手段 = 能处理该类型 且 被策略放行 , 按代价升序逐个试 ( 便宜的在先 )
         var candidates = solvers
             .Where(solver => solver.Kinds.Contains(challenge.Kind) && policy.Allows(challenge.Kind))
             .OrderBy(solver => solver.Cost)
@@ -165,6 +174,7 @@ public sealed class VerificationPipeline(
         }
     }
 
+    /// <summary>取主机当前生效的冷却结论 , 不在冷却期返回 null</summary>
     private VerificationBlock? CooldownOf(string host)
     {
         lock (_stateLock)
@@ -174,6 +184,7 @@ public sealed class VerificationPipeline(
         }
     }
 
+    /// <summary>进入冷却期 ; 限流类型优先按源站 Retry-After 退避 , 没给才落到策略默认值</summary>
     private void SetCooldown(string host, VerificationChallenge challenge, string reason, VerificationPolicy policy)
     {
         // 限流按源站给的 Retry-After 退避 : 它比策略里的默认冷却更了解自己的限流窗口 ( 给 60 秒就退 60 秒 ,
@@ -196,6 +207,7 @@ public sealed class VerificationPipeline(
             host, challenge.Kind, until, reason);
     }
 
+    /// <summary>过验证成功后清除该主机的冷却记录</summary>
     private void ClearCooldown(string host)
     {
         lock (_stateLock)
@@ -205,6 +217,7 @@ public sealed class VerificationPipeline(
         }
     }
 
+    /// <summary>取 ( 没有则建 ) 该主机的串行闸门</summary>
     private SemaphoreSlim HostGate(string host)
     {
         lock (_stateLock)

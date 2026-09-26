@@ -5,6 +5,7 @@ using KSpider.Job.News.Flash;
 using KSpider.Job.News.Web;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.Verify;
+using KSpider.Spider.Verify.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

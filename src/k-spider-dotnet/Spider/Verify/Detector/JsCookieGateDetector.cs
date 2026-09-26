@@ -1,3 +1,5 @@
+using KSpider.Spider.Verify.Model;
+
 namespace KSpider.Spider.Verify.Detector;
 
 /// <summary>
@@ -27,8 +29,10 @@ public sealed class JsCookieGateDetector : IVerificationDetector
     /// </summary>
     private const int GenericGateMaxBodyLength = 8192;
 
+    /// <summary>识别器名 , 会写进 <see cref="VerificationChallenge.DetectorName" /></summary>
     public string Name => "JsCookieGateDetector";
 
+    /// <summary>先按厂商脚本特征精确判定 ; 未命中再用"薄壳页写 cookie + 跳转"兜底</summary>
     public VerificationChallenge? Detect(VerificationProbe probe)
     {
         if (!probe.IsHtml) return null;
@@ -47,6 +51,7 @@ public sealed class JsCookieGateDetector : IVerificationDetector
         if (probe.BodyLength > GenericGateMaxBodyLength) return null;
         var body = probe.BodySample;
         if (!body.Contains("document.cookie", StringComparison.OrdinalIgnoreCase)) return null;
+        // 四种常见跳转写法命中任意一种即可
         var redirects = body.Contains("location.href", StringComparison.OrdinalIgnoreCase)
                         || body.Contains("location.replace", StringComparison.OrdinalIgnoreCase)
                         || body.Contains("location.reload", StringComparison.OrdinalIgnoreCase)

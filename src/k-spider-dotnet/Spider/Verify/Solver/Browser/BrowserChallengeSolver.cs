@@ -1,8 +1,9 @@
 using KSpider.Common.Logger;
+using KSpider.Spider.Verify.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 
-namespace KSpider.Spider.Verify.Solver;
+namespace KSpider.Spider.Verify.Solver.Browser;
 
 /// <summary>
 ///     浏览器过挑战策略 : 打开被拦截的地址 , 让页面脚本自己把挑战走完 ( JS 挑战 / Cloudflare 挑战
@@ -13,10 +14,16 @@ public sealed class BrowserChallengeSolver(IReadOnlyList<IVerificationDetector> 
 {
     private static readonly ILogger Log = LogFactory.GetLogger<BrowserChallengeSolver>();
 
+    /// <summary>策略名 , 进日志</summary>
     public string Name => "BrowserChallengeSolver";
 
+    /// <summary>代价 10 : 一次浏览器启动 ( 秒级 ) , 是本模块的主力自动手段</summary>
     public int Cost => 10;
 
+    /// <summary>
+    ///     覆盖 JS / Cloudflare 类挑战 ; 拒访 / 网关 / 跳转等传输层拦截也常以挑战页形态出现 ,
+    ///     一并交给浏览器试一遍 ( 试不出来仍有传输层结论兜底 )
+    /// </summary>
     public IReadOnlyCollection<VerificationKind> Kinds =>
     [
         VerificationKind.CloudflareChallenge,
@@ -27,6 +34,10 @@ public sealed class BrowserChallengeSolver(IReadOnlyList<IVerificationDetector> 
         VerificationKind.ServerGate
     ];
 
+    /// <summary>
+    ///     打开被拦地址 , 每秒取一次 DOM 重跑识别器 , 识别不到挑战即放行 ;
+    ///     等 Policy.BrowserWaitSeconds 秒仍被拦则按失败返回。
+    /// </summary>
     public async Task<VerificationSolveResult> SolveAsync(VerificationSolveRequest request,
         CancellationToken cancellationToken)
     {
@@ -69,6 +80,7 @@ public sealed class BrowserChallengeSolver(IReadOnlyList<IVerificationDetector> 
         return detectors.Any(detector => detector.Detect(probe) != null);
     }
 
+    /// <summary>导出目标主机 cookie 组装会话 ; 一个 cookie 都拿不到则按失败处理 ( 没法回放 )</summary>
     private async Task<VerificationSolveResult> SolvedAsync(BrowserGate gate, VerificationSolveRequest request,
         int waitedSeconds)
     {

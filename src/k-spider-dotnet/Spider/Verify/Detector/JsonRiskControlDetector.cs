@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using KSpider.Spider.Verify.Model;
 
 namespace KSpider.Spider.Verify.Detector;
 
@@ -36,8 +37,10 @@ public sealed class JsonRiskControlDetector : IVerificationDetector
     /// <summary>收集条数上限 , 避免对整篇业务数据全量遍历</summary>
     private const int MaxMessageScan = 40;
 
+    /// <summary>识别器名 , 会写进 <see cref="VerificationChallenge.DetectorName" /></summary>
     public string Name => "JsonRiskControlDetector";
 
+    /// <summary>非 HTML 载荷解析成 JSON 后收集 envelope 提示语 , 命中风控措辞即判 RiskControl</summary>
     public VerificationChallenge? Detect(VerificationProbe probe)
     {
         if (probe.IsHtml || probe.BodySample.Length == 0) return null;

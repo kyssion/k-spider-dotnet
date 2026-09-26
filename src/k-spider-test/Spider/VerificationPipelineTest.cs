@@ -1,4 +1,6 @@
 using KSpider.Spider.Verify;
+using KSpider.Spider.Verify.Model;
+using KSpider.Spider.Verify.Pipeline;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

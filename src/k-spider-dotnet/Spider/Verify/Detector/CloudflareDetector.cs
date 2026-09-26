@@ -1,3 +1,5 @@
+using KSpider.Spider.Verify.Model;
+
 namespace KSpider.Spider.Verify.Detector;
 
 /// <summary>
@@ -25,8 +27,10 @@ public sealed class CloudflareDetector : IVerificationDetector
         "challenges.cloudflare.com"
     ];
 
+    /// <summary>识别器名 , 会写进 <see cref="VerificationChallenge.DetectorName" /></summary>
     public string Name => "CloudflareDetector";
 
+    /// <summary>cf-mitigated 响应头是最硬证据 , 命中直接判 ; 否则只对 HTML 正文找挑战页特征</summary>
     public VerificationChallenge? Detect(VerificationProbe probe)
     {
         // 响应头是最硬的证据 : cf-mitigated 是 Cloudflare 自己标注"这次响应属于拦截"
