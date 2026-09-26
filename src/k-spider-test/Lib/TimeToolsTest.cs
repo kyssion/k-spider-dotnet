@@ -3,6 +3,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;
 
+/// <summary>
+///     TimeTools 时间解析与差值计算回归 ( 全部离线 )
+/// </summary>
 [TestClass]
 public class TimeToolsTest
 {

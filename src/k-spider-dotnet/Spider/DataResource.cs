@@ -1,5 +1,9 @@
 namespace KSpider.Spider;
 
+/// <summary>
+///     新闻栏目分类 ( 名称 + 分类号 ) , 分类号随列表行落 spider_news_list.category ;
+///     编号 1-22 , 多个栏目可共用同一分类 ( 见 DfNewsResource )
+/// </summary>
 public struct NewsCategory
 {
     public static readonly NewsCategory CategoryIntroduction = new()
@@ -159,6 +163,10 @@ public enum FromTypeOfNews
     Jin10Media = 5
 }
 
+/// <summary>
+///     列表行状态机 : 0 未下载 → 3 已下载原始 → 1 已解析详情 ; 失败态 2 解析失败 / 4 下载失败 ,
+///     fail_count 未达 NewsPipelineConst.MaxFailCount 时自动重试
+/// </summary>
 public enum NewsDownloadStatusCode
 {
     NoDownload = 0,
@@ -179,12 +187,18 @@ public static class NewsPipelineConst
     public const int MaxFailCount = 3;
 }
 
+/// <summary>
+///     原始内容的存储形态
+/// </summary>
 public enum NewsContentOriginType
 {
     Json = 1,
     Xml = 2
 }
 
+/// <summary>
+///     单条原始内容的下载结果
+/// </summary>
 public enum NewsContentOriginStatus
 {
     Success = 1,

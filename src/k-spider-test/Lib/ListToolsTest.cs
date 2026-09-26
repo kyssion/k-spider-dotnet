@@ -3,6 +3,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;
 
+/// <summary>
+///     ListTools.Partition 列表分片回归 ( 全部离线 )
+/// </summary>
 [TestClass]
 public class ListToolsTest
 {

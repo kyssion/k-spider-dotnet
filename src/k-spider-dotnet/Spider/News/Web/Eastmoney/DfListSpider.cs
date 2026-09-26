@@ -8,11 +8,17 @@ using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Eastmoney;
 
+/// <summary>
+///     东方财富栏目列表抓取 : 拼 getNewsByColumns 接口地址 ( 页码翻页 ) 请求并解析为 DfListInfo
+/// </summary>
 public class DfListSpider
 {
     private static readonly ILogger Log = LogFactory.GetLogger<DfListSpider>();
 
 
+    /// <summary>
+    ///     连续抓取多页列表 ( 页码闭区间 [ pageStartNumber , pageEndNumber ] )
+    /// </summary>
     public async Task<List<DfListInfo>> GetDfListInfoByUrl(DfNewsResource.DfListUrlResource dfListResourceInfo,
         int pageStartNumber,
         int pageEndNumber, int pageSize, DfListOrderType orderType)

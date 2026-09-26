@@ -21,6 +21,9 @@ public class ClsRollItem
     /// </summary>
     private static readonly TimeSpan ChinaOffset = TimeSpan.FromHours(8);
 
+    /// <summary>
+    ///     条目 id , 用于拼详情页地址 ; 0 表示字段缺失 , 上层跳过
+    /// </summary>
     public long Id { get; set; }
 
     public string Title { get; set; } = "";
@@ -39,10 +42,16 @@ public class ClsRollItem
     /// </summary>
     public string Level { get; set; } = "C";
 
+    /// <summary>
+    ///     封面图 ( 接口字段为 img )
+    /// </summary>
     public string CoverImage { get; set; } = "";
 
     public List<string> Images { get; set; } = [];
 
+    /// <summary>
+    ///     所属话题名列表 , 入库时拼接为 keyword
+    /// </summary>
     public List<string> Subjects { get; set; } = [];
 
     /// <summary>
@@ -54,6 +63,9 @@ public class ClsRollItem
 
     public DateTime NewsTime => DateTimeOffset.FromUnixTimeSeconds(Ctime).ToOffset(ChinaOffset).DateTime;
 
+    /// <summary>
+    ///     展示标题 : 无标题时用摘要截断兜底
+    /// </summary>
     private string DisplayTitle => string.IsNullOrEmpty(Title) ? Truncate(Brief, BriefTitleMaxLength) : Title;
 
     /// <summary>

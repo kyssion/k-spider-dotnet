@@ -7,6 +7,11 @@ using SqlSugar;
 
 namespace KSpider.Sync.Transfer;
 
+/// <summary>
+///     数据搬运核心 : 把远端 PG 的 5 张新闻表同步到本地 ,
+///     新行按自增 Id 增量插入 , 已有行按 (update_time, id) 双键水位更新 ,
+///     水位进度持久化在本地 sync_transfer_watermark 表
+/// </summary>
 public static class TransferSpiderData
 {
     private const int BatchSize = 2000;
@@ -156,6 +161,9 @@ public static class TransferSpiderData
                                  """);
     }
 
+    /// <summary>
+    ///     读取某表的同步水位 , 无记录时返回 null ( 首次运行 )
+    /// </summary>
     private static async Task<(DateTime UpdateTime, long Id)?> LoadWatermark(SqlSugarClient local, string tableName)
     {
         var times = await local.Ado.SqlQueryAsync<DateTime>(

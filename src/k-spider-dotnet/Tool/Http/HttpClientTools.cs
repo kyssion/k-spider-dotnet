@@ -2,6 +2,11 @@ using System.Net;
 
 namespace KSpider.Tool.Http;
 
+/// <summary>
+///     HttpClient 集中管理 : 按主机缓存客户端并统一伪装浏览器请求头。
+///     抓取链路不直接调本类 , 一律经 <see cref="KSpider.Spider.Verify.VerifiedHttp" />
+///     ( 会话回放与反爬验证重放在其上 ) ; 直接使用方仅限图片下载等无需过验证的场景
+/// </summary>
 public static class HttpClientTools
 {
     /// <summary>
@@ -21,8 +26,11 @@ public static class HttpClientTools
         CookieContainer = new CookieContainer()
     };
 
+    // 不带主机定向请求头的共享客户端 , 供 GetHttpClient 的通用场景 ( 图片下载等 )
     private static readonly HttpClient HttpClient = new HttpClient(DecompressHandler);
     private static readonly Object Lock = new object();
+    // host → 独立客户端 : DefaultRequestHeaders 写死了 Host 等主机定向头 , 不能跨主机复用 ;
+    // 全部客户端共享 DecompressHandler → CookieContainer 进程内全局共享 , 会话回放依赖这一点
     private static readonly Dictionary<string, HttpClient> HostClientMap = new Dictionary<string, HttpClient>();
     // 使用host创建新的HttpClient
     public static HttpClient CreateByHost(string host)

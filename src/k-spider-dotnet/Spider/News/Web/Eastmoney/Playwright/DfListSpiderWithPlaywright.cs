@@ -5,8 +5,13 @@ using Microsoft.Playwright;
 
 namespace KSpider.Spider.News.Web.Eastmoney.Playwright;
 
+/// <summary>
+///     Playwright 渲染版东财列表抓取 : 浏览器打开栏目页 , 拦截页面自身发起的列表接口请求取 column 号 ,
+///     或解析渲染后的 DOM 列表 ; DfSpiderScriptCheck 栏目自检使用
+/// </summary>
 public class DfListSpiderWithPlaywright
 {
+    // 静态资源拦截表 : 命中的请求中止 , 减少无关加载
     private static readonly Regex ImageRegex = new(@".(\.png|\.jpg|\.css|\.aspx|\.ico)");
 
     private readonly IBrowser _browser;
@@ -31,6 +36,9 @@ public class DfListSpiderWithPlaywright
         await _browser.CloseAsync();
     }
 
+    /// <summary>
+    ///     打开栏目页 , 拦截其发起的 getNewsByColumns 请求并提取 column 参数号 ( 校验 DfNewsResource 配置用 )
+    /// </summary>
     public async Task<int> GetListResourceNumberInfo(string url)
     {
         var page = await _context.NewPageAsync();
@@ -59,6 +67,9 @@ public class DfListSpiderWithPlaywright
     }
 
 
+    /// <summary>
+    ///     逐页打开列表页解析 DOM 数据 , 完成后关闭共享 context ( 实例一次性使用 )
+    /// </summary>
     public async Task<List<List<DfListInfo>>> GetDfListInfo(string url, int pageNum)
     {
         try

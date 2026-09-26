@@ -21,6 +21,9 @@ public static class ClsSignature
             .Select(item => $"{item.Key}={item.Value}"));
     }
 
+    /// <summary>
+    ///     对拼好的 query 串计算签名 : 先 SHA1 再 MD5 , 输出小写十六进制
+    /// </summary>
     public static string Sign(string queryString)
     {
         var sha1Hex = Convert.ToHexStringLower(SHA1.HashData(Encoding.UTF8.GetBytes(queryString)));

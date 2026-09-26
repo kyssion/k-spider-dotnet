@@ -7,6 +7,9 @@ namespace KSpider.Spider.News.Flash;
 /// </summary>
 public class FlashNewsPage
 {
+    /// <summary>
+    ///     本页快讯记录 , 均为可直接入库的完整记录
+    /// </summary>
     public List<SpiderFlashNewsModel> Items { get; init; } = [];
 
     /// <summary>

@@ -10,6 +10,7 @@ internal static class Program
     public static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
+        // 数据搬运 : 每 2 分钟一轮增量同步远端新闻表到本地 ( 启动即先跑一次 )
         builder.Services.AddQuartz(quartz =>
         {
             quartz.AddJob<TransferSpiderDataJob>(j => j.WithIdentity("TransferSpiderDataJob")

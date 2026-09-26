@@ -47,6 +47,7 @@ public class NewsContentOriginJob(SpiderNewsDao spiderNewsDao, Pg pg,
                 spiderNewsDao.UpdateSpiderNewListDownloadStatus(connection, newsItem);
                 connection.Ado.CommitTran();
             }
+            // 数据库异常不消耗重试次数 : 不回写状态 , 下一轮按原状态自然重取
             catch (KDbException e)
             {
                 connection.Ado.RollbackTran();

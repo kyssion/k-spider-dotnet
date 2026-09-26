@@ -5,9 +5,19 @@ using Microsoft.Extensions.Logging;
 using SqlSugar;
 
 namespace KSpider.Data;
+
+/// <summary>
+///     网页型管线单条 / 小批量 DAO : 连接由 Job 层创建传入 , 事务由 Job 层管理 ;
+///     异常统一包装为 KDbException ( 调用方捕获后不消耗 fail_count ) 。
+///     upsert 一律 IgnoreColumns( id , create_time , update_time ) : update_time 由触发器自动刷新 ;
+///     整批手拼 ON CONFLICT 的批量版在 SpiderNewsBatchDao
+/// </summary>
 public class SpiderNewsDao
 {
 
+    /// <summary>
+    ///     单条 upsert 原始内容 ( 按 news_url 判重 , 存在则整体更新 )
+    /// </summary>
     public int UpsetSpiderNewsContentOrigin(SqlSugarClient connection, SpiderNewsContentOriginModel contentInfo)
     {
         try
@@ -23,6 +33,9 @@ public class SpiderNewsDao
     }
 
 
+    /// <summary>
+    ///     单条 upsert 解析后详情 ( 按 news_url 判重 )
+    /// </summary>
     public int UpsetSpiderNewsContent(SqlSugarClient connection, SpiderNewsContentModel contentInfo)
     {
         try
@@ -37,6 +50,9 @@ public class SpiderNewsDao
         }
     }
 
+    /// <summary>
+    ///     批量 upsert 图片 ( 按 image_resource_url 判重 )
+    /// </summary>
     public int UpsetSpiderNewsImageList(SqlSugarClient connection,
         List<SpiderNewsImageListModel> spiderNewsImageList)
     {
@@ -59,6 +75,9 @@ public class SpiderNewsDao
     }
 
 
+    /// <summary>
+    ///     批量整行更新列表行
+    /// </summary>
     public int UpdateSpiderNewsListInfo(SqlSugarClient connection, List<SpiderNewsListModel> newsListItem)
     {
         try
@@ -71,6 +90,9 @@ public class SpiderNewsDao
         }
     }
 
+    /// <summary>
+    ///     只回写状态机两列 ( download_status_code / fail_count ) , 不覆盖列表行其它字段
+    /// </summary>
     public int UpdateSpiderNewListDownloadStatus(SqlSugarClient connection, SpiderNewsListModel newsListModel)
     {
         try
@@ -85,6 +107,9 @@ public class SpiderNewsDao
         }
     }
 
+    /// <summary>
+    ///     单行整行更新列表行
+    /// </summary>
     public int UpdateSpiderNewsListInfo(SqlSugarClient connection, SpiderNewsListModel newsListItem)
     {
         try
@@ -97,6 +122,10 @@ public class SpiderNewsDao
         }
     }
 
+    /// <summary>
+    ///     批量 upsert 列表行 ; IgnoreColumns 带 download_status_code :
+    ///     新插入行走库默认 status=0 进流水线 , 已存在行不覆盖状态 ( 状态只由后续任务推进 )
+    /// </summary>
     public int UpsetSpiderNewsListInfo(SqlSugarClient connection, List<SpiderNewsListModel> newsListItem)
     {
         try

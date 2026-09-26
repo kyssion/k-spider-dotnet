@@ -1,11 +1,15 @@
 namespace KSpider.Spider.News.Web.Eastmoney;
 
+/// <summary>
+///     东方财富列表 / 详情接口地址与栏目清单常量
+/// </summary>
 public static class DfNewsResource
 {
     // 列表页面请求数据的url地址
     public const string RequestDfListUrl =
         "https://np-listapi.eastmoney.com/comm/web/getNewsByColumns?client=web&biz=web_news_col&column={0}&order={1}&page_index={2}&page_size={3}&req_trace={4}&fields=code,showTime,title,mediaName,summary,image,url,uniqueUrl,Np_dst";
 
+    // 文章详情接口地址 : {0} 为文章参数 ( 从详情页 URL 提取 ) , {1} 为当前毫秒时间戳
     public const string RequestDfContextUrl = "https://newsinfo.eastmoney.com/kuaixun/v2/api/article/{0}?guid={1}";
     public const string ListResourceHost = "np-listapi.eastmoney.com";
     public const string ContextApiResourceHost = "newsinfo.eastmoney.com";
@@ -226,14 +230,24 @@ public static class DfNewsResource
 
     public struct DfListUrlResource
     {
+        /// <summary>
+        ///     栏目分类 ( 名称 + 分类号 )
+        /// </summary>
         public NewsCategory CategoryInfo { get; set; }
 
         // 列表页面的地址数据全集地址
         public string Url { get; set; }
+
+        /// <summary>
+        ///     列表接口 column 参数号 , 同时作为 NewsColumn 的 ColumnId
+        /// </summary>
         public int ListResourceNumber { get; set; }
     }
 }
 
+/// <summary>
+///     列表接口排序方式 ( 请求参数 order )
+/// </summary>
 public enum DfListOrderType
 {
     ByHeat = 1,

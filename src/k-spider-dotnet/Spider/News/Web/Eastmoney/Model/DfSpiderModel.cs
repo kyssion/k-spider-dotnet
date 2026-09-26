@@ -46,6 +46,7 @@ public class DfListInfo
     public string NewsUrl { get; set; } = "";
     public string NewsTitle { get; set; } = "";
     public string NewsSummary { get; set; } = "";
+    // 列表接口原始时间串 , 固定 yyyy-MM-dd HH:mm:ss 格式 ( 解析见 ToSpiderNewListModel )
     public string NewsTime { get; set; } = "";
     public string NewsFrom { get; set; } = "";
     public FromTypeOfNews FromMedia { get; set; }

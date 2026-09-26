@@ -92,6 +92,9 @@ public class NewsContentJob(SpiderNewsDao spiderNewsDao, Pg pg, ILogger<NewsCont
         }
     }
 
+    /// <summary>
+    ///     失败状态回写 : 回写本身失败只记日志不再抛 ( 状态维护不能反过来打断本轮其它条目 )
+    /// </summary>
     private void UpdateStatus(SqlSugarClient connection, SpiderNewsDao spiderNewsDao, SpiderNewsListModel newsItem)
     {
         try

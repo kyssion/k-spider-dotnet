@@ -2,6 +2,10 @@ using Microsoft.Extensions.Logging;
 
 namespace KSpider.Common.Logger;
 
+/// <summary>
+///     统一日志工厂 : DI 之外的调用方 ( Spider 爬虫类 / Devtools 过渡期 ) 从这里拿 ILogger ,
+///     静态类不能作泛型类型参数时用 GetLogger(Type) 重载
+/// </summary>
 public class LogFactory
 {
     private static readonly ILoggerFactory Factory = LoggerFactory.Create(builder => builder.AddSimpleConsole(

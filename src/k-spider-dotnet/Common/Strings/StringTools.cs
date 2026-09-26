@@ -1,6 +1,9 @@
 using System.Text;
 namespace KSpider.Common.Strings;
 
+/// <summary>
+///     字符串小工具 : 下划线 → 驼峰命名转换 ( 主要服务于 PgDevelop 的 DbFirst 实体生成 )
+/// </summary>
 public class StringTools
 {
     // 下划线转化成驼峰 

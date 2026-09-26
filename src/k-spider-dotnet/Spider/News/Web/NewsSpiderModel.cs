@@ -29,6 +29,9 @@ public class NewsContentOrigin
 
     public NewsContentOriginStatus Status { get; set; }
 
+    /// <summary>
+    ///     失败原因 , 成功时保持空串
+    /// </summary>
     public string Message { get; set; } = "";
 
     public SpiderNewsContentOriginModel ToModel()

@@ -33,6 +33,7 @@ public partial class ClsArticleSpider : INewsSpider
     [GeneratedRegex(@"\s")]
     private static partial Regex FillWriteLine();
 
+    // 频道 id → 频道资源 , 供 GetListPage 反查
     private static readonly Dictionary<string, ClsArticleResource.ArticleChannelResource> ChannelResourceMap =
         ClsArticleResource.ArticleChannelResourceList.ToDictionary(item => item.ChannelId.ToString());
 

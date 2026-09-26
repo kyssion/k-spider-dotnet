@@ -3,6 +3,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;
 
+/// <summary>
+///     StringTools 字符工具回归 ( 全部离线 )
+/// </summary>
 [TestClass]
 public class StringToolsTest
 {

@@ -47,6 +47,9 @@ public class Jin10FlashItem
 
     public string Pic { get; set; } = "";
 
+    /// <summary>
+    ///     标签名列表 , 入库时拼接为 keyword
+    /// </summary>
     public List<string> Tags { get; set; } = [];
 
     public string NewsUrl => string.Format(Jin10NewsResource.DetailUrlTemplate, Id);
@@ -65,6 +68,9 @@ public class Jin10FlashItem
     public bool HasNoPublicContent =>
         string.IsNullOrEmpty(Title) && string.IsNullOrEmpty(EffectiveContent);
 
+    /// <summary>
+    ///     展示标题 : 优先 title , 否则从兜底正文提取
+    /// </summary>
     private string DisplayTitle => !string.IsNullOrEmpty(Title) ? Title : ExtractTitle(EffectiveContent);
 
     /// <summary>

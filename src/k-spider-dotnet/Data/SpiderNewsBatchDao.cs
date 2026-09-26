@@ -5,6 +5,13 @@ using Microsoft.Extensions.Logging;
 using SqlSugar;
 
 namespace KSpider.Data;
+
+/// <summary>
+///     批量 upsert DAO : 整批生成一条 INSERT 再手拼 ON CONFLICT ,
+///     绕开 Storageable.WhereColumns 逐条先查后写的写放大 ;
+///     冲突列要求表上有唯一索引 ( 启动自检见 Pg.CheckBatchUpsertUniqueIndexes )。
+///     超过 maxBatchNumber 时按批递归切分 , 每批一条语句
+/// </summary>
 public class SpiderNewsBatchDao
 {
 
@@ -20,6 +27,9 @@ public class SpiderNewsBatchDao
         return sql.EndsWith(';') ? sql[..^1] : sql;
     }
 
+    /// <summary>
+    ///     解析详情批量 upsert : news_url 冲突时更新内容字段
+    /// </summary>
     public int UpsetSpiderNewsContentOnConflict(SqlSugarClient connection,
         List<SpiderNewsContentModel> contentInfo, int maxBatchNumber)
     {
@@ -64,6 +74,9 @@ public class SpiderNewsBatchDao
         }
     }
 
+    /// <summary>
+    ///     原始内容批量 upsert : news_url 冲突时更新原始 JSON 与下载状态 / 消息
+    /// </summary>
     public int UpsetSpiderNewsContentOriginOnConflict(SqlSugarClient connection,
         List<SpiderNewsContentOriginModel> contentInfo, int maxBatchNumber)
     {
@@ -103,6 +116,9 @@ public class SpiderNewsBatchDao
         }
     }
 
+    /// <summary>
+    ///     图片批量 upsert : image_resource_url 冲突时更新归属与文件名
+    /// </summary>
     public int UpsetSpiderNewsImageListOnConflict(SqlSugarClient connection,
         List<SpiderNewsImageListModel> spiderNewsImageList, int maxBatchNumber)
     {
@@ -145,6 +161,10 @@ public class SpiderNewsBatchDao
         }
     }
 
+    /// <summary>
+    ///     列表批量写入 : news_url 冲突 DO NOTHING ( 新行以库默认 status=0 进流水线 ,
+    ///     已存在行状态不动 , 由后续任务推进 )
+    /// </summary>
     public int UpsertSpiderNewsListOnConflict(SqlSugarClient connection, List<SpiderNewsListModel> newsList,
         int maxBatchNumber)
     {

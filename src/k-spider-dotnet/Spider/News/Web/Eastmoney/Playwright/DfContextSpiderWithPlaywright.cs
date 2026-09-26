@@ -9,12 +9,16 @@ using Microsoft.Playwright;
 
 namespace KSpider.Spider.News.Web.Eastmoney.Playwright;
 
+/// <summary>
+///     Playwright 渲染版东财详情抓取 : 性能开销大 , 各方法均已标记 Obsolete , 保留备用
+/// </summary>
 public partial class DfContextSpiderWithPlaywright(IPlaywright playwright)
 {
     public DfContextSpiderWithPlaywright() : this(Microsoft.Playwright.Playwright.CreateAsync().Result)
     {
     }
 
+    // 路由过滤 : 只放行 .html 请求 , 其余 ( 图片 / 脚本等 ) 一律中止以加速渲染
     [GeneratedRegex(".(html)")]
     private static partial Regex FillHtml();
 

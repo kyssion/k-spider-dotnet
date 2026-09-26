@@ -16,6 +16,9 @@ public class SinaLiveItem
     /// </summary>
     private const int TitleMaxLength = 60;
 
+    /// <summary>
+    ///     条目 id , docurl 缺失时用于拼合成去重键 ; 0 表示字段缺失 , 上层跳过
+    /// </summary>
     public long Id { get; set; }
 
     /// <summary>
@@ -28,8 +31,14 @@ public class SinaLiveItem
     /// </summary>
     public string CreateTime { get; set; } = "";
 
+    /// <summary>
+    ///     详情页地址 , 作 news_url 去重键 ; 缺失时由 NewsUrl 合成兜底
+    /// </summary>
     public string DocUrl { get; set; } = "";
 
+    /// <summary>
+    ///     标签名列表 , 入库时拼接为 keyword
+    /// </summary>
     public List<string> Tags { get; set; } = [];
 
     /// <summary>

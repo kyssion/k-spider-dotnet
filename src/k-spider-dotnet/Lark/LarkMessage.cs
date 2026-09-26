@@ -7,6 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace KSpider.Lark;
  
+/// <summary>
+///     飞书消息发送 : 模板卡片 / 自定义 msg_type ( 当前无调用方 , SDK 保留备用 )
+/// </summary>
 public class LarkMessage : LarkToken
 {
     private static readonly ILogger Logger = LogFactory.GetLogger<LarkToken>();
@@ -42,11 +45,17 @@ public class LarkMessage : LarkToken
         }
     }
 
+    /// <summary>
+    ///     发送模板卡片消息 ( msg_type=interactive )
+    /// </summary>
     public static async Task SendTemplateMessage(string appId, string appSecret, string receiveIdType, string receiveId,
         TemplateInfo templateInfo)
     {
          await SendMessage(appId, appSecret, receiveIdType, receiveId, "interactive", JsonUtil.GetJson(templateInfo));
     }
+    /// <summary>
+    ///     发送消息 : 先取 tenant_access_token 再 POST ; 返回 code 非 0 抛 LarkGetTokenError
+    /// </summary>
     public static async Task SendMessage(string appId , string appSecret ,string receiveIdType, string receiveId, string msgType, string content)
     {
         var token =await GetTenantAccessToken(appId, appSecret);

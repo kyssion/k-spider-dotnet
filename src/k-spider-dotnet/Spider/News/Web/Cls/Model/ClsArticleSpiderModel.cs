@@ -139,8 +139,14 @@ public class ClsArticleDetailInfo
     /// </summary>
     public string Content { get; set; } = "";
 
+    /// <summary>
+    ///     作者 / 记者名 , 为空时回退平台名 ( 见 ToSpiderNewsContentModel )
+    /// </summary>
     public string AuthorName { get; set; } = "";
 
+    /// <summary>
+    ///     文章标签列表 , 拼接后落 news_keyword
+    /// </summary>
     public List<string> TagNames { get; set; } = [];
 
     /// <summary>
@@ -148,6 +154,9 @@ public class ClsArticleDetailInfo
     /// </summary>
     public List<string> Images { get; set; } = [];
 
+    /// <summary>
+    ///     发布时间 ( 东八区 )
+    /// </summary>
     public DateTime NewsTime { get; set; }
 
     public static ClsArticleDetailInfo FromJson(JsonNode articleDetail)

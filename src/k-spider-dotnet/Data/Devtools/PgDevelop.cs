@@ -4,6 +4,10 @@ using KSpider.Data;
 
 namespace KSpider.Data.Devtools;
 
+/// <summary>
+///     DbFirst 实体生成器 ( 开发期工具 , 不参与生产链路 ) : 从库反向生成 Model/ 下的 SqlSugar 实体 ;
+///     输出路径写死为开发机绝对路径 , 使用前按本机修改
+/// </summary>
 public static class PgDevelop
 {
     // 更新 开发的表的信息

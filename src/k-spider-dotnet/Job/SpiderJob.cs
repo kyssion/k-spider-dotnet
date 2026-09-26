@@ -7,5 +7,8 @@ namespace KSpider.Job;
 /// </summary>
 public abstract class SpiderJob : IJob
 {
+    /// <summary>
+    ///     任务执行体 : 由 Quartz 触发 ; 网络调用全程 await , 不要 .Result / .Wait()
+    /// </summary>
     public abstract Task Execute(IJobExecutionContext context);
 }

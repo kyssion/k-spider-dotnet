@@ -20,6 +20,9 @@ public class WscnLiveItem
     /// </summary>
     private static readonly TimeSpan ChinaOffset = TimeSpan.FromHours(8);
 
+    /// <summary>
+    ///     条目 id , uri 缺失时用于拼合成去重键 ; 0 表示字段缺失 , 上层跳过
+    /// </summary>
     public long Id { get; set; }
 
     public string Title { get; set; } = "";
@@ -34,6 +37,9 @@ public class WscnLiveItem
     /// </summary>
     public long DisplayTime { get; set; }
 
+    /// <summary>
+    ///     条目页地址 , 作 news_url 去重键 ; 缺失时由 NewsUrl 合成兜底
+    /// </summary>
     public string Uri { get; set; } = "";
 
     /// <summary>
@@ -51,6 +57,9 @@ public class WscnLiveItem
 
     public DateTime NewsTime => DateTimeOffset.FromUnixTimeSeconds(DisplayTime).ToOffset(ChinaOffset).DateTime;
 
+    /// <summary>
+    ///     展示标题 : 无标题时用正文截断兜底
+    /// </summary>
     private string DisplayTitle => string.IsNullOrEmpty(Title) ? Truncate(ContentText, TitleMaxLength) : Title;
 
     /// <summary>

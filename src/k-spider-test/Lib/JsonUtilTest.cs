@@ -4,6 +4,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Lib;
 
+/// <summary>
+///     JsonUtil 序列化回归 ( 全部离线 )
+/// </summary>
 [TestClass]
 public class JsonUtilTest
 {

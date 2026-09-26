@@ -5,10 +5,17 @@ using Microsoft.Extensions.Logging;
 
 namespace KSpider.Lark;
 
+/// <summary>
+///     tenant_access_token 进程内缓存载体
+/// </summary>
 public class TenantAccessToken
 {
     public string? TokenValue;
     public DateTime BDateTime { get; set; }
+
+    /// <summary>
+    ///     token 有效期 ( 秒 ) , 飞书固定 7200
+    /// </summary>
     public const int ExpireTime = 7200;
 
     /// <summary>
@@ -17,6 +24,9 @@ public class TenantAccessToken
     public const int RefreshAheadSeconds = 600;
 }
 
+/// <summary>
+///     tenant_access_token 获取与缓存 : 未到临期直接复用 , 过期自动重取
+/// </summary>
 public class LarkToken : LarkDatasource
 {
     private static readonly ILogger Logger = LogFactory.GetLogger<LarkToken>();
@@ -24,6 +34,9 @@ public class LarkToken : LarkDatasource
 
     private static TenantAccessToken TenantAccessToken { get; set; } = new();
 
+    /// <summary>
+    ///     取 token : 缓存未到期直接复用 , 否则请求飞书接口重取 ( 失败抛 LarkGetTokenError )
+    /// </summary>
     public static async Task<string> GetTenantAccessToken(string appId, string appSecret)
     {
         if (TenantAccessToken.TokenValue != null &&

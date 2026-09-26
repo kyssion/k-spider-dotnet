@@ -14,6 +14,7 @@ namespace KSpider.Job.News.Web;
 /// </summary>
 public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<NewsListJob> logger) : SpiderJob
 {
+    // 单栏目每轮最多翻页数 : 翻到存量区间或无更多游标即停 , 上限兜底防止失控翻页
     private const int MaxPageNumber = 4;
     private const int PageSize = 200;
 
@@ -82,6 +83,9 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
         return insertNumber;
     }
 
+    /// <summary>
+    ///     查本页已入库的 URL 集合 , 用于判断是否翻到了存量区间
+    /// </summary>
     private static List<string?> GetExistsUrls(SqlSugarClient connection, List<SpiderNewsListModel> newsList)
     {
         var urls = newsList.Select(item => item.NewsUrl).ToList();
