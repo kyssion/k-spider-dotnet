@@ -3,14 +3,12 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using KSpider.Common.Json;
-using KSpider.Common.Logger;
 using KSpider.Exceptions;
-using KSpider.Spider.News.Web.Eastmoney.Model;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
-using KSpider.Tool.Html;
-using KSpider.Tool.Http;
+using KSpider.Common.Html;
+using KSpider.Common.Http;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Eastmoney;
@@ -213,7 +211,7 @@ public partial class DfContentSpider
                         contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Table.ToString(),
-                            Value = JsonUtil.GetJson(liList),
+                            Value = JsonTools.GetJson(liList),
                             ValueType = NewsContentSegment.UlType
                         });
                         break;
@@ -228,7 +226,7 @@ public partial class DfContentSpider
                         contextDetails.Add(new NewsContentSegment
                         {
                             TagType = HtmlTagName.Table.ToString(),
-                            Value = JsonUtil.GetJson(tableDataList),
+                            Value = JsonTools.GetJson(tableDataList),
                             ValueType = NewsContentSegment.TableType
                         });
                         break;

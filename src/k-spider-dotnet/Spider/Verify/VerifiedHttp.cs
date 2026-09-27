@@ -1,7 +1,7 @@
-using KSpider.Common.Logger;
 using KSpider.Exceptions;
 using KSpider.Spider.Verify.Model;
-using KSpider.Tool.Http;
+using KSpider.Common.Http;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.Verify;

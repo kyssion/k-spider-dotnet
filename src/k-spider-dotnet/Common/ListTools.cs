@@ -1,4 +1,4 @@
-namespace KSpider.Common.Collection;
+namespace KSpider.Common;
 
 public class ListTools
 {

@@ -1,10 +1,9 @@
 using System.Text.Json.Nodes;
-using KSpider.Common.Json;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Common.Time;
+using KSpider.Common;
 
-namespace KSpider.Spider.News.Flash.Jin10.Model;
+namespace KSpider.Spider.News.Flash.Jin10;
 
 /// <summary>
 ///     金十数据快讯的单条数据 ( 列表即全文 ) , 直接映射为可入库的快讯记录
@@ -108,7 +107,7 @@ public class Jin10FlashItem
             Level = FlashLevel,
             StockList = null,
             // 金十图片地址带尺寸后缀 ( 实测形态 : .../demo.png/lite ) , 图片名场景已不适用单列 , 直接存原地址数组
-            ImageUrls = string.IsNullOrEmpty(Pic) ? null : JsonUtil.GetJson(new List<string> { Pic }),
+            ImageUrls = string.IsNullOrEmpty(Pic) ? null : JsonTools.GetJson(new List<string> { Pic }),
             RawContent = itemJson
         };
     }

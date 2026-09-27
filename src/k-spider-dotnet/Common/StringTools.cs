@@ -1,5 +1,5 @@
 using System.Text;
-namespace KSpider.Common.Strings;
+namespace KSpider.Common;
 
 /// <summary>
 ///     字符串小工具 : 下划线 → 驼峰命名转换 ( 主要服务于 PgDevelop 的 DbFirst 实体生成 )

@@ -1,4 +1,4 @@
-namespace KSpider.Common.Time;
+namespace KSpider.Common;
 
 public static class TimeTools
 {

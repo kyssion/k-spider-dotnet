@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace KSpider.Tool.Http;
+namespace KSpider.Common.Http;
 
 /// <summary>
 ///     HttpClient 集中管理 : 按主机缓存客户端并统一伪装浏览器请求头。

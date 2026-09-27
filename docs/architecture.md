@@ -99,17 +99,15 @@ src/k-spider-dotnet/
 ├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs   # 中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/             # ── 新闻域 ──
-│   │   ├── NewsSpiderModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
+│   │   ├── NewsSharedModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
 │   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
-│   ├── Verify/           # 反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
-│   │   ├── Model/         #   共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
-│   │   ├── Pipeline/      #   编排与运行时状态 : VerificationPipeline + VerificationSessionStore
-│   │   ├── Detector/      #   识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
-│   │   └── Solver/        #   通过策略 : Browser/ ( 浏览器基建 + 过挑战 / 滑块 ) + 人工升级
-│   └── Report/           # ── 研报域 ── : Eastmoney/ ( 当前无调用方 , 预留扩展 )
-├── Tool/             # Http/ ( 伪装头客户端与 URL 工具 ) + Html/ ( 标签枚举与解析工具 )
-├── Common/           # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/
+│   └── Verify/           # 反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
+│       ├── Model/         #   共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
+│       ├── Pipeline/      #   编排与运行时状态 : VerificationPipeline + VerificationSessionStore
+│       ├── Detector/      #   识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
+│       └── Solver/        #   通过策略 : Browser/ ( 浏览器基建 + 过挑战 / 滑块 ) + 人工升级
+├── Common/           # 通用工具 : 纯函数工具平铺 ( JsonTools / StringTools / ListTools / TimeTools / LogFactory ) + Http/ ( 伪装头客户端与 URL 工具 ) + Html/ ( 标签枚举与图片提取 )
 ├── Lark/             # 飞书 SDK ( 当前无调用方 , 保留备用 )
 └── Exceptions/       # DownloadHttpException 族 + KDbException
 ```

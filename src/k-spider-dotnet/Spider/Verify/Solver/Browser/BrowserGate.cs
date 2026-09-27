@@ -1,5 +1,5 @@
 using KSpider.Spider.Verify.Model;
-using KSpider.Tool.Http;
+using KSpider.Common.Http;
 using Microsoft.Playwright;
 
 namespace KSpider.Spider.Verify.Solver.Browser;

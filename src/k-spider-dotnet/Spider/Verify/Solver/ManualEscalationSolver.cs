@@ -1,5 +1,5 @@
-using KSpider.Common.Logger;
 using KSpider.Spider.Verify.Model;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.Verify.Solver;

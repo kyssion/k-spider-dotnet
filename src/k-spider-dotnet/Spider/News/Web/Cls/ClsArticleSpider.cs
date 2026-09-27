@@ -3,16 +3,14 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using KSpider.Common.Json;
-using KSpider.Common.Logger;
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider.News.Flash.Cls;
 using KSpider.Spider.News.Web;
-using KSpider.Spider.News.Web.Cls.Model;
 using KSpider.Spider.Verify;
-using KSpider.Tool.Html;
-using KSpider.Tool.Http;
+using KSpider.Common.Html;
+using KSpider.Common.Http;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Cls;
@@ -275,7 +273,7 @@ public partial class ClsArticleSpider : INewsSpider
                     segments.Add(new NewsContentSegment
                     {
                         TagType = node.Name,
-                        Value = JsonUtil.GetJson(liNodes.Select(li => li.InnerText).ToList()),
+                        Value = JsonTools.GetJson(liNodes.Select(li => li.InnerText).ToList()),
                         ValueType = NewsContentSegment.UlType
                     });
                     break;
@@ -292,7 +290,7 @@ public partial class ClsArticleSpider : INewsSpider
                     segments.Add(new NewsContentSegment
                     {
                         TagType = node.Name,
-                        Value = JsonUtil.GetJson(tableData),
+                        Value = JsonTools.GetJson(tableData),
                         ValueType = NewsContentSegment.TableType
                     });
                     break;

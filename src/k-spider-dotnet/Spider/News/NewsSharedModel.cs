@@ -1,4 +1,4 @@
-namespace KSpider.Spider.News.Web;
+namespace KSpider.Spider.News;
 
 /// <summary>
 ///     源内部的一个栏目。

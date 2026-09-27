@@ -71,7 +71,7 @@
 照 AGENTS.md 的"新增网页抓取型新闻源"套路执行：
 
 1. `<源>NewsResource.cs`（端点 / host / 栏目与分类号常量，把实测到的边界语义写成注释）；
-2. `Model/<源>SpiderModel.cs`（接口响应模型 + `To*Model()` 映射，时间转换在这里做，可空字段写兜底）；
+2. `<源>SpiderModel.cs`（与 Resource / Spider 同目录直下，不再建 Model/ 子目录；接口响应模型 + `To*Model()` 映射，时间转换在这里做，可空字段写兜底）；
 3. `<源>Spider.cs` 实现 `INewsSpider` 三段；列表与解析方法抽成 `public static` 供离线测试；**不得用可变实例字段存请求状态**（Job 按源并行）；HTTP 调用走 `VerifiedHttp`（需要自定义请求头时传请求工厂，`HttpRequestMessage` 不能重发）；
 4. `FromTypeOfNews` 加枚举值 + `NewsSpiderRegistry` 注册一行；
 5. 夹具入库 + 离线解析回归（`ClsArticleSpiderTest` 是最新范例：字段映射 / 过滤分支 / 游标语义 / 详情解析 / 坏数据抛错六个用例）；

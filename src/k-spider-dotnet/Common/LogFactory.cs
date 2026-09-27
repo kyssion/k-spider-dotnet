@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace KSpider.Common.Logger;
+namespace KSpider.Common;
 
 /// <summary>
 ///     统一日志工厂 : DI 之外的调用方 ( Spider 爬虫类 / Devtools 过渡期 ) 从这里拿 ILogger ,

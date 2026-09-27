@@ -1,4 +1,4 @@
-using KSpider.Common.Strings;
+using KSpider.Common;
 using KSpider.Config;
 using KSpider.Data;
 

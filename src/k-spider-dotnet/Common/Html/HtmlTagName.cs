@@ -1,4 +1,4 @@
-namespace KSpider.Tool.Html;
+namespace KSpider.Common.Html;
 
 /// <summary>
 ///     东财新闻正文允许解析的 HTML 标签集合

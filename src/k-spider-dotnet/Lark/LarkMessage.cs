@@ -1,10 +1,9 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using KSpider.Common.Json;
-using KSpider.Common.Logger;
 using Microsoft.Extensions.Logging;
 
+using KSpider.Common;
 namespace KSpider.Lark;
  
 /// <summary>
@@ -51,7 +50,7 @@ public class LarkMessage : LarkToken
     public static async Task SendTemplateMessage(string appId, string appSecret, string receiveIdType, string receiveId,
         TemplateInfo templateInfo)
     {
-         await SendMessage(appId, appSecret, receiveIdType, receiveId, "interactive", JsonUtil.GetJson(templateInfo));
+         await SendMessage(appId, appSecret, receiveIdType, receiveId, "interactive", JsonTools.GetJson(templateInfo));
     }
     /// <summary>
     ///     发送消息 : 先取 tenant_access_token 再 POST ; 返回 code 非 0 抛 LarkGetTokenError
@@ -59,7 +58,7 @@ public class LarkMessage : LarkToken
     public static async Task SendMessage(string appId , string appSecret ,string receiveIdType, string receiveId, string msgType, string content)
     {
         var token =await GetTenantAccessToken(appId, appSecret);
-        var httpContent = new StringContent(JsonUtil.GetJson(new MessageData
+        var httpContent = new StringContent(JsonTools.GetJson(new MessageData
         {
             ReceiveId = receiveId,
             MsgType = msgType,

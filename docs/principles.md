@@ -29,7 +29,7 @@
 ## 二、分层与依赖方向
 
 ```
-Job/ (编排)  →  Spider/ (抓取与解析)  →  Tool/ (HTTP/HTML/JSON/时间等公共工具)
+Job/ (编排)  →  Spider/ (抓取与解析)  →  Common/ (HTTP/HTML/JSON/时间等公共工具)
     ↓
 Data/ (连接工厂 + DAO)  →  Model/ (SqlSugar 实体)
 ```

@@ -64,17 +64,15 @@ src/k-spider-dotnet/
 ├── Spider/                    # 爬虫实现 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs        #   中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/                  #   ── 新闻域 ──
-│   │   ├── NewsSpiderModel.cs #     跨管线共享 : NewsColumn / NewsContentSegment
+│   │   ├── NewsSharedModel.cs #     跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/               #     网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/
 │   │   └── Flash/             #     实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
-│   ├── Verify/                #   反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
-│   │   ├── Model/             #     共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
-│   │   ├── Pipeline/          #     编排与运行时状态 : VerificationPipeline + VerificationSessionStore
-│   │   ├── Detector/          #     识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
-│   │   └── Solver/            #     通过策略 : Browser/ ( 浏览器基建 + 过挑战 / 滑块 ) + 人工升级
-│   └── Report/                #   ── 研报域 ── : Eastmoney/ ( 预留扩展 )
-├── Tool/                      # Html/（HtmlTools、HtmlTagName）+ Http/（HttpClient 伪装头、URL 工具）
-├── Common/                    # 公共工具 : Logger/ + Json/ + Collection/ + Strings/ + Time/
+│   └── Verify/                #   反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
+│       ├── Model/             #     共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
+│       ├── Pipeline/          #     编排与运行时状态 : VerificationPipeline + VerificationSessionStore
+│       ├── Detector/          #     识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
+│       └── Solver/            #     通过策略 : Browser/ ( 浏览器基建 + 过挑战 / 滑块 ) + 人工升级
+├── Common/                    # 通用工具 : 纯函数工具平铺 ( JsonTools / StringTools / ListTools / TimeTools / LogFactory ) + Http/（HttpClient 伪装头、URL 工具）+ Html/（标签枚举、图片提取）
 ├── Lark/                      # 飞书 SDK（当前无调用方，保留备用）
 └── Exceptions/                # 异常体系（DownloadHttpException 族、KDbException）
 ```
@@ -119,7 +117,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 
 状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 解析失败 / 4 下载失败`。失败态在 `fail_count < NewsPipelineConst.MaxFailCount(3)` 时自动重试；数据库异常（KDbException）不消耗重试次数。
 
-股票管线已移除（2026-09）：原 `StockCnJob/StockHkJob` 与 `stock_*` 表逻辑已从代码与 DDL 删除，历史实现与表结构可从 git 历史找回；`Spider/Report/`（研报域）与快讯表的 `stock_list`（关联标的）是两回事，不要混淆。
+股票管线已移除（2026-09）：原 `StockCnJob/StockHkJob` 与 `stock_*` 表逻辑已从代码与 DDL 删除，历史实现与表结构可从 git 历史找回；快讯表的 `stock_list`（关联标的）只是数据字段，与已删除的股票管线无关。
 
 ## 代码约定
 
@@ -147,7 +145,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
   - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 201、见闻 301、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
-- **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Tool/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。反爬验证的浏览器策略（`Spider/Verify/Solver/Browser/`）只在被拦截时按需启动浏览器，平时不参与抓取。
+- **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Common/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。反爬验证的浏览器策略（`Spider/Verify/Solver/Browser/`）只在被拦截时按需启动浏览器，平时不参与抓取。
 - **新增反爬验证识别方式 / 通过手段**（模块见 [docs/anti-bot-verification.md](docs/anti-bot-verification.md)）：
   - 识别方式：`VerificationKind` 按需加值 → 写一个 `IVerificationDetector` 实现（**纯判定、不联网**，否则没法离线回归）→ 在 `VerificationRegistry.DetectorList` 按"特征越具体越靠前"加一行 → 补夹具与用例。
   - 通过手段：写一个 `IVerificationSolver` 实现（声明 `Kinds` 与 `Cost`，越小越先试）→ 在 `VerificationRegistry.SolverList` 加一行。人机确认类（滑块 / 图形 / 短信）**不要**加进 `VerificationPolicy.DefaultAllowedKinds`，由部署方按源显式放开。

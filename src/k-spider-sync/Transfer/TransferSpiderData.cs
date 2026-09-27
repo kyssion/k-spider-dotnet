@@ -1,7 +1,7 @@
 using KSpider.Data;
-using KSpider.Common.Logger;
 using KSpider.Model;
 using KSpider.Sync.Job;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 

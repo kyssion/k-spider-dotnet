@@ -1,7 +1,7 @@
-using KSpider.Common.Time;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace KSpider.Test.Lib;
+using KSpider.Common;
+namespace KSpider.Test.Common;
 
 /// <summary>
 ///     TimeTools 时间解析与差值计算回归 ( 全部离线 )

@@ -1,10 +1,10 @@
 using System.Text.Json.Nodes;
-using KSpider.Common.Json;
 using KSpider.Model;
 using KSpider.Spider.News.Flash.Cls;
 using KSpider.Spider.News.Web;
+using KSpider.Common;
 
-namespace KSpider.Spider.News.Web.Cls.Model;
+namespace KSpider.Spider.News.Web.Cls;
 
 /// <summary>
 ///     频道文章列表接口的单条数据 ( /v3/depth/list ) , 列表只有摘要 , 正文在详情页 ——
@@ -185,7 +185,7 @@ public class ClsArticleDetailInfo
             NewsFrom = string.IsNullOrEmpty(AuthorName) ? ClsNewsResource.NewsFromName : AuthorName,
             NewsTime = NewsTime,
             NewsKeyword = TagNames.Count > 0 ? string.Join(",", TagNames) : null,
-            NewsContentJson = JsonUtil.GetJson(segments),
+            NewsContentJson = JsonTools.GetJson(segments),
             NewsContentText = contentText
         };
     }

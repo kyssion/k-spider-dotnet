@@ -1,9 +1,8 @@
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using KSpider.Common.Logger;
 using KSpider.Exceptions;
-using KSpider.Spider.News.Web.Eastmoney.Model;
 using KSpider.Spider.Verify;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Eastmoney;

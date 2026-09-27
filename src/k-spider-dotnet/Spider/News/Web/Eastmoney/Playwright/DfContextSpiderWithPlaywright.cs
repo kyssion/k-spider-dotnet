@@ -1,10 +1,9 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using KSpider.Spider.News.Web.Eastmoney.Model;
 using KSpider.Spider.News.Web;
-using KSpider.Tool.Html;
-using KSpider.Tool.Http;
+using KSpider.Common.Html;
+using KSpider.Common.Http;
 using Microsoft.Playwright;
 
 namespace KSpider.Spider.News.Web.Eastmoney.Playwright;

@@ -1,7 +1,7 @@
-using KSpider.Common.Collection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace KSpider.Test.Lib;
+using KSpider.Common;
+namespace KSpider.Test.Common;
 
 /// <summary>
 ///     ListTools.Partition 列表分片回归 ( 全部离线 )

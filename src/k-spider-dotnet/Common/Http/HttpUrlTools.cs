@@ -1,6 +1,6 @@
 using System.Web;
 
-namespace KSpider.Tool.Http;
+namespace KSpider.Common.Http;
 
 /// <summary>
 ///     URL 解析小工具 : 查询参数取值 / 末段路径提取 ( 图片命名等 )

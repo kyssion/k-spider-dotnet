@@ -2,7 +2,7 @@ using KSpider.Data;
 using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Web;
+using KSpider.Spider.News;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SqlSugar;

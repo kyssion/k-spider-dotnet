@@ -1,7 +1,7 @@
-using KSpider.Tool.Http;
+using KSpider.Common.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace KSpider.Test.Tool;
+namespace KSpider.Test.Common;
 
 /// <summary>
 ///     HttpClient 共享客户端的压缩解压配置测试 ( 离线 , 不访问网络 )

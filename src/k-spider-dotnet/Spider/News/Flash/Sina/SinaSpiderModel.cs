@@ -1,10 +1,9 @@
 using System.Text.Json.Nodes;
-using KSpider.Common.Json;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Common.Time;
+using KSpider.Common;
 
-namespace KSpider.Spider.News.Flash.Sina.Model;
+namespace KSpider.Spider.News.Flash.Sina;
 
 /// <summary>
 ///     新浪 7x24 直播的单条快讯 ( 列表即全文 ) , 直接映射为可入库的快讯记录
@@ -104,8 +103,8 @@ public class SinaLiveItem
             });
         }
 
-        // 用 JsonUtil 序列化 : JsonNode.ToJsonString 会把中文转义成 \uXXXX , 与已入库 JSON 的风格不一致
-        return result.Count > 0 ? JsonUtil.GetJson(result) : null;
+        // 用 JsonTools 序列化 : JsonNode.ToJsonString 会把中文转义成 \uXXXX , 与已入库 JSON 的风格不一致
+        return result.Count > 0 ? JsonTools.GetJson(result) : null;
     }
 
     /// <summary>

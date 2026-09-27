@@ -1,11 +1,10 @@
 using System.Text.Json.Nodes;
 using KSpider.Exceptions;
-using KSpider.Common.Logger;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
-using KSpider.Spider.News.Flash.Wscn.Model;
 using KSpider.Spider.Verify;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Flash.Wscn;

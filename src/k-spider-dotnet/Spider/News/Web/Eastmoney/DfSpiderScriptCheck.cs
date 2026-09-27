@@ -1,5 +1,5 @@
-using KSpider.Common.Logger;
 using KSpider.Spider.News.Web.Eastmoney.Playwright;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
 namespace KSpider.Spider.News.Web.Eastmoney;

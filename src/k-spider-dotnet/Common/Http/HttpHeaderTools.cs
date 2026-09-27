@@ -1,4 +1,4 @@
-namespace KSpider.Tool.Http;
+namespace KSpider.Common.Http;
 
 /// <summary>
 ///     常见图片 Content-Type 的具名常量 ( 按响应头定图片文件后缀用 )

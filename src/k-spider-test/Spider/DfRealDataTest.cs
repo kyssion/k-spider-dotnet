@@ -1,6 +1,6 @@
 using KSpider.Spider;
 using KSpider.Spider.News.Web.Eastmoney;
-using KSpider.Spider.News.Web;
+using KSpider.Spider.News;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;

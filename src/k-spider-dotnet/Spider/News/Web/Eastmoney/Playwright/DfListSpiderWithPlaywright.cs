@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
-using KSpider.Spider.News.Web.Eastmoney.Model;
-using KSpider.Tool.Http;
+using KSpider.Common.Http;
 using Microsoft.Playwright;
 
 namespace KSpider.Spider.News.Web.Eastmoney.Playwright;

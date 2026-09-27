@@ -1,10 +1,9 @@
-using KSpider.Common.Json;
 using KSpider.Spider.News.Web;
-using KSpider.Common.Time;
 using KSpider.Model;
-using KSpider.Tool.Http;
+using KSpider.Common.Html;
+using KSpider.Common;
 
-namespace KSpider.Spider.News.Web.Eastmoney.Model;
+namespace KSpider.Spider.News.Web.Eastmoney;
 
 // 单条新闻解析后的完整内容
 public class DfContentInfo
@@ -34,7 +33,7 @@ public class DfContentInfo
             NewsTime = TimeTools.GetDateByTimeStrForFormat(NewsTime ?? "", TimeTools.TimeFormatForBackSlash),
             NewsKeyword = NewsKeyword,
             NewsContentText = NewsDataContentText,
-            NewsContentJson = JsonUtil.GetJson(NewsDataContent)
+            NewsContentJson = JsonTools.GetJson(NewsDataContent)
         };
         return model;
     }

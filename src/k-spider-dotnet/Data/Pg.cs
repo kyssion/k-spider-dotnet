@@ -1,5 +1,5 @@
 using KSpider.Config;
-using KSpider.Common.Logger;
+using KSpider.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SqlSugar;

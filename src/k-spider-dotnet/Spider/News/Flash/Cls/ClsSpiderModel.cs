@@ -1,10 +1,10 @@
 using System.Text.Json.Nodes;
-using KSpider.Common.Json;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Tool.Http;
+using KSpider.Common.Http;
+using KSpider.Common;
 
-namespace KSpider.Spider.News.Flash.Cls.Model;
+namespace KSpider.Spider.News.Flash.Cls;
 
 /// <summary>
 ///     电报列表接口的单条数据 ( 列表即全文 ) , 直接映射为可入库的快讯记录
@@ -109,7 +109,7 @@ public class ClsRollItem
             Keyword = string.Join(",", Subjects),
             Level = FlashLevel,
             StockList = ReadStockListJson(),
-            ImageUrls = imageUrls.Count > 0 ? JsonUtil.GetJson(imageUrls) : null,
+            ImageUrls = imageUrls.Count > 0 ? JsonTools.GetJson(imageUrls) : null,
             RawContent = itemJson
         };
     }
@@ -132,8 +132,8 @@ public class ClsRollItem
             });
         }
 
-        // 用 JsonUtil 序列化 : JsonNode.ToJsonString 会把中文转义成 \uXXXX , 与已入库 JSON 的风格不一致
-        return result.Count > 0 ? JsonUtil.GetJson(result) : null;
+        // 用 JsonTools 序列化 : JsonNode.ToJsonString 会把中文转义成 \uXXXX , 与已入库 JSON 的风格不一致
+        return result.Count > 0 ? JsonTools.GetJson(result) : null;
     }
 
     /// <summary>

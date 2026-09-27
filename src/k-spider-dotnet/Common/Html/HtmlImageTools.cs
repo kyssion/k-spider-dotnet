@@ -1,4 +1,6 @@
-namespace KSpider.Tool.Http;
+using KSpider.Common.Http;
+
+namespace KSpider.Common.Html;
 
 /// <summary>
 ///     图片下载与落盘工具 ( 开发期产物 , 下载 / 落盘方法当前无调用方 ) ;

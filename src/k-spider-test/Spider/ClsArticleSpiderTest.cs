@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.News.Web;
+using KSpider.Spider.News;
 using KSpider.Spider.News.Web.Cls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

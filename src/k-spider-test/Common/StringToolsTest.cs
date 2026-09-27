@@ -1,7 +1,7 @@
-using KSpider.Common.Strings;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace KSpider.Test.Lib;
+using KSpider.Common;
+namespace KSpider.Test.Common;
 
 /// <summary>
 ///     StringTools 字符工具回归 ( 全部离线 )

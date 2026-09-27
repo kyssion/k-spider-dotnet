@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
-using KSpider.Common.Json;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
+using KSpider.Common;
 
-namespace KSpider.Spider.News.Flash.Wscn.Model;
+namespace KSpider.Spider.News.Flash.Wscn;
 
 /// <summary>
 ///     华尔街见闻 live 的单条快讯 ( 列表即全文 ) , 直接映射为可入库的快讯记录
@@ -96,7 +96,7 @@ public class WscnLiveItem
             Keyword = string.Join(",", Tags),
             Level = FlashLevel,
             StockList = null,
-            ImageUrls = Images.Count > 0 ? JsonUtil.GetJson(Images) : null,
+            ImageUrls = Images.Count > 0 ? JsonTools.GetJson(Images) : null,
             RawContent = itemJson
         };
     }
