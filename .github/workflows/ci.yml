@@ -11,6 +11,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 前端构建 : pnpm + Node , 产物进 k-spider-web/wwwroot ( 后续 dotnet build 打包 )
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: 前端构建
+        run: bash scripts/build-web.sh
+
+      # E2E : mock API 夹具驱动 ( 离线确定 ) ; live 用例默认跳过 , 与后端 Live 分类同款分层
+      - name: 前端 E2E 测试
+        run: |
+          pnpm --dir web exec playwright install --with-deps chromium
+          pnpm --dir web test:e2e
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
