@@ -33,6 +33,9 @@
 | 新增 / 修改新闻源（`Spider/*/`） | [news-pipeline.md](news-pipeline.md) 的源明细表；AGENTS.md 的新闻源套路；侦察或解析方法有新发现时回填 [web-source-playbook.md](web-source-playbook.md) |
 | 新增 / 修改反爬验证识别器或通过策略（`Spider/Verify/`） | [anti-bot-verification.md](anti-bot-verification.md) 的识别器/策略表与扩展套路；AGENTS.md 的验证模块套路；测试夹具登记到 `src/k-spider-test/TestData/README.md` |
 | 抓取层 HTTP 调用方式变更（`Common/Http/`、`Spider/Verify/VerifiedHttp`） | [anti-bot-verification.md](anti-bot-verification.md)、AGENTS.md 的验证模块套路 |
+| Web 控制台 API / 查询变更（`src/k-spider-web/Api|Query/`） | [architecture.md](architecture.md) 的 Web 控制台小节与扩展点表；AGENTS.md 的 Web 控制台套路 |
+| 前端页面 / 依赖变更（`web/`） | [architecture.md](architecture.md) 的前端栈说明；`web/pnpm-lock.yaml` 随源提交 |
+| 系统表（`spider_job_state` / `spider_job_command` / `spider_node_status`）结构变更 | [data-model.md](data-model.md)、`db/k_script_spider.sql`、`Pg.EnsureSystemDbObjects` 三处同步 |
 | 新增 / 修改定时任务（`Job/`、`Program.AddSpiderJobs`） | [architecture.md](architecture.md) 任务表、[operations.md](operations.md) 任务清单、README 任务表 |
 | 表结构 / 索引 / 唯一键变更（`Model/`、`db/`、`Pg.EnsureSpiderNewsListDbObjects`） | [data-model.md](data-model.md)、`db/k_script_spider.sql` |
 | 状态机 / 重试语义 / 落库语义变更 | [news-pipeline.md](news-pipeline.md) |

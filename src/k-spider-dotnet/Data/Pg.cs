@@ -51,7 +51,7 @@ public class Pg
 
     /// <summary>
     ///     程序启动时的幂等库结构补齐 : fail_count 列 + 流水线轮询部分索引。
-    ///     表结构本体仍由 db/k-script-spider-datasource.sql 初始化 , 这里只做增量演进。
+    ///     表结构本体仍由 db/k_script_spider.sql 初始化 , 这里只做增量演进。
     /// </summary>
     public void EnsureSpiderNewsListDbObjects()
     {
@@ -127,6 +127,77 @@ public class Pg
     }
 
     /// <summary>
+    ///     系统状态表的幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 , 写入见 SystemStatusDao )。
+    ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsureSystemDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            connection.Ado.ExecuteCommand("""
+                CREATE TABLE IF NOT EXISTS public.spider_job_state
+                (
+                    node_id             text      NOT NULL,
+                    job_name            text      NOT NULL,
+                    next_fire_time      timestamp,
+                    is_paused           boolean   NOT NULL DEFAULT false,
+                    last_fired_at       timestamp,
+                    last_duration_ms    bigint,
+                    last_success        boolean,
+                    consecutive_failures integer  NOT NULL DEFAULT 0,
+                    last_error          text,
+                    last_stats          text,
+                    create_time         timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time         timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT spider_job_state_pkey PRIMARY KEY (node_id, job_name)
+                )
+                """);
+            connection.Ado.ExecuteCommand("""
+                CREATE TABLE IF NOT EXISTS public.spider_job_command
+                (
+                    id          bigserial NOT NULL,
+                    node_id     text,
+                    job_name    text      NOT NULL,
+                    action      text      NOT NULL,
+                    status      text      NOT NULL DEFAULT 'pending',
+                    result      text,
+                    create_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    consumed_at timestamp,
+                    CONSTRAINT spider_job_command_pkey PRIMARY KEY (id)
+                )
+                """);
+            // 指令轮询热路径 : 只扫 pending ( NodeStateJob 每 3 秒 )
+            connection.Ado.ExecuteCommand(
+                "CREATE INDEX IF NOT EXISTS idx_job_command_pending ON public.spider_job_command (id) WHERE status = 'pending'");
+            connection.Ado.ExecuteCommand("""
+                CREATE TABLE IF NOT EXISTS public.spider_node_status
+                (
+                    node_id     text      NOT NULL,
+                    report_time timestamp NOT NULL,
+                    payload     text,
+                    create_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT spider_node_status_pkey PRIMARY KEY (node_id)
+                )
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            foreach (var table in (string[])["spider_job_state", "spider_job_command", "spider_node_status"])
+            {
+                connection.Ado.ExecuteCommand($"DROP TRIGGER IF EXISTS update_modified_column ON public.{table}");
+                connection.Ado.ExecuteCommand(
+                    $"CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.{table} " +
+                    "FOR EACH ROW EXECUTE FUNCTION public.update_time_func()");
+            }
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsureSystemDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     批量 upsert 依赖的唯一索引自检。
     ///     SpiderNewsBatchDao 的手拼 SQL 用 ON CONFLICT (列) 做去重 , 该列上必须有唯一索引 / 约束 ,
     ///     否则 PostgreSQL 会报 "there is no unique or exclusion constraint matching the ON CONFLICT
@@ -153,7 +224,7 @@ public class Pg
                 """, new { table, column });
             if (count == 0)
                 Log.LogError(
-                    "[CheckBatchUpsertUniqueIndexes] 表 {Table} 的 {Column} 缺少唯一索引 , 批量 upsert 会整批失败 ( 该源将无数据落库 ) , 请按 db/k-script-spider-datasource.sql 补建",
+                    "[CheckBatchUpsertUniqueIndexes] 表 {Table} 的 {Column} 缺少唯一索引 , 批量 upsert 会整批失败 ( 该源将无数据落库 ) , 请按 db/k_script_spider.sql 补建",
                     table, column);
         }
     }

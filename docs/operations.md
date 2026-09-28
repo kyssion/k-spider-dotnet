@@ -16,9 +16,10 @@ appsettings.json  →  appsettings.{环境}.json  →  K_SPIDER__ 前缀环境�
 
 | 变量 | 用途 | 说明 |
 |---|---|---|
-| `K_SPIDER__DATABASE__CONNECTIONSTRING` | 主程序 PG 连接串 | 映射到 `Database:ConnectionString`（双下划线是层级分隔符） |
+| `K_SPIDER__DATABASE__CONNECTIONSTRING` | 主程序 / Web 控制台 PG 连接串 | 映射到 `Database:ConnectionString`（双下划线是层级分隔符）；`k-spider-web` 与主程序连同一个库 |
 | `K_SPIDER_REMOTE__CONNECTIONSTRING` | `k-spider-sync` 远端库 | **前缀是单下划线 `K_SPIDER_`**，与主程序不一致，照抄主程序的写法会静默失效 |
 | `K_SPIDER_LOCAL__CONNECTIONSTRING` | `k-spider-sync` 本地库 | 同上 |
+| `ASPNETCORE_URLS` | `k-spider-web` 监听地址 | 默认 `http://localhost:5800`（appsettings.json 的 `Urls`）；需要外部访问时覆盖或用 nginx 反代 |
 
 配置值为空 = 使用代码内默认值（本地开发库）。
 
@@ -54,6 +55,31 @@ pwsh src/k-spider-dotnet/bin/Debug/net10.0/playwright.ps1 install chromium --wit
 Linux 上 `--with-deps` 需要 root，装完浏览器缓存在 `~/.cache/ms-playwright`。
 
 `k-spider-sync` 是独立进程，单独发布与部署（`src/k-spider-sync/k-spider-sync.csproj`），与主爬虫互不影响。
+
+### Web 控制台（`k-spider-web`）
+
+```bash
+# 1. 构建前端 ( 需要 Node 20+ 与 pnpm ; 产物拷入 k-spider-web/wwwroot )
+bash scripts/build-web.sh
+
+# 2. 自包含发布 ( 产物含前端静态页 )
+dotnet publish src/k-spider-web/k-spider-web.csproj \
+    -c Release -r linux-x64 --self-contained -p:SpiderEnvironment=Production
+```
+
+- systemd 模板：`deploy/k-spider-web.service`（与主爬虫分属两个服务，互不影响重启）。
+- 数据库连接串用 `K_SPIDER__DATABASE__CONNECTIONSTRING` 注入，与主程序同库；只读查询 + 写指令表，不写新闻表。
+- 默认只监听 `localhost:5800`；远程访问推荐 nginx 反代（可在这层加 Basic Auth）：
+
+  ```nginx
+  location / {
+      proxy_pass http://127.0.0.1:5800;
+      proxy_set_header Host $host;
+  }
+  ```
+
+- 健康探针：`GET /api/health`；开发期可在 `http://localhost:5800/openapi/v1.json` 拿 OpenAPI 文档（仅 Development 环境）。
+- 前端本地开发：`cd web && pnpm install && pnpm dev`（5173 端口，`/api` 自动代理到 5800）。
 
 ## 三、监控与巡检
 

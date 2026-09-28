@@ -1,0 +1,21 @@
+[Unit]
+Description=k-spider-web 爬虫 Web 控制台 ( 只读查询 + 分析 + 任务指令 )
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# 部署目录 = dotnet publish 产物目录 ( 含 scripts/build-web.sh 构建的前端 wwwroot ) , 按实际路径调整
+WorkingDirectory=/opt/k-spider-web
+ExecStart=/opt/k-spider-web/k-spider-web
+Environment=DOTNET_ENVIRONMENT=Production
+# 数据库连接串与爬虫节点同库 : 由部署方环境变量注入 , 不写进文件
+# Environment=K_SPIDER__DATABASE__CONNECTIONSTRING=Host=...;Database=k_script_spider;...
+# 监听地址默认 localhost:5800 ( appsettings.json 的 Urls ) ; 需要外部访问时用 nginx 反代或在此覆盖
+# Environment=ASPNETCORE_URLS=http://0.0.0.0:5800
+Environment=TZ=Asia/Shanghai
+Restart=always
+RestartSec=10
+SyslogIdentifier=k-spider-web
+
+[Install]
+WantedBy=multi-user.target

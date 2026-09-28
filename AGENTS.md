@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目与财联社文章频道 13 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯），存入 PostgreSQL。解决方案共 3 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目与财联社文章频道 13 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -21,11 +21,20 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"
 # 只跑真实接口连通性（验证两源 URL 能调通并拿到数据集 , 排障时先跑这个）
 dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 
-# 一键验证（构建 + 离线用例 , CI 同款）
+# 一键验证（文档链接 + 前端构建(有 pnpm 时) + 构建 + 离线用例 , CI 同款）
 ./scripts/verify.sh
+
+# 构建前端并拷贝产物到 k-spider-web/wwwroot（改了 web/ 必须跑 , 需要 Node 20+ 与 pnpm）
+bash scripts/build-web.sh
+
+# 前端本地开发（5173 端口热更新 , /api 自动代理到 5800）
+cd web && pnpm install && pnpm dev
 
 # 本地运行主程序（需要可用的 PostgreSQL , 默认 Development 环境）
 dotnet run --project src/k-spider-dotnet
+
+# 本地运行 Web 控制台（默认 http://localhost:5800 , 先跑过 build-web 才有页面）
+dotnet run --project src/k-spider-web
 
 # 本地切换环境调试（构建与运行参数对齐 , 确保对应环境配置文件被拷贝）
 DOTNET_ENVIRONMENT=Test dotnet run --project src/k-spider-dotnet -p:SpiderEnvironment=Test
@@ -38,15 +47,16 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 
 ## 解决方案结构
 
-仓库根 = 解决方案根，三个项目位于 `src/` 下：
+仓库根 = 解决方案根，四个项目位于 `src/` 下：
 
 | 项目 | 类型 | 职责 |
 |---|---|---|
 | `src/k-spider-dotnet` | Exe | 主爬虫：新闻抓取、解析、落库、Quartz 托管调度；含 Playwright（特殊页面抓取与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
 | `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 5 张新闻表（4 张网页新闻 + `spider_flash_news`）同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
+| `src/k-spider-web` | Exe | Web 控制台：只读查询/分析 Minimal API + 前端静态页伺服；任务控制（触发/暂停/恢复）写 `spider_job_command` 指令表异步受理（约 3 秒内由爬虫节点的 `NodeStateJob` 消费），引用主项目实体与 `SystemStatusDao` |
 | `src/k-spider-test` | 类库 | MSTest 单元测试（全部离线） |
 
-依赖方向：`k-spider-sync → k-spider-dotnet`（复用 `Model/` 实体、`Data/Pg` 连接工厂与 `Job/SpiderJob` 基类）；test 引用主项目。**实体只有一套**（主项目 `Model/`）。
+依赖方向：`k-spider-sync / k-spider-web / k-spider-test → k-spider-dotnet`（复用 `Model/` 实体与 `Data/Pg` 连接工厂）。**实体只有一套**（主项目 `Model/`）。前端源码在仓库根 `web/`（React + TS + Vite + pnpm），构建产物拷入 `k-spider-web/wwwroot`。
 
 主项目目录（命名空间 PascalCase 风格 `KSpider.*`；代码在项目根下）：
 
@@ -55,12 +65,14 @@ src/k-spider-dotnet/
 ├── Program.cs                 # Host 入口 : DI 注册 + AddSpiderJobs 集中调度注册 + 优雅停机
 ├── appsettings*.json          # 多环境配置 ( Development / Test / Production )
 ├── Config/                    # DatabaseOptions ( IOptions 绑定 )
-├── Data/                      # Pg 连接工厂 + DAO ( DI Singleton ) + Devtools/ ( 开发期工具 )
+├── Data/                      # Pg 连接工厂 + DAO ( DI Singleton ) + SystemStatusDao ( 系统表通道 ) + Devtools/ ( 开发期工具 )
 ├── Model/                     # SqlSugar 实体（DbFirst 生成，带 Model 后缀）
 ├── Job/                       # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
 │   ├── News/Web/              #   网页型三段 : NewsListJob / NewsContentOriginJob / NewsContentJob
 │   ├── News/Flash/            #   快讯型 : FlashNewsJob ( 15 秒 )
-│   ├── Check/                 #   NewsCheckJob
+│   ├── Check/                 #   NewsCheckJob ( 含节点快照上报 )
+│   ├── Node/                  #   NodeStateJob + NodeIdentity ( 调度态上报 + 指令消费 , 3 秒 )
+│   └── JobRuntimeListener.cs  #   IJobListener : 每次执行完把结果/耗时/RunSummary 写 spider_job_state
 ├── Spider/                    # 爬虫实现 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs        #   中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/                  #   ── 新闻域 ──
@@ -146,6 +158,12 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
   - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 201、见闻 301、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
 - **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Common/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。反爬验证的浏览器策略（`Spider/Verify/Solver/Browser/`）只在被拦截时按需启动浏览器，平时不参与抓取。
+- **Web 控制台（`src/k-spider-web` + 仓库根 `web/`）与爬虫进程只通过库通信**，主程序不开 HTTP 端口：
+  - 运行状态上行：`JobRuntimeListener`（每次执行写执行结果）+ `NodeStateJob`（3 秒刷调度态）+ `NewsCheckJob`（5 分钟节点快照）写 3 张系统表；Web 只读。
+  - 控制指令下行：Web 写 `spider_job_command`（`trigger`/`pause`/`resume`）→ `NodeStateJob` 轮询消费（约 3 秒），异步受理、结果回写指令行。**`NodeStateJob` 自身不许暂停**（代码里已拒绝该指令：它停了没人消费恢复指令）。
+  - 新增 API 端点：`src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务（DI Singleton，只读），分页信封 `PageResult<T>`，分析聚合强制时间窗 ≤31 天。
+  - 新增前端页面：`web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求一律走 `api/hooks.ts` 的 TanStack Query 封装（轮询型 hook 带 `refetchInterval`）；改完必须 `bash scripts/build-web.sh` 才会进 `wwwroot`。
+  - Job 想在控制台带业务摘要：`Execute` 末尾给基类属性 `RunSummary` 赋值（如"新增列表 12"），listener 自动上报。
 - **新增反爬验证识别方式 / 通过手段**（模块见 [docs/anti-bot-verification.md](docs/anti-bot-verification.md)）：
   - 识别方式：`VerificationKind` 按需加值 → 写一个 `IVerificationDetector` 实现（**纯判定、不联网**，否则没法离线回归）→ 在 `VerificationRegistry.DetectorList` 按"特征越具体越靠前"加一行 → 补夹具与用例。
   - 通过手段：写一个 `IVerificationSolver` 实现（声明 `Kinds` 与 `Cost`，越小越先试）→ 在 `VerificationRegistry.SolverList` 加一行。人机确认类（滑块 / 图形 / 短信）**不要**加进 `VerificationPolicy.DefaultAllowedKinds`，由部署方按源显式放开。
@@ -196,6 +214,9 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 16. **反爬验证的浏览器策略依赖 Chromium**：目标机需执行一次 `playwright install chromium`（步骤见 docs/operations.md 的部署章节）。未安装时 `BrowserChallengeSolver` 失败并在日志里给出该提示，**识别与告警仍然生效**、抓取链路不受影响——别把它当成"验证模块坏了"。
 17. **会话回放走 `HttpClientTools.ApplyCookies`（写进 handler 的 CookieContainer），不要给请求手动加 `Cookie` 头**：手动头会与容器里的同名旧值拼成两份同名 cookie（实测 `sid=SOLVED; sid=STALE`，服务端取哪份未定义，重复 cookie 本身也是注入指纹）。回放只带 cookie、**不带 UA** —— 请求头由 `HttpClientTools` 统一伪装（`DisguiseUserAgent` 常量），浏览器侧必须复用同一串 UA，否则指纹不一致会被再拦一次。注意 `CreateByHost` 的 CookieContainer 是进程内共享的，`ApplyCookies` 会按名清理并覆盖同名项，改这段要连带跑 `VerifiedHttpTest`。
 18. **验证失败的代价**：`VerificationRequiredException` 按"这条数据失败"处理（消耗 `fail_count`），且该主机进冷却期（默认 10 分钟；429 按源站 `Retry-After` 退避）。因此识别器误判的表现是"某个源整批数据失败 + 冷却期内不再尝试"，改识别器特征后务必跑 `VerificationDetectorTest` 的 `RealBusinessPayloadIsNotChallenge` 用例（真实响应全量不误判）。
+19. **SqlSugar `Ado.ExecuteCommand(sql, obj)` 的参数对象必须匿名对象**（或 `SugarParameter[]`）：直接传 record / 具名类实例会抛"parameter format is wrong"（`SystemStatusDao` 已踩，传入一律 `new { ... }` 平铺属性）。另外手写 SQL 里给 PG 的 `timestamp without time zone` 列传 `DateTime.Now` 参数时，Npgsql 会按 Kind=Local 编成 timestamptz 引发类型不匹配——构造参数统一 `DateTime.SpecifyKind(value, DateTimeKind.Unspecified)`（分析层 `NormalizeWindow` 已处理）。
+20. **`k-spider-web` 开发模式的静态文件伺服自项目目录**（`staticwebassets.runtime.json` 清单），`bin` 下没有 `wwwroot` 物理目录：判断"前端产物是否存在"必须用 `WebRootFileProvider.GetFileInfo("index.html").Exists`，用 `WebRootPath` 拼 `File.Exists` 在 `dotnet run` 下恒为 false（已踩）；发布产物则两者一致。
+21. **手动触发类指令是异步的**：`POST /api/jobs/{name}/{action}` 返回 202 只代表已受理，生效靠 `NodeStateJob` 3 秒轮询消费；爬虫进程停着时指令停在 `pending`，进程恢复后被消费。自动化脚本判断生效要轮询 `/api/jobs/commands` 或 `/api/status/jobs`，不要立刻断言。
 
 ## 提交规范
 

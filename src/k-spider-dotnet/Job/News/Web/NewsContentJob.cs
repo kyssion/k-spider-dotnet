@@ -31,6 +31,9 @@ public class NewsContentJob(SpiderNewsDao spiderNewsDao, Pg pg, ILogger<NewsCont
             .Where(it => newsUrls.Contains(it.NewsUrl)).ToList()
             .GroupBy(it => it.NewsUrl).ToDictionary(group => group.Key!, group => group.First());
 
+        var successNumber = 0;
+        var failNumber = 0;
+        var backNumber = 0;
         foreach (var newsItem in newsListInfos)
         {
             if (string.IsNullOrEmpty(newsItem.NewsUrl)) continue;
@@ -50,6 +53,7 @@ public class NewsContentJob(SpiderNewsDao spiderNewsDao, Pg pg, ILogger<NewsCont
                 newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedDownloadOriginInfo;
                 newsItem.FailCount += 1;
                 UpdateStatus(connection, spiderNewsDao, newsItem);
+                backNumber++;
                 logger.LogWarning("[SyncContentInfoFromOriginInfo] origin info not find , back to download , url : {}",
                     newsItem.NewsUrl);
                 continue;
@@ -69,6 +73,7 @@ public class NewsContentJob(SpiderNewsDao spiderNewsDao, Pg pg, ILogger<NewsCont
                 spiderNewsDao.UpsetSpiderNewsImageList(connection, parseResult.Images);
                 spiderNewsDao.UpdateSpiderNewsListInfo(connection, newsItem);
                 connection.Ado.CommitTran();
+                successNumber++;
             }
             catch (Exception e)
             {
@@ -76,7 +81,7 @@ public class NewsContentJob(SpiderNewsDao spiderNewsDao, Pg pg, ILogger<NewsCont
                 switch (e)
                 {
                     case KDbException:
-                        // 数据库异常不消耗重试次数 , 保持状态等待下一轮
+                        // 数据库异常不消耗重试次数 , 保持状态等待下一轮 ( 也不计入本轮统计 )
                         logger.LogError("[SyncContentInfoFromOriginInfo] content  db err : {} ,  url : {}", e,
                             newsItem.NewsUrl);
                         break;
@@ -86,10 +91,15 @@ public class NewsContentJob(SpiderNewsDao spiderNewsDao, Pg pg, ILogger<NewsCont
                         newsItem.DownloadStatusCode = (int)NewsDownloadStatusCode.FailedSyncDetailInfo;
                         newsItem.FailCount += 1;
                         UpdateStatus(connection, spiderNewsDao, newsItem);
+                        failNumber++;
                         break;
                 }
             }
         }
+
+        RunSummary = newsListInfos.Count == 0
+            ? "本轮无待解析"
+            : $"解析 {successNumber}/{newsListInfos.Count} , 失败 {failNumber} , 退回下载 {backNumber}";
     }
 
     /// <summary>

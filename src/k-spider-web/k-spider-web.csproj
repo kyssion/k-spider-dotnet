@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <RootNamespace>KSpider.Web</RootNamespace>
+        <!-- 目标环境 ( Development / Test / Production ) : 控制拷贝哪份环境配置 , 本地默认 Development -->
+        <SpiderEnvironment Condition="'$(SpiderEnvironment)' == ''">Development</SpiderEnvironment>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- 复用主项目的 Model 实体 / Pg 连接工厂 / SystemStatusDao -->
+        <ProjectReference Include="..\k-spider-dotnet\k-spider-dotnet.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- 基础配置 + 当前目标环境的配置文件 , 其余环境文件不进产物 ( 与主项目同款 ) -->
+        <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'Development'" />
+        <None Update="appsettings.Test.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'Test'" />
+        <None Update="appsettings.Production.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'Production'" />
+    </ItemGroup>
+</Project>

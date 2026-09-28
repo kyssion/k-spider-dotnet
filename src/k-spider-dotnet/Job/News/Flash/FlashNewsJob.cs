@@ -28,6 +28,7 @@ public class FlashNewsJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<
     {
         // 各源并行 , 每源独立连接 ( SqlSugarClient 非线程安全 ) , 单源失败不影响其它源
         var results = await Task.WhenAll(FlashNewsSpiderRegistry.All.Select(RunSourceAsync));
+        RunSummary = $"写入快讯 {results.Sum(item => item.InsertNumber)}";
         logger.LogInformation("[FlashNewsJob Execute] run success , upsert flash news {} , source detail : {}",
             results.Sum(item => item.InsertNumber),
             string.Join(" | ", results.Select(item => $"{item.FromMedia}={item.InsertNumber}")));

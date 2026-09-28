@@ -24,6 +24,7 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
         // media 之间并行 : 每个源有自己的连接、事务与推进节奏 , 互不等待
         // ( 任务带 DisallowConcurrentExecution , 本轮不会与上一轮重叠 )
         var results = await Task.WhenAll(NewsSpiderRegistry.All.Select(RunSourceAsync));
+        RunSummary = $"新增列表 {results.Sum(item => item.InsertNumber)}";
         logger.LogInformation("[NewsListJob Execute] run success , new insert news {} , source detail : {}",
             results.Sum(item => item.InsertNumber),
             string.Join(" | ", results.Select(item => $"{item.FromMedia}={item.InsertNumber}")));

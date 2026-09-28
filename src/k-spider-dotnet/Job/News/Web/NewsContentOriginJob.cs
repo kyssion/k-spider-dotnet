@@ -25,6 +25,8 @@ public class NewsContentOriginJob(SpiderNewsDao spiderNewsDao, Pg pg,
                          (it.DownloadStatusCode == (int)NewsDownloadStatusCode.FailedDownloadOriginInfo &&
                           it.FailCount < NewsPipelineConst.MaxFailCount))
             .OrderBy(item => item.Id, OrderByType.Asc).Take(pageSize).ToList();
+        var successNumber = 0;
+        var failNumber = 0;
         foreach (var newsItem in newsListInfos)
         {
             // 源未注册属于配置错误 , 跳过且不消耗重试次数
@@ -46,8 +48,12 @@ public class NewsContentOriginJob(SpiderNewsDao spiderNewsDao, Pg pg,
                 spiderNewsDao.UpsetSpiderNewsContentOrigin(connection, contentOrigin.ToModel());
                 spiderNewsDao.UpdateSpiderNewListDownloadStatus(connection, newsItem);
                 connection.Ado.CommitTran();
+                if (newsItem.DownloadStatusCode == (int)NewsDownloadStatusCode.SuccessDownloadOriginInfo)
+                    successNumber++;
+                else
+                    failNumber++;
             }
-            // 数据库异常不消耗重试次数 : 不回写状态 , 下一轮按原状态自然重取
+            // 数据库异常不消耗重试次数 : 不回写状态 , 下一轮按原状态自然重取 ( 也不计入本轮统计 )
             catch (KDbException e)
             {
                 connection.Ado.RollbackTran();
@@ -59,8 +65,13 @@ public class NewsContentOriginJob(SpiderNewsDao spiderNewsDao, Pg pg,
                 logger.LogError("[SyncContentOriginInfoByBatch] err : {} , url : {}", e, newsItem.NewsUrl);
                 MarkFailed(newsItem);
                 spiderNewsDao.UpdateSpiderNewListDownloadStatus(connection, newsItem);
+                failNumber++;
             }
         }
+
+        RunSummary = newsListInfos.Count == 0
+            ? "本轮无待下载"
+            : $"下载 {successNumber + failNumber}/{newsListInfos.Count} , 成功 {successNumber} , 失败 {failNumber}";
     }
 
     /// <summary>

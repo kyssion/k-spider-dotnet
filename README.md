@@ -8,6 +8,7 @@
 - **实时快讯管线**（15 秒一轮，独立于网页管线）：财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯——"列表即全文"型源，拉到即终态直写 `spider_flash_news`（含重要度/关联标的），发布到入库最坏延迟约 16 秒；`NewsCheckJob` 按源监控实时性滞后。
 - **反爬验证识别与通过**（`Spider/Verify/`）：所有抓取请求统一走 `VerifiedHttp`，被 JS 门禁 / Cloudflare 挑战 / 频率限制 / 载荷级风控拦住时自动识别并处理——JS 与 Cloudflare 类挑战用浏览器过掉并把 cookie 回放给 HTTP 链路，过不了的（滑块/图形/短信验证码、限流）明确告警而不是悄悄返回空数据。识别器与通过策略都是注册表扩展，新增验证方式只需加一个类加一行注册（见 [docs/anti-bot-verification.md](docs/anti-bot-verification.md)）。
 - **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计 + 反爬验证阻塞告警（每 5 分钟）。
+- **Web 控制台**（独立进程 `k-spider-web`，React + TypeScript）：总览（任务状态/管线积压/快讯实时性/反爬告警）、新闻与快讯查询、数据分析（入库趋势/分布/关键词）、任务手动触发/暂停/恢复；爬虫运行状态与控制指令经 3 张系统表跨进程传递，与采集进程完全解耦、可分开部署。
 - **数据搬运**：独立进程 `k-spider-sync` 将远端库的 5 张新闻表（4 张网页新闻 + 快讯表）增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
 
 ## 解决方案结构
@@ -15,15 +16,17 @@
 ```
 k-spider-dotnet/                 仓库根 = 解决方案根
 ├── db/                          建库 DDL（k_script_spider.sql）
-├── deploy/                      systemd 服务模板
+├── deploy/                      systemd 服务模板（爬虫 / Web 控制台）
 ├── docs/                        设计文档（设计原则 / 架构 / 新闻管线 / 反爬验证 / 数据模型 / 运维手册）
-├── scripts/                     verify.sh 一键验证
-├── .github/workflows/ci.yml     CI（push/PR 构建测试）
+├── scripts/                     verify.sh 一键验证 / build-web.sh 前端构建
+├── .github/workflows/ci.yml     CI（push/PR 构建测试，含前端构建）
 ├── Directory.Build.props        公共构建属性（net10.0 / Nullable 等）
 ├── Directory.Packages.props     中央包版本管理（CPM）
+├── web/                         Web 控制台前端源码（React + TS + Vite + pnpm）
 └── src/
     ├── k-spider-dotnet/         主爬虫（Host + DI + Quartz 托管调度 , 含 Playwright 特殊页面抓取）
     ├── k-spider-sync/           远端 PG → 本地 PG 增量同步（复用主项目实体）
+    ├── k-spider-web/            Web 控制台服务端（只读查询/分析 API + 前端静态页伺服）
     └── k-spider-test/           MSTest 单元测试（离线可跑）
 ```
 
@@ -69,7 +72,8 @@ dotnet run --project src/k-spider-dotnet
 | `NewsListJob` | 2 分钟 | 网页型源抓列表，批量 ON CONFLICT 写入，自适应翻页 | 启用 |
 | `NewsContentOriginJob` | 3 秒 | 按源分发下载原始内容（全源 FIFO，失败重试 ≤3 次） | 启用 |
 | `NewsContentJob` | 1 分钟 | 按源分发解析原始内容为结构化内容（失败重试 ≤3 次） | 启用 |
-| `NewsCheckJob` | 5 分钟 | 各源栏目接口探测 + 分源积压统计 + 反爬验证阻塞告警 | 启用 |
+| `NewsCheckJob` | 5 分钟 | 各源栏目接口探测 + 分源积压统计 + 反爬验证阻塞告警 + 节点快照上报 | 启用 |
+| `NodeStateJob` | 3 秒 | 状态通道：任务调度态上报 + Web 控制台指令消费（不可暂停） | 启用 |
 | `TransferSpiderDataJob`（sync） | 2 分钟 | 远端 → 本地增量同步 | 启用 |
 
 任务的启用/停用：`src/k-spider-dotnet/Program.cs` 的 `AddSpiderJobs` 中注释控制。Ctrl+C / SIGTERM 触发优雅停机（等待在跑任务完成）。
@@ -99,6 +103,10 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 
 推荐 **systemd**（自动重启 + journald 日志轮转）：模板见 [deploy/k-spider-dotnet.service](deploy/k-spider-dotnet.service)，
 拷贝到 `/etc/systemd/system/` 后 `systemctl enable --now k-spider-dotnet`。轻量场景可用产物目录内的 `run.sh`。
+
+Web 控制台独立部署：先 `bash scripts/build-web.sh` 构建前端，再
+`dotnet publish src/k-spider-web/k-spider-web.csproj -c Release -r linux-x64 --self-contained -p:SpiderEnvironment=Production`
+（默认 `http://localhost:5800`，连接串用 `K_SPIDER__DATABASE__CONNECTIONSTRING` 注入与主程序同库，详见 [docs/operations.md](docs/operations.md)）。
 
 ## AI 辅助开发
 

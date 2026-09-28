@@ -180,3 +180,67 @@ CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_flash_news FOR EAC
 CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")
   WHERE download_status_code IN (0, 2, 3, 4);
+
+--
+-- 系统运行状态表 ( 2026-09 新增 : Web 控制台 ( k-spider-web ) 的跨进程状态与指令通道 ;
+-- 主程序上报 / 消费 , k-spider-web 读取展示与写入指令 , 老库由启动时 Pg.EnsureSystemDbObjects 幂等补齐 )
+--
+
+-- 任务调度态 : 每节点每任务一行 ( upsert 不膨胀 ) ; 执行列由 JobRuntimeListener 写 , 调度列由 NodeStateJob 刷新
+CREATE TABLE IF NOT EXISTS "public"."spider_job_state" (
+  "node_id" text NOT NULL,
+  "job_name" text NOT NULL,
+  "next_fire_time" timestamp without time zone,
+  "is_paused" boolean NOT NULL DEFAULT false,
+  "last_fired_at" timestamp without time zone,
+  "last_duration_ms" bigint,
+  "last_success" boolean,
+  "consecutive_failures" integer NOT NULL DEFAULT 0,
+  "last_error" text,
+  "last_stats" text,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "spider_job_state_pkey" PRIMARY KEY ("node_id", "job_name")
+);
+
+COMMENT ON TABLE "public"."spider_job_state" IS '任务调度态 ( 执行结果 + 调度列 , 控制台展示 )';
+COMMENT ON COLUMN "public"."spider_job_state"."last_stats" IS '上次执行摘要 ( 如 新增列表 12 )';
+
+-- 任务指令 : k-spider-web 写 pending , 爬虫节点由 NodeStateJob 轮询消费后回写 done / rejected
+CREATE TABLE IF NOT EXISTS "public"."spider_job_command" (
+  "id" bigserial NOT NULL,
+  "node_id" text,
+  "job_name" text NOT NULL,
+  "action" text NOT NULL,
+  "status" text NOT NULL DEFAULT 'pending',
+  "result" text,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "consumed_at" timestamp without time zone,
+  CONSTRAINT "spider_job_command_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "public"."spider_job_command" IS '任务指令 ( trigger / pause / resume , Web → 爬虫 的控制通道 )';
+COMMENT ON COLUMN "public"."spider_job_command"."node_id" IS '目标节点 , 空 = 任意节点 ( 分布式时的路由依据 )';
+
+-- 指令轮询热路径 : 只扫 pending ( NodeStateJob 每 3 秒 )
+CREATE INDEX IF NOT EXISTS "idx_job_command_pending"
+  ON "public"."spider_job_command" ("id") WHERE status = 'pending';
+
+-- 节点状态快照 : NewsCheckJob 每轮 upsert ( 接口探测 / 管线积压 / 快讯滞后 / 验证冷却 )
+CREATE TABLE IF NOT EXISTS "public"."spider_node_status" (
+  "node_id" text NOT NULL,
+  "report_time" timestamp without time zone NOT NULL,
+  "payload" text,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "spider_node_status_pkey" PRIMARY KEY ("node_id")
+);
+
+COMMENT ON TABLE "public"."spider_node_status" IS '节点状态快照 ( payload 为 JSON 文本 , report_time 过远即节点失联 )';
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_job_state FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_job_command FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_node_status FOR EACH ROW EXECUTE FUNCTION update_time_func();

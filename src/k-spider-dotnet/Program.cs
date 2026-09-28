@@ -1,8 +1,10 @@
 using KSpider.Config;
 using KSpider.Data;
+using KSpider.Job;
 using KSpider.Job.Check;
 using KSpider.Job.News.Flash;
 using KSpider.Job.News.Web;
+using KSpider.Job.Node;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.Verify;
 using KSpider.Spider.Verify.Model;
@@ -36,6 +38,7 @@ public static class Program
         builder.Services.AddSingleton<Pg>();
         builder.Services.AddSingleton<SpiderNewsDao>();
         builder.Services.AddSingleton<SpiderNewsBatchDao>();
+        builder.Services.AddSingleton<SystemStatusDao>();
         builder.Services.AddQuartz(AddSpiderJobs);
         // 优雅停机 : 收到退出信号后等待在跑任务完成
         builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
@@ -50,6 +53,8 @@ public static class Program
         host.Services.GetRequiredService<Pg>().EnsureSpiderNewsListDbObjects();
         // 实时快讯表幂等建表 ( 表 + 实时消费索引 + update_time 触发器 )
         host.Services.GetRequiredService<Pg>().EnsureFlashNewsDbObjects();
+        // 系统状态表幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 )
+        host.Services.GetRequiredService<Pg>().EnsureSystemDbObjects();
         await host.RunAsync();
     }
 
@@ -58,6 +63,9 @@ public static class Program
     /// </summary>
     private static void AddSpiderJobs(IServiceCollectionQuartzConfigurator quartz)
     {
+        // 任务执行结果上报 ( 每次执行写 spider_job_state , 供 Web 控制台展示 ) , 作用于全部任务
+        quartz.AddJobListener<JobRuntimeListener>();
+
         quartz.AddJob<NewsListJob>(j => j.WithIdentity("NewsListJob").DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("NewsListJob.Trigger").ForJob("NewsListJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(2).RepeatForever()));
@@ -80,5 +88,10 @@ public static class Program
         quartz.AddJob<NewsCheckJob>(j => j.WithIdentity("NewsCheckJob").DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("NewsCheckJob.Trigger").ForJob("NewsCheckJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()));
+
+        // 节点状态任务 : 3 秒刷新调度态上报 + 消费 Web 控制台指令 ( 状态通道 , 不允许暂停自己 )
+        quartz.AddJob<NodeStateJob>(j => j.WithIdentity(NodeStateJob.JobName).DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("NodeStateJob.Trigger").ForJob(NodeStateJob.JobName).StartNow()
+                .WithSimpleSchedule(x => x.WithIntervalInSeconds(3).RepeatForever()));
     }
 }

@@ -7,12 +7,24 @@
 ┌──────────────────┐      ┌──────────────────────┐      ┌──────────────────┐      ┌──────────────────┐
 │ 东方财富 列表/正文 │      │  k-spider-dotnet     │      │  PostgreSQL      │      │  PostgreSQL      │
 │ 财联社   电报     │─────▶│  Generic Host + DI   │─────▶│  远端库           │─────▶│  本地库           │
-│ 新浪/见闻/金十    │ HTTP │  Quartz 托管调度      │  ORM │  5 张表 + 触发器  │ 2 分钟│  (k-spider-sync) │
-└──────────────────┘      └──────────────────────┘      └──────────────────┘      └──────────────────┘
+│ 新浪/见闻/金十    │ HTTP │  Quartz 托管调度      │  ORM │  8 张表 + 触发器  │ 2 分钟│  (k-spider-sync) │
+└──────────────────┘      └──────────────────────┘      └────────┬─────────┘      └──────────────────┘
+                                   ▲ 状态上报 / 指令消费           │ 只读查询 / 写指令
+                                   │ ( 3 张系统表 )                ▼
+                          ┌────────┴─────────────┐      ┌──────────────────┐
+                          │  k-spider-web        │◀─────│  浏览器           │
+                          │  Web API + 前端静态页 │      └──────────────────┘
+                          └──────────────────────┘
 ```
 
 采集与使用物理分离：`k-spider-dotnet` 只写远端库，`k-spider-sync` 把 5 张新闻表搬到本地库，
 分析侧读本地库不干扰采集进程，两边可以独立重启与部署。
+
+Web 控制台（`k-spider-web`）是第三个独立进程：只读查询与聚合分析直接读爬虫同库，
+爬虫进程的运行状态（任务调度态、最近执行结果）与控制指令（手动触发/暂停/恢复）
+通过 3 张系统表（`spider_job_state` / `spider_job_command` / `spider_node_status`）跨进程传递，
+**主程序不开 HTTP 端口、不引入 Web 依赖**——这也是将来多节点分布式部署的最小雏形：
+状态与指令天然按 `node_id` 分组与路由。
 
 ## 二、项目与依赖方向
 
@@ -20,14 +32,17 @@
 |---|---|---|
 | `src/k-spider-dotnet` | Exe | 主爬虫：抓取、解析、落库、调度；含 Playwright（特殊页面渲染与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
 | `src/k-spider-sync` | Exe | 数据搬运：远端 → 本地增量同步（新行按 Id + 已有行按 `update_time` 双键水位） |
+| `src/k-spider-web` | Exe | Web 控制台：只读查询 / 分析 API + 前端静态页伺服；任务控制走指令表异步受理 |
 | `src/k-spider-test` | 类库 | MSTest 测试：离线夹具回归 + 真实接口连通性（`TestCategory=Live`） |
 
 ```
 k-spider-sync ─┐
-k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg 连接工厂、Job/SpiderJob 基类 )
+k-spider-web  ─┼──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg 连接工厂、Data/SystemStatusDao )
+k-spider-test ─┘
 ```
 
-**实体只有一套**（主项目 `Model/`），另外两个项目不复制实体，避免三处漂移。
+**实体只有一套**（主项目 `Model/`），另外三个项目不复制实体，避免多处漂移。
+前端源码在仓库根 `web/`（React + TS + Vite + pnpm），构建产物拷入 `k-spider-web/wwwroot` 由 Kestrel 伺服。
 
 ## 三、运行时模型
 
@@ -37,7 +52,7 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 2. `Host.CreateApplicationBuilder` 装配配置：`appsettings.json` → `appsettings.{环境}.json` → `K_SPIDER__` 前缀环境变量 → 代码默认值。
 3. DI 注册：`DatabaseOptions`（IOptions）、`Pg`、`SpiderNewsDao`、`SpiderNewsBatchDao`（均 Singleton）。
 4. `AddQuartz(AddSpiderJobs)` 集中注册任务与触发器；`AddQuartzHostedService(WaitForJobsToComplete = true)` 保证收到退出信号后等在跑任务收尾。
-5. `host.Build()` 后先执行 `Pg.EnsureSpiderNewsListDbObjects()` 幂等补齐库对象（库不可用时仅记日志，不阻断进程），再 `RunAsync()`。
+5. `host.Build()` 后依次执行 `Pg.EnsureSpiderNewsListDbObjects()` / `EnsureFlashNewsDbObjects()` / `EnsureSystemDbObjects()` 幂等补齐库对象（库不可用时仅记日志，不阻断进程），再 `RunAsync()`。
 
 ### 调度模型
 
@@ -53,10 +68,16 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 | `NewsListJob` | 2 分钟 | 每栏目最多 4 页 × 200 条 | **网页型源并发**抓列表（源内仍串行翻页），见下 |
 | `NewsContentOriginJob` | 3 秒 | 200 条 | 全源 FIFO 下载原始内容 |
 | `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
-| `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 + 反爬验证阻塞告警 |
+| `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 + 反爬验证阻塞告警 + 节点快照上报（`spider_node_status`） |
+| `NodeStateJob` | 3 秒 | — | **状态通道**：刷新各任务调度态（下次触发/暂停）到 `spider_job_state` + 轮询消费 `spider_job_command` 指令；不许被暂停（它停了没人消费恢复指令） |
 | `TransferSpiderDataJob`（sync 进程） | 2 分钟 | 2000 行 / 批 | 远端 → 本地增量同步 |
 
 任务停用/启用只改 `Program.AddSpiderJobs` 里的注释，不要在别处加开关。
+
+另有 `JobRuntimeListener`（Quartz `IJobListener`，注册在 `AddSpiderJobs` 首行）：
+每次任务执行完把 结果/耗时/异常/`RunSummary` 摘要 upsert 到 `spider_job_state` 执行列，
+上报失败只记日志不影响任务。各 Job 在 `Execute` 末尾给基类 `SpiderJob.RunSummary` 赋值即可带上业务摘要
+（如"新增列表 12"），不设就是空。
 
 ### 列表任务的并发模型
 
@@ -89,13 +110,14 @@ k-spider-test ─┴──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg
 src/k-spider-dotnet/
 ├── Program.cs        # 唯一装配入口 : 配置 + DI + 任务注册
 ├── Config/           # DatabaseOptions ( IOptions 绑定 )
-├── Data/             # Pg 连接工厂 + DAO ( 事务由 Job 层管理 ) + SpiderNewsBatchDao 手拼批量 SQL
+├── Data/             # Pg 连接工厂 + DAO ( 事务由 Job 层管理 ) + SpiderNewsBatchDao 手拼批量 SQL + SystemStatusDao ( 系统表通道 )
 │   └── Devtools/     # DbFirst 实体生成器 ( 开发期工具 , 不参与生产 )
 ├── Model/            # SqlSugar 实体 ( DbFirst 生成 , 带 Model 后缀 ) — 全解决方案唯一实体源
 ├── Job/              # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
 │   ├── News/Web/     #   网页型三段任务
 │   ├── News/Flash/   #   FlashNewsJob ( 15 秒 )
-│   └── Check/        #   NewsCheckJob
+│   ├── Check/        #   NewsCheckJob ( 含节点快照上报 )
+│   └── Node/         #   NodeStateJob + NodeIdentity ( 调度态上报与指令消费 )
 ├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组
 │   ├── DataResource.cs   # 中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
 │   ├── News/             # ── 新闻域 ──
@@ -112,6 +134,22 @@ src/k-spider-dotnet/
 └── Exceptions/       # DownloadHttpException 族 + KDbException
 ```
 
+### Web 控制台（`src/k-spider-web`）
+
+```
+src/k-spider-web/
+├── Program.cs        # 装配入口 : 配置 ( 与主程序同款 K_SPIDER__ 前缀 ) + DI + 静态页伺服 + SPA 回退
+├── Api/              # Minimal API 端点 , 一域一文件 ( Status / News / Flash / Analysis / JobCommand ) , WebEndpoints 装配
+├── Dto/              # 响应 record + PageResult<T> 分页信封
+├── Query/            # 只读查询服务 ( DI Singleton ) : 筛选分页 / 三表联查 / date_trunc 聚合 / 指令写入
+└── wwwroot/          # 前端构建产物 ( scripts/build-web.sh 拷入 , 不入库 )
+```
+
+前端（仓库根 `web/`）：React 19 + TypeScript + Vite + pnpm，React Router 路由，
+TanStack Query 管请求缓存与轮询（状态页 5 秒级刷新），Zustand 存分析页共享时间窗，
+Tailwind + 手写 shadcn 风格组件（不引 radix，保持零额外依赖），Recharts 画图。
+开发期 `pnpm dev` 起 5173 端口并把 `/api` 代理到 5800。
+
 ## 五、关键设计决策
 
 | 决策 | 原因 | 代价 / 注意 |
@@ -122,6 +160,8 @@ src/k-spider-dotnet/
 | 表结构不用 CodeFirst，DDL 手工维护 + DbFirst 反向生成实体 | 索引 / 部分索引 / 触发器 / 约束这些是对生产库有实际影响的对象，交给 DDL 更可控 | 改表要 Model 与 DDL 两处同步 |
 | 多源抽象在出现第二个源时才提取 | 避免为假想扩展点提前设计（见 principles） | 东财单源时期的历史代码需要一次性改造 |
 | 快讯型源在列表阶段直接落原始内容并置 `status=3` | 这类源没有可回查的单条接口，原始内容只能在列表响应里拿到 | 列表行与原始内容必须同事务写入 |
+| Web 控制台的运行状态与控制走系统表，而不是主程序开内部 HTTP 端口 | 独立部署 / 独立重启零耦合；多节点分布式时 `node_id` 分组天然成立，指令表就是任务分发通道的最小形态 | 状态有秒级延迟（NodeStateJob 3 秒轮询）；指令是异步受理（约 3 秒内生效） |
+| `spider_job_state` 用 upsert 单行（节点 × 任务）而不是 append-only 执行日志 | `NewsContentOriginJob` 每 3 秒一轮，append 表日增数万行；控制台只需要"最近一次 + 连续失败计数" | 没有执行历史趋势；v2 有真实需要再上 run_log + 保留期清理 |
 | 轮询热路径依赖部分索引 | 轮询每 3 秒一次，全表扫描会拖垮库 | 索引变更要用 `CREATE INDEX CONCURRENTLY` 上线（普通建索引的写锁会卡住 3 秒轮询） |
 | 测试分"离线夹具 + 真实连通性"两层 | 门禁要确定性，接口是否还活着要能真实检验 | 联网用例需能从门禁排除 |
 
@@ -135,4 +175,6 @@ src/k-spider-dotnet/
 | 定时任务 | 继承 `Job/SpiderJob.cs`（只需实现 `Execute`）→ 构造函数注入 DAO/Pg/`ILogger<T>` → `Program.AddSpiderJobs` 加 `AddJob` + `AddTrigger` 两行（`DisallowConcurrentExecution` 必加） |
 | 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k_script_spider.sql` |
 | 同步到本地的表 | `k-spider-sync` 的 `TransferSpiderData.DoTransfer` 加一行 `SyncTableSafely<T>`（实体需实现 `ILongIdEntity` + `IUpdateTimeEntity`） |
+| Web API 端点 | `src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务 |
+| 前端页面 | `web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求用 `api/hooks.ts` 的 TanStack Query 封装 |
 | 需要浏览器渲染的页面 | `Spider/News/Web/Eastmoney/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |

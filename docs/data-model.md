@@ -1,6 +1,6 @@
 # 数据模型
 
-库名 `k_script_spider`，5 张表（4 张网页新闻 + 1 张实时快讯）。完整 DDL（pg_dump 导出 + 增量演进段）在
+库名 `k_script_spider`，8 张表（4 张网页新闻 + 1 张实时快讯 + 3 张系统运行状态）。完整 DDL（pg_dump 导出 + 增量演进段）在
 [`db/k_script_spider.sql`](../db/k_script_spider.sql)，新环境用它初始化。
 
 ## 一、表清单
@@ -12,8 +12,19 @@
 | `spider_news_content` | 结构化详情：`news_content_json`（片段数组）+ `news_content_text` + `news_keyword` | `news_url` | `NewsContentJob` |
 | `spider_news_image_list` | 正文图片地址与文件名 | `image_resource_url` | `NewsContentJob` |
 | `spider_flash_news` | 实时快讯（列表即全文，拉到即终态：标题/正文/标签/重要度 1-3/关联标的/图片/原始 JSON） | `(from_media, news_url)` | `FlashNewsJob` |
+| `spider_job_state` | 任务调度态（每节点×任务一行 upsert 不膨胀：下次触发/是否暂停 + 最近执行结果/连续失败） | `(node_id, job_name)` | 主程序（`JobRuntimeListener` 写执行列，`NodeStateJob` 刷调度列） |
+| `spider_job_command` | 任务指令（Web 控制台写 `pending`，爬虫节点 3 秒轮询消费后置 `done`/`rejected`；`action`：trigger/pause/resume） | `id` | `k-spider-web` 写 / 主程序消费 |
+| `spider_node_status` | 节点状态快照（NewsCheckJob 每 5 分钟 upsert：`payload` JSON 文本，含接口探测失败/管线积压/快讯滞后/验证冷却） | `node_id` | 主程序（`NewsCheckJob`） |
 
 另有 `sync_transfer_watermark`（**只存在于本地同步库**，由 `k-spider-sync` 启动时幂等创建，不在主库 DDL 里）：记录每张表已同步到的 `(update_time, id)` 水位。
+
+系统表说明：
+
+- 三张系统表是 **Web 控制台（`k-spider-web`）的跨进程通道**，主程序与 Web 进程一写一读，老库由启动时 `Pg.EnsureSystemDbObjects()` 幂等补齐。
+- 系统表**不参与** `k-spider-sync` 的数据搬运（每库各自的运行时状态）。
+- `node_id` 为节点标识（v1 单节点 = 主机名），是将来分布式多节点时的分组与路由依据。
+- 指令轮询热路径有部分索引 `idx_job_command_pending ON spider_job_command (id) WHERE status = 'pending'`。
+- `payload` 用 `text` 存 JSON 字符串而不是 `jsonb`：Npgsql 参数会以 text 类型发送，写 jsonb 列需要显式 CAST，且 v1 不需要库内 JSON 查询。
 
 ## 二、唯一键与去重语义
 

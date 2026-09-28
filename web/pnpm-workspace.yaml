@@ -1,0 +1,4 @@
+# pnpm 12+ 的设置写在这里 ( package.json 的 pnpm 字段已不再读取 )
+# esbuild 安装时需要跑 postinstall 放置平台二进制
+allowBuilds:
+  esbuild: true

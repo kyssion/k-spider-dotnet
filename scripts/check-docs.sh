@@ -18,7 +18,7 @@ while IFS= read -r file; do
         esac
         [ -e "$dir/$link" ] || echo "缺失链接 : $file -> $link" >> "$missing_file"
     done < <(grep -oh "]([^)]*\.md\(#[^)]*\)\?)" "$file" 2>/dev/null | sed 's/](//; s/)$//; s/#.*$//' || true)
-done < <(find . -name "*.md" -not -path "./.git/*" -not -path "*/obj/*" -not -path "*/bin/*" | sort)
+done < <(find . -name "*.md" -not -path "./.git/*" -not -path "*/obj/*" -not -path "*/bin/*" -not -path "*/node_modules/*" | sort)
 
 if [ -s "$missing_file" ]; then
     cat "$missing_file"
