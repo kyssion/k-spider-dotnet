@@ -26,9 +26,16 @@ jobs:
         run: bash scripts/build-web.sh
 
       # E2E : mock API 夹具驱动 ( 离线确定 ) ; live 用例默认跳过 , 与后端 Live 分类同款分层
+      # playwright 浏览器缓存 : 命中时跳过下载 ; 不用 --with-deps ( ubuntu runner 镜像自带依赖 ,
+      # --with-deps 的 apt 安装会与镜像维护进程抢 apt 锁导致挂起 , 实测卡死过一次 )
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}
+
       - name: 前端 E2E 测试
         run: |
-          pnpm --dir web exec playwright install --with-deps chromium
+          pnpm --dir web exec playwright install chromium
           pnpm --dir web test:e2e
 
       - uses: actions/setup-dotnet@v4
