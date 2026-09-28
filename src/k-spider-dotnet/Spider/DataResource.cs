@@ -193,7 +193,12 @@ public static class NewsPipelineConst
 public enum NewsContentOriginType
 {
     Json = 1,
-    Xml = 2
+    Xml = 2,
+
+    /// <summary>
+    ///     整页 HTML ( 站点没有结构化详情接口时 , 详情页本身就是数据载体 , 如新浪文章 )
+    /// </summary>
+    Html = 3
 }
 
 /// <summary>

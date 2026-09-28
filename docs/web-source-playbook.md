@@ -97,3 +97,4 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live" 
 | 东方财富 | XHR 列表 + JSON 详情接口 + 三种老页面模板兼容 | `Spider/News/Web/Eastmoney/`，35 栏目 |
 | 财联社文章 | 频道配置在 `common_config`、列表混排游标、详情 SSR `__NEXT_DATA__` | `Spider/News/Web/Cls/`，13 栏目 |
 | 财联社电报（快讯型对照） | 签名逆向 + 单页上限 50 + 严格小于游标 | `Spider/News/Flash/Cls/` |
+| 新浪财经文章 | 双列表体系（滚动 JSON 接口 + SSR 栏目页）、栏目页无翻页且时间无年份、详情整页 HTML 作 origin、死链 cid 只能实测甄别 | `Spider/News/Web/Sina/`，22 栏目 |

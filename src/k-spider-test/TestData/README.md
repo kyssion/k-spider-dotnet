@@ -15,6 +15,10 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 | `df_list_344.json` | `GET https://np-listapi.eastmoney.com/comm/web/getNewsByColumns?…&column=344&page_index=1&page_size=20&…` | 2026-09-19 01:52 | 东方财富「财经导读」栏目列表 20 条 |
 | `df_article_real.json` | `GET https://newsinfo.eastmoney.com/kuaixun/v2/api/article/202609183878840472?guid=…` | 2026-09-19 01:52 | 东方财富正文接口（含图片段落，正文 9827 字符） |
 | `sina_live_page1.json` / `sina_live_page2.json` | `GET https://zhibo.sina.com.cn/api/zhibo/feed?page=1/2&page_size=20&zhibo_id=152&tag_id=0&dire=f&dpc=1` | 2026-09-19 11:06 (东八区) | 新浪 7x24 快讯两页各 20 条 |
+| `sina_article_roll_page1.json` / `sina_article_roll_page2.json` | `GET https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&k=&num=50&page=1/2` | 2026-09-29 00:41 (东八区) | 新浪财经滚动接口（综合 lid=2516）两页各 50 条，页间零重叠；首页首条《财报前夕，美光"超级多头"重申2000美元目标价》（ctime=1790613243） |
+| `sina_article_column_56592.html` | `GET https://finance.sina.com.cn/roll/c/56592.shtml`（页面 HTML 原样保存） | 2026-09-29 00:41 | 「上市公司」栏目滚动页（SSR 整页列表），200 条 li 里 14 条无日期路径（覆盖跳过分支），首条《准万亿城市"卡位战"，悬念再起》（09月28日 23:54） |
+| `sina_article_detail.html` | `GET https://finance.sina.com.cn/stock/usstock/c/2026-09-29/doc-initmeav9622448.shtml`（页面 HTML 原样保存） | 2026-09-29 00:41 | 新浪文章详情页（SSR），正文在 `div#artibody`，含 1 张 `div.img_wrapper` 正文图与文末 appendQr 推广二维码块（锁定"二维码不入图片列表"），标题《财报前夕，美光"超级多头"重申2000美元目标价》 |
+| `sina_article_detail_rich.html` | `GET https://finance.sina.com.cn/stock/usstock/c/2026-09-28/doc-initmeau2811260.shtml`（页面 HTML 原样保存） | 2026-09-29 00:41 | 含 `blockquote` 引用块的文章详情页，标题《奥多比预测今年美国假日季线上购物将创历史新高》 |
 | `wscn_live_page1.json` / `wscn_live_page2.json` | `GET https://api-one.wallstcn.com/apiv1/content/lives?channel=global-channel&client=pc&limit=20`（第二页带 `cursor=1789785930`） | 2026-09-19 11:06 | 华尔街见闻 live 两页各 20 条 |
 | `jin10_flash_page1.json` / `jin10_flash_page2.json` | `GET https://flash-api.jin10.com/get_flash_list?channel=-8200&vip=1`（带 `x-app-id` / `x-version` 头，第二页带 `max_time`） | 2026-09-19 11:06 | 金十快讯两页各 20 余条，含 4 条 PLUS 专享（正文锁定）条目 |
 
