@@ -10,15 +10,18 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    // 显式 IP : CI 上 localhost 的 IPv4/IPv6 解析不一致会让 webServer 就绪探测永远不通过
+    baseURL: 'http://127.0.0.1:5899',
     trace: 'off',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // 自动起 vite dev server ( /api 走代理 , 但请求在浏览器层已被 mock 拦截 , 不会真的到后端 )
+  // 构建产物 + preview 伺服 : 比 dev server 启动快且稳定 ( dev 在 CI 上冷启动慢、偶发就绪探测挂起 ) ,
+  // 且测的就是生产构建形态 ; 端口用专用的 5899 而不是 vite 默认 5173 ( 会被本机其它 vite 项目抢占 ,
+  // 本地 reuseExistingServer 会误复用 ); 命令自带 build , 单独跑 test:e2e 无需先手动构建
   webServer: {
-    command: 'pnpm dev --strictPort',
-    url: 'http://localhost:5173',
+    command: 'pnpm build && pnpm preview --strictPort --port 5899 --host 127.0.0.1',
+    url: 'http://127.0.0.1:5899',
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 120_000,
   },
 })
