@@ -1,0 +1,6 @@
+[
+  { "source": 2, "sourceName": "ClsMedia", "newest": "2026-09-28T13:59:00", "lagSeconds": 30 },
+  { "source": 3, "sourceName": "SinaMedia", "newest": "2026-09-28T13:58:40", "lagSeconds": 50 },
+  { "source": 4, "sourceName": "WscnMedia", "newest": "2026-09-28T13:55:00", "lagSeconds": 230 },
+  { "source": 5, "sourceName": "Jin10Media", "newest": null, "lagSeconds": null }
+]

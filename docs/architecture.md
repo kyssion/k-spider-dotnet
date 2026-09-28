@@ -149,6 +149,9 @@ src/k-spider-web/
 TanStack Query 管请求缓存与轮询（状态页 5 秒级刷新），Zustand 存分析页共享时间窗，
 Tailwind + 手写 shadcn 风格组件（不引 radix，保持零额外依赖），Recharts 画图。
 开发期 `pnpm dev` 起 5173 端口并把 `/api` 代理到 5800。
+E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route` 拦截成
+`tests/fixtures/` 夹具——离线确定、进 CI；真实后端用例带 `@live` 前缀默认跳过
+（`LIVE_E2E=1` 执行），与后端测试的两层分层一致。
 
 ## 五、关键设计决策
 

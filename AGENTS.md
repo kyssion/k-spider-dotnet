@@ -30,6 +30,12 @@ bash scripts/build-web.sh
 # 前端本地开发（5173 端口热更新 , /api 自动代理到 5800）
 cd web && pnpm install && pnpm dev
 
+# 前端 E2E（Playwright + mock API 夹具 , 离线确定 ; 首次先 pnpm --dir web exec playwright install chromium）
+cd web && pnpm test:e2e
+
+# 前端真实后端连通性（先起 k-spider-web 再跑 , 与后端 Live 用例同款分层）
+cd web && pnpm test:e2e:live
+
 # 本地运行主程序（需要可用的 PostgreSQL , 默认 Development 环境）
 dotnet run --project src/k-spider-dotnet
 
@@ -163,6 +169,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
   - 控制指令下行：Web 写 `spider_job_command`（`trigger`/`pause`/`resume`）→ `NodeStateJob` 轮询消费（约 3 秒），异步受理、结果回写指令行。**`NodeStateJob` 自身不许暂停**（代码里已拒绝该指令：它停了没人消费恢复指令）。
   - 新增 API 端点：`src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务（DI Singleton，只读），分页信封 `PageResult<T>`，分析聚合强制时间窗 ≤31 天。
   - 新增前端页面：`web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求一律走 `api/hooks.ts` 的 TanStack Query 封装（轮询型 hook 带 `refetchInterval`）；改完必须 `bash scripts/build-web.sh` 才会进 `wwwroot`。
+  - **前端 E2E**（`web/tests/`，Playwright + `@playwright/test`）：业务 API 由 `tests/helpers/mock-api.ts` 用 `page.route` 拦截成 `tests/fixtures/` 里的夹具——离线确定、进 CI；真实后端用例写进 `tests/live.spec.ts`（`@live` 前缀，默认跳过，`LIVE_E2E=1 pnpm test:e2e:live` 执行），与后端"夹具回归 + Live 连通性"同款分层。**新增 API 端点时同步补夹具**——页面请求了未登记的接口，测试会直接报"未 mock 的接口"；服务端 DTO 改字段时夹具跟着改（夹具约定见 `web/tests/fixtures/README.md`）。浏览器版本与主项目 .NET Playwright 对齐（共用 `~/Library/Caches/ms-playwright` 的 chromium-1243，零额外下载）。
   - Job 想在控制台带业务摘要：`Execute` 末尾给基类属性 `RunSummary` 赋值（如"新增列表 12"），listener 自动上报。
 - **新增反爬验证识别方式 / 通过手段**（模块见 [docs/anti-bot-verification.md](docs/anti-bot-verification.md)）：
   - 识别方式：`VerificationKind` 按需加值 → 写一个 `IVerificationDetector` 实现（**纯判定、不联网**，否则没法离线回归）→ 在 `VerificationRegistry.DetectorList` 按"特征越具体越靠前"加一行 → 补夹具与用例。

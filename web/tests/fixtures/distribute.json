@@ -1,0 +1,6 @@
+{
+  "newsSource": [ { "key": "1", "count": 18481 }, { "key": "2", "count": 840 } ],
+  "newsCategory": [ { "key": "8", "count": 5884 }, { "key": "1", "count": 5430 }, { "key": "3", "count": 1758 } ],
+  "flashSource": [ { "key": "5", "count": 330 }, { "key": "4", "count": 210 }, { "key": "3", "count": 180 }, { "key": "2", "count": 150 } ],
+  "flashLevel": [ { "key": "1", "count": 800 }, { "key": "2", "count": 60 }, { "key": "3", "count": 10 } ]
+}

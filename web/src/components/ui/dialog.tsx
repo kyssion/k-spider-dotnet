@@ -26,6 +26,8 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
+        role="dialog"
+        aria-modal="true"
         className={cn(
           'relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl border bg-card shadow-lg',
           className,

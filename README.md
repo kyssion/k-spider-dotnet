@@ -115,4 +115,5 @@ Web 控制台独立部署：先 `bash scripts/build-web.sh` 构建前端，再
 - **全部测试**：`dotnet test src/k-spider-test/k-spider-test.csproj` —— 含真实接口连通性用例（直接请求两源线上 URL，验证能调通、能拿到数据集、能解析；断网时自动跳过）。
 - **离线测试**：`dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"` 不依赖网络与数据库，基于 `TestData/` 里的真实响应夹具做解析回归。
 - **连通性排障**：`dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"`（源改版、财联社签名失效时先跑它）。
-- **一键验证**：`./scripts/verify.sh` = 文档链接检查 + 构建 + 离线测试（CI 同款）。
+- **一键验证**：`./scripts/verify.sh` = 文档链接检查 + 前端构建与 E2E（mock API，离线确定）+ 构建 + 离线测试（CI 同款）。
+- **前端测试**：`cd web && pnpm test:e2e`（Playwright + mock 夹具）；`pnpm test:e2e:live` 验真实后端（需先起 k-spider-web）。

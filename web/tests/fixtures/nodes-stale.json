@@ -1,0 +1,7 @@
+[
+  {
+    "nodeId": "node-a",
+    "reportTime": "2026-01-01T00:00:00",
+    "payload": "{\"apiAliveErrors\":[\"[2 ClsMedia] column telegraph : 接口未返回数据\"],\"pipelineBacklog\":[],\"flashLag\":[],\"verifyBlocked\":[]}"
+  }
+]

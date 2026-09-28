@@ -34,13 +34,13 @@ export default function FlashPage() {
       <PageTitle title="实时快讯" description="spider_flash_news · 拉到即终态的四源快讯" />
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-center gap-2 pt-5">
-          <Select value={source} onChange={(e) => { setSource(e.target.value); setPage(1) }}>
+          <Select aria-label="来源" value={source} onChange={(e) => { setSource(e.target.value); setPage(1) }}>
             <option value="">全部来源</option>
             {[2, 3, 4, 5].map((id) => (
               <option key={id} value={id}>{sourceName(id)}</option>
             ))}
           </Select>
-          <Select value={level} onChange={(e) => { setLevel(e.target.value); setPage(1) }}>
+          <Select aria-label="级别" value={level} onChange={(e) => { setLevel(e.target.value); setPage(1) }}>
             <option value="">全部级别</option>
             {Object.entries(FLASH_LEVELS).map(([code, info]) => (
               <option key={code} value={code}>{info.label}</option>

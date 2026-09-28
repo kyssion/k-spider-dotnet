@@ -1,0 +1,12 @@
+{
+  "news": [
+    { "bucket": "2026-09-27T00:00:00", "fromMedia": "1", "count": 120 },
+    { "bucket": "2026-09-27T00:00:00", "fromMedia": "2", "count": 30 },
+    { "bucket": "2026-09-28T00:00:00", "fromMedia": "1", "count": 150 },
+    { "bucket": "2026-09-28T00:00:00", "fromMedia": "2", "count": 25 }
+  ],
+  "flash": [
+    { "bucket": "2026-09-27T00:00:00", "fromMedia": "2", "count": 400 },
+    { "bucket": "2026-09-28T00:00:00", "fromMedia": "2", "count": 380 }
+  ]
+}

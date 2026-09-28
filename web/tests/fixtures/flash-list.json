@@ -1,0 +1,10 @@
+{
+  "total": 3,
+  "page": 1,
+  "pageSize": 30,
+  "items": [
+    { "id": 101, "fromMedia": 2, "category": 101, "newsUrl": "https://example.com/flash/101", "newsTime": "2026-09-28T14:00:00", "title": "财联社普通快讯标题", "content": "普通快讯的正文内容。", "keyword": "宏观", "level": 1, "stockList": null },
+    { "id": 102, "fromMedia": 3, "category": 201, "newsUrl": "https://example.com/flash/102", "newsTime": "2026-09-28T13:55:00", "title": "新浪重要快讯标题", "content": "重要快讯的正文内容。", "keyword": "央行", "level": 2, "stockList": "[{\"stock_id\":\"sh600000\",\"name\":\"浦发银行\"}]" },
+    { "id": 103, "fromMedia": 5, "category": 401, "newsUrl": "https://example.com/flash/103", "newsTime": "2026-09-28T13:50:00", "title": "金十重大快讯标题", "content": "重大快讯的正文内容。", "keyword": "黄金", "level": 3, "stockList": null }
+  ]
+}

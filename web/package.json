@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:live": "LIVE_E2E=1 playwright test --grep @live"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
@@ -21,7 +23,9 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/vite": "^4.1.0",
+    "@types/node": "^26.6.3",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",

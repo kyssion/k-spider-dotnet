@@ -51,6 +51,7 @@ export default function AnalysisPage() {
           <Input type="date" value={end} onChange={(e) => setRange(start, e.target.value || end)} />
           <span className="ml-4 text-muted-foreground">粒度</span>
           <Select
+            aria-label="粒度"
             value={granularity}
             onChange={(e) => setGranularity(e.target.value === 'hour' ? 'hour' : 'day')}
           >

@@ -1,0 +1,7 @@
+[
+  {
+    "nodeId": "node-a",
+    "reportTime": "@@NOW@@",
+    "payload": "{\"apiAliveErrors\":[],\"pipelineBacklog\":[{\"source\":1,\"statusCounts\":{\"0\":17222,\"1\":780,\"3\":205}},{\"source\":2,\"statusCounts\":{\"0\":629,\"1\":172,\"3\":39}}],\"flashLag\":[{\"source\":2,\"newest\":\"2026-09-28 13:59:00\",\"lagSeconds\":30},{\"source\":3,\"newest\":\"2026-09-28 13:58:40\",\"lagSeconds\":50},{\"source\":4,\"newest\":\"2026-09-28 13:55:00\",\"lagSeconds\":230},{\"source\":5,\"newest\":\"2026-09-28 13:57:10\",\"lagSeconds\":160}],\"verifyBlocked\":[{\"host\":\"www.example.com\",\"kind\":\"SliderCaptcha\",\"until\":\"2026-09-28 14:20:00\",\"reason\":\"全部策略未通过 ( BrowserChallengeSolver / BrowserSliderSolver / ManualEscalationSolver )\"}]}"
+  }
+]

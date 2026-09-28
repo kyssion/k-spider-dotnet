@@ -1,0 +1,4 @@
+[
+  { "id": 1, "nodeId": null, "jobName": "NewsListJob", "action": "trigger", "status": "done", "result": "已触发", "consumedAt": "2026-09-28T14:15:25", "createTime": "2026-09-28T14:15:24" },
+  { "id": 2, "nodeId": null, "jobName": "FlashNewsJob", "action": "trigger", "status": "pending", "result": null, "consumedAt": null, "createTime": "2026-09-28T14:20:00" }
+]

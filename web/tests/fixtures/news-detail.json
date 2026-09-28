@@ -1,0 +1,6 @@
+{
+  "list": { "id": 1, "fromMedia": 1, "newsUrl": "https://example.com/news/n1", "newsTitle": "东方财富测试新闻标题一", "newsSummary": "这是第一条测试新闻的摘要", "newsFrom": "东方财富网", "newsTime": "2026-09-28T13:00:00", "category": 8, "downloadStatusCode": 0, "failCount": 0 },
+  "origin": { "newsOriginContent": "{\"code\":0,\"data\":{\"title\":\"东方财富测试新闻标题一\"}}", "newsOriginType": 1, "status": 1, "message": null },
+  "content": { "newsTitle": "东方财富测试新闻标题一", "newsSummary": "这是第一条测试新闻的摘要", "newsKeyword": "A股,大盘", "newsContentText": "正文第一段内容。\n正文第二段内容。", "newsContentJson": "[]" },
+  "images": [ { "imageResourceUrl": "https://example.com/img/a.png", "imageName": "a.png" } ]
+}

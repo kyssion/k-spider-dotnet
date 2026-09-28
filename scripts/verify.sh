@@ -14,6 +14,14 @@ else
   echo "==> 跳过前端构建 ( 未安装 pnpm ; 需要时执行 scripts/build-web.sh )"
 fi
 
+# 前端 E2E ( mock API , 离线确定 ) : 需要 pnpm + 已安装 playwright 浏览器 , 缺任一则跳过
+if command -v pnpm >/dev/null 2>&1 && { [ -d "$HOME/Library/Caches/ms-playwright" ] || [ -d "$HOME/.cache/ms-playwright" ]; }; then
+  echo "==> 前端 E2E 测试"
+  (cd web && pnpm test:e2e)
+else
+  echo "==> 跳过前端 E2E ( 未安装 pnpm 或 playwright 浏览器 ; 首次执行 pnpm --dir web exec playwright install chromium )"
+fi
+
 echo "==> dotnet build"
 dotnet build k-spider-dotnet.sln
 

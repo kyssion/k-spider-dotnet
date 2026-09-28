@@ -1,0 +1,4 @@
+[
+  { "source": 1, "statusCounts": { "0": 17222, "1": 780, "3": 205 }, "oldestPending": "2026-09-20T16:50:35" },
+  { "source": 2, "statusCounts": { "0": 629, "1": 172, "3": 39 }, "oldestPending": "2026-09-27T10:42:44" }
+]

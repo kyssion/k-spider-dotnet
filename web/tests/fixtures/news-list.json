@@ -1,0 +1,10 @@
+{
+  "total": 3,
+  "page": 1,
+  "pageSize": 20,
+  "items": [
+    { "id": 1, "fromMedia": 1, "newsUrl": "https://example.com/news/n1", "newsTitle": "东方财富测试新闻标题一", "newsSummary": "这是第一条测试新闻的摘要", "newsFrom": "东方财富网", "newsTime": "2026-09-28T13:00:00", "category": 8, "downloadStatusCode": 0, "failCount": 0 },
+    { "id": 2, "fromMedia": 2, "newsUrl": "https://example.com/news/n2", "newsTitle": "财联社测试文章标题二", "newsSummary": "这是第二条测试文章的摘要", "newsFrom": "财联社", "newsTime": "2026-09-28T12:30:00", "category": 110, "downloadStatusCode": 3, "failCount": 0 },
+    { "id": 3, "fromMedia": 1, "newsUrl": "https://example.com/news/n3", "newsTitle": "东方财富已解析新闻标题三", "newsSummary": "这是第三条测试新闻的摘要", "newsFrom": "东方财富网", "newsTime": "2026-09-28T11:00:00", "category": 1, "downloadStatusCode": 1, "failCount": 2 }
+  ]
+}

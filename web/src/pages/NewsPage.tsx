@@ -34,13 +34,13 @@ export default function NewsPage() {
       <PageTitle title="网页新闻" description="spider_news_list 三段流水线的列表数据" />
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-center gap-2 pt-5">
-          <Select value={source} onChange={(e) => { setSource(e.target.value); setPage(1) }}>
+          <Select aria-label="来源" value={source} onChange={(e) => { setSource(e.target.value); setPage(1) }}>
             <option value="">全部来源</option>
             {[1, 2].map((id) => (
               <option key={id} value={id}>{sourceName(id)}</option>
             ))}
           </Select>
-          <Select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}>
+          <Select aria-label="状态" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }}>
             <option value="">全部状态</option>
             {Object.entries(NEWS_STATUS).map(([code, info]) => (
               <option key={code} value={code}>{info.label}</option>
