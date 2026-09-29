@@ -24,6 +24,9 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 | `wscn_article_detail_paid.json` | `GET https://api-one-wscn.awtmt.com/apiv1/content/articles/3782635?extract=0` | 2026-09-29 14:24 | 付费文详情（is_priced，正文截断约 700 字），锁定"付费预览仍解析入库"路径 |
 | `wscn_live_page1.json` / `wscn_live_page2.json` | `GET https://api-one.wallstcn.com/apiv1/content/lives?channel=global-channel&client=pc&limit=20`（第二页带 `cursor=1789785930`） | 2026-09-19 11:06 | 华尔街见闻 live 两页各 20 条 |
 | `jin10_flash_page1.json` / `jin10_flash_page2.json` | `GET https://flash-api.jin10.com/get_flash_list?channel=-8200&vip=1`（带 `x-app-id` / `x-version` 头，第二页带 `max_time`） | 2026-09-19 11:06 | 金十快讯两页各 20 余条，含 4 条 PLUS 专享（正文锁定）条目 |
+| `jin10_article_list_28.json` / `jin10_article_list_30.json` / `jin10_article_list_53.json` | `GET https://reference-api.jin10.com/reference?nav_bar_id=28/30/53&page=1&page_size=20`（带 `x-app-id: irINJPgCgrndSp0F` / `x-version: 1.0.1` 头） | 2026-09-29 18:10 (东八区) | 金十「市场参考」文章列表三栏目（综合/金十早餐/热点头条）各 20 条；综合页含 6 条付费专享条目（如 231298，锁定"vip 跳过"分支）；头条页首条《特朗普周二会见AI巨头，OpenAI同日开发者大会料推常驻AI智能体》（id=231303，display_datetime=2026-09-29 17:32:06） |
+| `jin10_article_detail.json` | `GET https://reference-api.jin10.com/reference/getOne?id=231303&type=news`（带 `x-app-id: arU9WZF7TC9m7nWn` 头，与列表是两套 app-id） | 2026-09-29 18:10 | 免费长文详情（content 为 HTML 片段，标签集 h2/img/p/strong，约 2800 字符） |
+| `jin10_article_detail_rich.json` | `GET https://reference-api.jin10.com/reference/getOne?id=231299&type=news` | 2026-09-29 18:10 | 纯 `figure` 图片文（期货热图），锁定"figure 图片提取"路径 |
 
 维护方式：接口改版或解析逻辑变更时重新抓一份覆盖同名文件，并同步用例里依赖夹具的固定值
 （财联社游标 `1789746672`、正文时间 `2026/09/19 01:09:08` 等）。

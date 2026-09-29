@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与新浪财经文章 22 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目、新浪财经文章 22 个栏目、华尔街见闻文章全量流与金十「市场参考」5 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -161,7 +161,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（新网站才加 `FromTypeOfNews` 枚举值；已有网站的第二个管线复用原值，如新浪文章复用 `SinaMedia`）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。侦察流程与验收标准见 [docs/web-source-playbook.md](docs/web-source-playbook.md)。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）、`Spider/News/Web/Sina/SinaArticleSpider.cs`（一个源两套列表体系 + 详情整页 HTML 作 origin）。
   - 翻页走 `GetListPage(column, pageSize, cursor)` 的不透明游标，`NextCursor = null` 表示没有更多。
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
-  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
+  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311、金十 401 + 金十文章 402-406），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
 - **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Common/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。反爬验证的浏览器策略（`Spider/Verify/Solver/Browser/`）只在被拦截时按需启动浏览器，平时不参与抓取。
 - **Web 控制台（`src/k-spider-web` + 仓库根 `web/`）与爬虫进程只通过库通信**，主程序不开 HTTP 端口：
@@ -203,7 +203,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 
 ## 已知坑（改代码前必读）
 
-1. **SqlSugar `ToSqlString` 默认 200 行限制**：批量生成 INSERT 会自动分页。`SpiderNewsBatchDao`（Data/）里有绕过实现（`IsNoPage = true` + 手拼 `ON CONFLICT`），写批量 SQL 时照抄它。**单条数据时 `ToSqlString` 以 `VALUES` 段结尾且不带分号**（多条以 `;` 结尾，均无 returning），去尾统一用 `SpiderNewsBatchDao.TrimInsertSqlTail`；不要用 `[..LastIndexOf(';')]` 截断——单条时 LastIndexOf 返回 -1 会抛参数越界（有单测锁定该边界）。
+1. **SqlSugar `ToSqlString` 默认 200 行限制**：批量生成 INSERT 会自动分页。`SpiderNewsBatchDao`（Data/）里有绕过实现（`IsNoPage = true` + 手拼 `ON CONFLICT`），写批量 SQL 时照抄它。**单条数据时 ToSqlString 以 `returning "id"` 结尾、多条以 `;` 结尾**（均无法直接拼 `ON CONFLICT`，2026-09 金十财料栏目单行批次实测触发过 returning 形态），去尾统一用 `SpiderNewsBatchDao.TrimInsertSqlTail`（两种尾巴都剥）；不要用 `[..LastIndexOf(';')]` 截断——单条时 LastIndexOf 返回 -1 会抛参数越界（有单测锁定该边界）。
 2. **手拼 `ON CONFLICT (列)` 要求该列上有唯一索引 / 约束**，缺失时 PostgreSQL 整批报错（`there is no unique or exclusion constraint matching the ON CONFLICT specification`）。列表任务里列表行与原始内容同事务，异常会一起回滚，表现为"该源一行数据都进不来、其它源正常"。`Pg.CheckBatchUpsertUniqueIndexes` 在启动时会显式告警；缺约束时按 docs/operations.md 的巡检 SQL 核对并手工补建（批量 upsert 依赖四张表的唯一列）。
 3. 本地无 PG 时运行主程序，各 Job 每轮抛连接异常并按间隔重试，属预期噪音；验证代码改动用 `dotnet test`，不要靠运行主程序判断对错。
 4. **配置根固定为程序目录**（`Program.cs` 显式设 `ContentRootPath = AppContext.BaseDirectory`）：appsettings 全在项目目录，若按 Host 默认用工作目录找配置，从仓库根执行 `dotnet run --project` 会静默回退代码默认连接串连到本地库（2026-09 检验时踩过，表现为全部 Job 报 `3D000 数据库不存在`）；修复后任意目录运行都能正确装载配置。
@@ -227,6 +227,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 22. **新浪财经一个网站两种管线**（与财联社同款先例）：7x24 快讯在快讯注册表，文章源在网页注册表（`Spider/News/Web/Sina/`），**共用 `SinaMedia=3`**，文章 category 用 202-223 段。文章源的三个实测边界：① 滚动接口 `num>50` 被静默钳到 50；② 栏目滚动页 `roll/c/{cid}.shtml` **整页即全量、没有翻页**（`?page=` 只跳回首页），页面时间 `(09月28日 22:15)` 无年份，年份从条目 URL 路径 `/yyyy-MM-dd/doc-` 补全，无日期路径条目跳过（实测 200 条里 14 条）；③ 频道页上挂着一批已下线的死链 cid（230808/264124/40811 等，`roll/c` 下一律 404），**栏目清单以实测存活为准，不要照抄频道页链接**。详情页整页 HTML 存 origin（`NewsContentOriginType.Html`），文末 `appendQr_wrap` 推广二维码块解析时整体跳过。
 23. **华尔街见闻文章接口的两个静默坑**：① 列表 `limit>30` 时接口返回 `data:""`（code 仍 20000，不是钳制而是无数据），`WscnArticleResource.MaxPageSize` 已钳制，解析层对"data 非对象"显式报错而非当空页；② 详情接口 `extract` 参数**必填**（0=带图 HTML / 1=纯文本），缺失报 `60327 "extract 不正确"`。文章流只配一个全量栏目（`global` 标签覆盖 119/120，多栏目必重复抓），分类号逐条从 `categories` 多标签按优先级推断；付费文（`is_priced`，约 7%）正文截断仍入库，付费标记写两表的 `is_paid` 列（列表侧来自接口、origin 侧从详情回读），付费条目 uri 的 `?layout=` 查询串入库前剥掉。
 24. **同一台机只跑一个主程序实例**：多实例没有任何互斥防护——连接数与源站请求按实例数叠加打满远端库，且 `node_id` 取主机名，多实例会互相覆盖 `spider_node_status` 的调度态、抢占消费 `spider_job_command` 指令，表现为状态闪烁、指令"已 done 但没生效"（2026-09 自测踩过：残留 4 个实例把库打饱和，接口层表现为莫名超时）。部署用 `deploy/` 的 systemd 单元天然单例；本机调试收进程用**精确进程路径** `pkill -f "net10.0/k-spider-dotnet$"`，不要 `pkill -f k-spider-dotnet`（会把路径里同样含仓库名的 `k-spider-web` 一起误杀）。
+25. **金十文章接口的四个实测坑**：① 列表（`reference-api.jin10.com/reference`）与详情（`/reference/getOne`）是**两套 `x-app-id`**（`irINJPgCgrndSp0F` / `arU9WZF7TC9m7nWn`），两套头不通用、缺头一律 502，值写死在 `Jin10ArticleResource`；② 列表 `page_size` 上限 100，超限返回**显式 400**（`value must be inside range [1, 100]`，不是静默钳制）；③ 付费专享条目（`vip/super_vip/elite_vip` 任一非零）匿名请求详情时 `content` **整体为空**（不是截断），按"无详情数据不接入"在列表层跳过，VIP 专区（nav 77）/精英专区（nav 84）两栏目因此未接；④ 综合流（nav 28）**不是全量超集**（早餐/财料栏目在综合流前 500 条命中不足一成），必须多栏目接入，栏目间约九成重叠由 `news_url` 去重吸收；末页判断用**原始条数**（被跳过的付费/视频条目不参与），否则满页会被误判成末页提前停翻。
 
 ## 提交规范
 

@@ -85,7 +85,7 @@ public interface INewsSpider
 ## 三点五、解析路由与数据重放
 
 - 解析方法的路由有两条等价路径：`NewsContentJob` 按列表行 `from_media` 走 `NewsSpiderRegistry`（现行路径）；数据重放按 origin 行 `parser_code` 走 `NewsParserRegistry`（码优先，空/未知码回退 from_media）——两条路径同源构建，不会漂移。
-- 每个源在 `INewsSpider.ParserCode` 声明解析器码（`df-article-v1` / `cls-article-v1` / `sina-html-v1` / `wscn-article-v1`），随 origin 行落库；解析逻辑不兼容变更时 bump 版本号。
+- 每个源在 `INewsSpider.ParserCode` 声明解析器码（`df-article-v1` / `cls-article-v1` / `sina-html-v1` / `wscn-article-v1` / `jin10-article-v1`），随 origin 行落库；解析逻辑不兼容变更时 bump 版本号。
 - 重放入口：Web 控制台"数据重放"页（`POST /api/replay`，筛选 源/解析器/入库时间窗/条数上限），执行在 Web 进程内异步进行，进度落 `spider_replay_log`。解析成功推进列表 `status=1`，失败不动列表状态只计数。
 
 ## 四、已接入的源
@@ -100,8 +100,9 @@ public interface INewsSpider
 | 华尔街见闻 live | `WscnMedia = 4` | 1 个栏目「全球宏观」，`category = 301` | 接口自带 `next_cursor` | **快讯管线**：拉到即终态 | 无鉴权，约 1/3 条目无标题；`score=2` → 重要度 2 |
 | 华尔街见闻文章 | `WscnMedia = 4`（与 live 共用） | 1 个「文章全量流」栏目，分类号逐条从 `categories` 标签按优先级推断（302 要闻 / 303 A股 / 304 美股 / 305 债券 / 306 商品 / 307 外汇 / 308 ETF / 309 AI科技 / 310 产业公司 / 311 IPO） | 接口自带 `next_cursor`（单调向旧、零重叠） | 详情接口 JSON（`origin_type = Json`），正文在其 `data.content`（HTML 片段） | 无鉴权；`limit>30` 静默返回空 `data`；详情 `extract` 参数必填；付费文（`is_priced`）正文截断仍入库；带 `symbols` 关联标的与作者署名 |
 | 金十快讯 | `Jin10Media = 5` | 1 个栏目「快讯」，`category = 401` | `max_time` 时间游标（含边界） | **快讯管线**：拉到即终态 | 必须带客户端标识头；约 20% 为 PLUS 专享（有 vip_title 的保留标题、无任何公开信息的跳过）；`important` → 重要度 2 |
+| 金十「市场参考」文章 | `Jin10Media = 5`（与快讯共用） | 5 个栏目（综合 402 / 金十早餐 403 / 精选分析 404 / 热点头条 405 / 财料 406） | `page` 页码翻页（零重叠、越界页空列表） | 详情接口 JSON（`origin_type = Json`），正文在其 `data.content`（HTML 片段） | 列表与详情是**两套 `x-app-id`**；`page_size` 上限 100（超限显式 400）；付费专享条目（vip 三标记）匿名拿不到正文、列表层直接跳过；VIP 专区/精英专区栏目未接 |
 
-> **「当前栏目」是开发进度，不是源的能力上限**。东财是开发最完整的源（35 个栏目），其余四个源目前每个只接了 1 个栏目，
+> **「当前栏目」是开发进度，不是源的能力上限**。各源里只有东财把 35 个栏目接全；财联社/新浪/金十的**快讯管线**各只接了 1 个栏目，
 > 但它们都能扩展出更多栏目：
 >
 > | 源 | 可扩展的栏目 | 依据 |
@@ -191,6 +192,18 @@ public interface INewsSpider
 - **PLUS 专享条目**（实测约占 20%）`data.content` 为空、`data.lock=true`，正文需付费账号；实现用 `data.vip_title` 作为标题与正文兜底，至少保留新闻要点。是否专享可从原始 JSON 的 `data.lock` / `data.exclusive_to` 判断。
 - 图片地址带尺寸后缀（形如 `.../demo.png/lite`），图片名取最后一个像文件名的路径段。
 
+### 金十「市场参考」文章（`Spider/News/Web/Jin10/`）
+
+- 文章站是 `xnews.jin10.com`（金十自研资讯品牌「市场参考」，`news.jin10.com` 301 过去），与快讯同站不同管线、共用 `Jin10Media`。列表与详情都是 `reference-api.jin10.com` 的免签 JSON 接口。
+- 端点：`/reference?nav_bar_id={栏目}&page={页码}&page_size={条数}`（列表）与 `/reference/getOne?id={id}&type=news`（详情）。**列表与详情是两套 `x-app-id`**（`irINJPgCgrndSp0F` / `arU9WZF7TC9m7nWn`，均配 `x-version: 1.0.1`），缺头 502；两套头写死在 `Jin10ArticleResource`，被拒时对照网页端请求更新。
+- **多栏目接入**（与见闻"单全量流"相反）：实测综合流不是超集——早餐/财料栏目在综合流前 500 条命中不足一成、精英专区零命中，因此按编辑位建 5 个栏目（综合/金十早餐/精选分析/热点头条/财料，分类号 402-406），栏目间重叠（综合与热点头条约九成）由 `news_url` 去重吸收。
+- 翻页：页码游标（游标即页码字符串），页间零重叠；越界页码返回空列表（status 仍 200），空页即末页；**末页判断用原始条数**，被跳过的付费/视频条目不参与，避免满页被误判成末页。
+- 边界：`page_size` 上限 100，超限返回**显式 400**（`value must be inside range [1, 100]`），已在 `MaxPageSize` 钳制；内容下架/不存在时详情接口返回 `status=404` 信封（HTTP 仍 200）。
+- **付费专享条目跳过**：`vip / super_vip / elite_vip` 任一非零的条目，匿名请求详情时 `content` **整体为空**（不是截断，比见闻更严），按"无详情数据不接入"口径在列表层直接跳过（`ShouldSkip`）；VIP 专区（nav 77）与精英专区（nav 84）两个栏目因此未接，待放开订阅态后再接。
+- 非文章形态（`type != news`，如视频/音频卡片）无文章正文，列表层跳过。
+- 字段映射：`news_url = https://xnews.jin10.com/details/{id}`（详情页规范形态，与站点 sitemap 一致；接口自带的 `detail_url` 是 webapp 带查询串形态，不用作去重键）；`introduction` 落摘要；来源优先 `author.nick`（专职作者署名）；列表与详情的时间同格式（`yyyy-MM-dd HH:mm:ss`，与东财列表同款常量）。
+- origin 存详情接口 JSON 原文（`NewsContentOriginType.Json`），解析段展开 `data.content` HTML 片段（标签集实测 `p/strong/span/h2/a/img/figure/figcaption/video/blockquote/div`）；`figure` 是金十特有图容器（图 + `figcaption` 图注各自成段），内嵌 `video` 静默跳过（约 2 处/篇，无文本可取）。
+
 ## 五、源成熟度（现状如实记录）
 
 各源的开发完成度差异很大，评估"要不要优化管线"时必须区分**架构能力**与**当前开发进度**：
@@ -201,7 +214,7 @@ public interface INewsSpider
 | 财联社 | **电报最小可用 + 文章频道已接入** | 电报只接「电报」1 个栏目；签名算法已逆向并有实测向量锁定；文章频道 2026-09 接入 13 个栏目（共用 `ClsMedia`），品见/招财号未接入 |
 | 新浪 | **7x24 最小可用 + 文章源已接入** | 7x24 只接 1 个栏目；文章源 2026-09 接入 22 个栏目（滚动接口 2 + 栏目滚动页 20，共用 `SinaMedia`），详情整页 HTML 落 origin |
 | 华尔街见闻 | **live 最小可用 + 文章源已接入** | live 只接「全球宏观」1 个栏目；文章源 2026-09 接入全量流（单栏目 + 分类号逐条推断，共用 `WscnMedia`），三段全 API 化，带 symbols/作者/付费属性 |
-| 金十 | **最小可用** | 只接「快讯」1 个栏目；PLUS 专享条目只有标题 |
+| 金十 | **快讯最小可用 + 文章源已接入** | 快讯只接「快讯」1 个栏目；文章源 2026-09 接入「市场参考」5 个栏目（共用 `Jin10Media`），三段全 API 化，付费专享条目按"匿名无正文"口径跳过、VIP 两栏目未接 |
 
 四个快讯源的共同短板：
 

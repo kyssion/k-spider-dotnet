@@ -51,7 +51,7 @@ public class WscnArticleSpiderTest
         // 夹具第 25/26 条为同一篇付费文 ( is_priced=true , uri 带 ?layout= 查询串 )
         Assert.AreEqual("https://wallstreetcn.com/premium/articles/3782635", paid[0].NewsUrl,
             "付费条目 uri 的可变查询串应被剥掉 ( 去重键稳定形态 )");
-        Assert.IsTrue(paid.All(item => item.NewsUrl.IndexOf('?') < 0), "入库 URL 不应带查询串");
+        Assert.IsTrue(paid.All(item => item.NewsUrl?.IndexOf('?') < 0), "入库 URL 不应带查询串");
     }
 
     [TestMethod]

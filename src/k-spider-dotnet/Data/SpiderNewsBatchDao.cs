@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using KSpider.Exceptions;
 using KSpider.Model;
 using Microsoft.Extensions.Logging;
@@ -13,17 +14,25 @@ namespace KSpider.Data;
 /// </summary>
 public class SpiderNewsBatchDao
 {
+    /// <summary>
+    ///     结尾的 returning 子句 ( 单条 + IsIdentity 主键时 ToSqlString 会拼出 `returning "id"` ) :
+    ///     只匹配整段 SQL 的结尾 , 且字符类不含单引号 , 值串里出现的同形文本不会被误剥
+    /// </summary>
+    private static readonly Regex ReturningTailRegex =
+        new(@"\s*returning\s+[""\w]+(\s*,\s*[""\w]+)*\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     /// <summary>
-    ///     去掉 ToSqlString 输出尾部的分号 , 以便手拼 ON CONFLICT 子句。
-    ///     实测 ( SqlSugar 5.1.4.216 , IsNoPage = true ) : 多条 ( ≥2 ) 以 ";" 结尾 ,
-    ///     单条以 VALUES 段结尾不带分号 ( 也无 returning ) ;
+    ///     去掉 ToSqlString 输出尾部无法拼接 ON CONFLICT 的尾巴 :
+    ///     实测 ( SqlSugar 5.1.4.216 , IsNoPage = true ) 多条 ( ≥2 ) 以 ";" 结尾 ,
+    ///     单条以 `returning "id"` 结尾 ( 2026-09 金十财料栏目单行批次实测触发 , 与早先"以 VALUES 结尾"的记录不符 ,
+    ///     以实测为准 ) , 两种尾巴都剥 ;
     ///     不要用 [..LastIndexOf(';')] 截断 —— 单条时 LastIndexOf 返回 -1 会抛参数越界 ( 有单测锁定 )。
     /// </summary>
     public static string TrimInsertSqlTail(string insertSql)
     {
         var sql = insertSql.TrimEnd();
-        return sql.EndsWith(';') ? sql[..^1] : sql;
+        if (sql.EndsWith(';')) sql = sql[..^1].TrimEnd();
+        return ReturningTailRegex.Replace(sql, "");
     }
 
     /// <summary>

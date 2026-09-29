@@ -98,3 +98,5 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live" 
 | 财联社文章 | 频道配置在 `common_config`、列表混排游标、详情 SSR `__NEXT_DATA__` | `Spider/News/Web/Cls/`，13 栏目 |
 | 财联社电报（快讯型对照） | 签名逆向 + 单页上限 50 + 严格小于游标 | `Spider/News/Flash/Cls/` |
 | 新浪财经文章 | 双列表体系（滚动 JSON 接口 + SSR 栏目页）、栏目页无翻页且时间无年份、详情整页 HTML 作 origin、死链 cid 只能实测甄别 | `Spider/News/Web/Sina/`，22 栏目 |
+| 华尔街见闻文章 | 免签 API + 单全量流栏目（global 标签覆盖 119/120）+ 分类号逐条推断 | `Spider/News/Web/Wscn/`，1 栏目 |
+| 金十「市场参考」文章 | Nuxt SSR 站从 `__NUXT__` 载荷与 chunk 反查 API、列表/详情两套 `x-app-id`、综合流非超集需多栏目、付费条目匿名无正文整条跳过 | `Spider/News/Web/Jin10/`，5 栏目 |

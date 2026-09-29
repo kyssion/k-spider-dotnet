@@ -6,6 +6,7 @@ using KSpider.Spider.News.Flash.Jin10;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Flash.Sina;
+using KSpider.Spider.News.Web.Jin10;
 using KSpider.Spider.News.Web.Sina;
 using KSpider.Spider.News.Web.Wscn;
 using KSpider.Spider.News.Flash.Wscn;
@@ -39,6 +40,10 @@ public class NewsSourceRegistryTest
         Assert.IsNotNull(wscnArticle, "WscnMedia ( 华尔街见闻文章源 ) 必须常驻网页型注册表");
         Assert.IsInstanceOfType<WscnArticleSpider>(wscnArticle);
 
+        var jin10Article = NewsSpiderRegistry.Get((int)FromTypeOfNews.Jin10Media);
+        Assert.IsNotNull(jin10Article, "Jin10Media ( 金十「市场参考」文章源 ) 必须常驻网页型注册表");
+        Assert.IsInstanceOfType<Jin10ArticleSpider>(jin10Article);
+
         // 东财按需启停 : 启用时必须是 DfNewsSpider
         var df = NewsSpiderRegistry.Get((int)FromTypeOfNews.DfMedia);
         if (df != null) Assert.IsInstanceOfType<DfNewsSpider>(df);
@@ -70,7 +75,8 @@ public class NewsSourceRegistryTest
     ///     同一网站可以同时拥有两条管线 : 枚举标识"网站来源" , 管线归属由注册表决定。
     ///     财联社共用 ClsMedia —— 电报走快讯注册表 , 文章频道走网页型注册表 ;
     ///     新浪共用 SinaMedia —— 7x24 快讯走快讯注册表 , 文章源走网页型注册表 ;
-    ///     见闻共用 WscnMedia —— live 快讯走快讯注册表 , 文章源走网页型注册表
+    ///     见闻共用 WscnMedia —— live 快讯走快讯注册表 , 文章源走网页型注册表 ;
+    ///     金十共用 Jin10Media —— 快讯走快讯注册表 , 「市场参考」文章源走网页型注册表
     /// </summary>
     [TestMethod]
     public void SameSiteMayOwnBothPipelines()
@@ -98,6 +104,14 @@ public class NewsSourceRegistryTest
         var wscnWeb = NewsSpiderRegistry.Get((int)FromTypeOfNews.WscnMedia);
         Assert.IsNotNull(wscnWeb, "见闻文章源应在 NewsSpiderRegistry");
         Assert.IsInstanceOfType<WscnArticleSpider>(wscnWeb);
+
+        var jin10Flash = FlashNewsSpiderRegistry.Get((int)FromTypeOfNews.Jin10Media);
+        Assert.IsNotNull(jin10Flash, "金十快讯应在 FlashNewsSpiderRegistry");
+        Assert.IsInstanceOfType<Jin10NewsSpider>(jin10Flash);
+
+        var jin10Web = NewsSpiderRegistry.Get((int)FromTypeOfNews.Jin10Media);
+        Assert.IsNotNull(jin10Web, "金十文章源应在 NewsSpiderRegistry");
+        Assert.IsInstanceOfType<Jin10ArticleSpider>(jin10Web);
     }
 
     [TestMethod]
@@ -192,6 +206,16 @@ public class NewsSourceRegistryTest
             Assert.IsTrue(number >= 302, $"见闻文章源分类号不应与 live 快讯 ( 301 ) 冲突 : {number}");
         }
 
+        // 金十文章源的分类号全部落在金十段内 ( 快讯 401 在前 , 文章 402-406 接后 )
+        foreach (var column in Jin10ArticleResource.ArticleColumnList)
+        {
+            var (min, max) = rangeBySource[FromTypeOfNews.Jin10Media];
+            Assert.IsTrue(column.CategoryNumber >= min && column.CategoryNumber <= max,
+                $"金十文章源分类号越界 : {column.ColumnName} = {column.CategoryNumber}");
+            Assert.IsTrue(column.CategoryNumber >= 402,
+                $"金十文章源分类号不应与快讯 ( 401 ) 冲突 : {column.ColumnName} = {column.CategoryNumber}");
+        }
+
         // 各源编号段互不重叠
         var ranges = rangeBySource.Values.OrderBy(range => range.Min).ToList();
         for (var i = 1; i < ranges.Count; i++)
@@ -210,12 +234,13 @@ public class NewsSourceRegistryTest
         Assert.IsTrue(codes.All(code => !string.IsNullOrWhiteSpace(code)), "存在源未声明 ParserCode");
         Assert.AreEqual(codes.Count, codes.Distinct().Count(), "解析器码必须唯一");
         foreach (var code in codes)
-            StringAssert.Matches(code, new System.Text.RegularExpressions.Regex(@"^[a-z]+-[a-z]+-v\d+$"),
+            StringAssert.Matches(code, new System.Text.RegularExpressions.Regex(@"^[a-z][a-z0-9]*-[a-z][a-z0-9]*-v\d+$"),
                 $"解析器码格式应为 {{源}}-{{形态}}-v{{N}} : {code}");
 
         // 按码命中
         var wscn = NewsParserRegistry.Resolve("wscn-article-v1", 0);
         Assert.IsInstanceOfType<WscnArticleSpider>(wscn);
+        Assert.IsInstanceOfType<Jin10ArticleSpider>(NewsParserRegistry.Resolve("jin10-article-v1", 0));
 
         // 空/未知码回退按 from_media
         Assert.IsInstanceOfType<SinaArticleSpider>(NewsParserRegistry.Resolve(null, (int)FromTypeOfNews.SinaMedia));

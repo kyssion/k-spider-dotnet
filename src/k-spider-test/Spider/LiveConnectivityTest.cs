@@ -6,6 +6,7 @@ using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Web.Sina;
+using KSpider.Spider.News.Web.Jin10;
 using KSpider.Spider.News.Web.Wscn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -191,6 +192,55 @@ public class LiveConnectivityTest
 
         TestContext.WriteLine(
             $"见闻文章 {column.ColumnName} : 首页 {page1.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
+    }
+
+    [TestMethod]
+    public async Task Jin10ArticleLiveFetchListOriginAndParse()
+    {
+        var spider = new Jin10ArticleSpider();
+
+        // 多栏目页码翻页 : 满页续拉一页验证零重叠 ( 综合流与各编辑栏目互有重叠 , 由入库去重吸收 )
+        var total = 0;
+        foreach (var column in spider.Columns)
+        {
+            var page1 = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, null));
+            Assert.IsTrue(page1.Items.Count > 0, $"金十文章 {column.ColumnName} 列表接口未返回任何数据");
+            // 早餐/财料等栏目按日/周更 , 不套鲜活窗口 , 只验字段完整与时间不晚于当前
+            AssertNewsFieldsComplete(page1.Items.Select(item => (item.NewsUrl, item.NewsTitle, item.NewsFrom,
+                item.NewsTime, item.FromMedia, item.Category)).ToList());
+            Assert.IsTrue(page1.Items.Max(item => item.NewsTime) <= DateTime.Now.AddHours(1),
+                $"{column.ColumnName} 最新条目晚于当前时间 ( 时间解析可能已变更 )");
+            Assert.IsTrue(page1.Items.All(item => !item.IsPaid), "付费专享条目应在列表层被跳过 ( 匿名无正文 )");
+            if (page1.NextCursor != null)
+            {
+                var page2 = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, page1.NextCursor));
+                Assert.IsTrue(page2.Items.Count > 0, "页码续拉未取到数据 ( 翻页语义可能已变更 )");
+                var overlap = page1.Items.Select(item => item.NewsUrl)
+                    .Intersect(page2.Items.Select(item => item.NewsUrl)).Count();
+                Assert.AreEqual(0, overlap, "页码翻页两页不应重叠");
+            }
+
+            total += page1.Items.Count;
+        }
+
+        // 详情 : 综合流 ( 快更新栏目 ) 首条 ( 已过滤付费 ) 下载 origin 并解析出结构化内容 ;
+        // 综合流最新条目应在近 2 小时内 , 证明接口返回的是实时数据
+        var firstColumn = spider.Columns[0];
+        var firstPage = await FetchOrSkipAsync(() => spider.GetListPage(firstColumn, 20, null));
+        Assert.IsTrue(firstPage.Items.Max(item => item.NewsTime) >= DateTime.Now.AddHours(-2),
+            "综合流最新条目超过 2 小时 ( 接口可能返回陈旧数据 )");
+        var newsItem = firstPage.Items[0];
+        var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
+        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        Assert.AreEqual(newsItem.IsPaid, origin.IsPaid, "origin 侧付费标记应与列表侧一致");
+        Assert.AreEqual("jin10-article-v1", origin.ParserCode);
+        var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
+        Assert.IsTrue(!string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText) ||
+                      parseResult.Images.Count > 0, "解析后正文与图片均为空");
+
+        TestContext.WriteLine(
+            $"金十文章 {spider.Columns.Count} 栏目共 {total} 条 , 样例 {newsItem.NewsTitle}");
     }
 
     /// <summary>
