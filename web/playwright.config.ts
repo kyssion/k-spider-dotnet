@@ -15,13 +15,15 @@ export default defineConfig({
     trace: 'off',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // 构建产物 + preview 伺服 : 比 dev server 启动快且稳定 ( dev 在 CI 上冷启动慢、偶发就绪探测挂起 ) ,
-  // 且测的就是生产构建形态 ; 端口用专用的 5899 而不是 vite 默认 5173 ( 会被本机其它 vite 项目抢占 ,
-  // 本地 reuseExistingServer 会误复用 ); 命令自带 build , 单独跑 test:e2e 无需先手动构建
+  // 构建产物 + preview 伺服 : 比 dev server 启动快且稳定 , 且测的就是生产构建形态。
+  // 命令直接调 vite 二进制 , 不经 pnpm/shell 中间层——CI ( linux ) 上 pnpm→shell→vite 的进程树
+  // 在 playwright 收尾杀 webServer 时收不干净 , stdio 管道悬空导致测试全过后 CLI 永不退出
+  // ( 实测挂满 6 小时被取消 ; mac 上进程组终止行为不同故本地不复现 )。
+  // dist 需先构建 : verify.sh / CI 都先跑 build ; 本地单独跑 test:e2e 前先 pnpm build。
   webServer: {
-    command: 'pnpm build && pnpm preview --strictPort --port 5899 --host 127.0.0.1',
+    command: 'node_modules/.bin/vite preview --strictPort --port 5899 --host 127.0.0.1',
     url: 'http://127.0.0.1:5899',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 60_000,
   },
 })

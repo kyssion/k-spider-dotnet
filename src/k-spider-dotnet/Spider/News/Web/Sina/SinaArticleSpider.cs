@@ -186,7 +186,7 @@ public partial class SinaArticleSpider : INewsSpider
                 {
                     NewsUrl = newsUrl,
                     ImageResourceUrl = segment.ResourceUri!,
-                    ImageName = HttpUrlTools.GetUrlLastPath(segment.ResourceUri)
+                    ImageName = HttpUrlTools.GetUrlLastPath(segment.ResourceUri!)
                 })
                 .ToList();
 
