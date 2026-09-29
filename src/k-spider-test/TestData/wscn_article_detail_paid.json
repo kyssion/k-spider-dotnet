@@ -1,0 +1,149 @@
+{
+ "code": 20000,
+ "message": "OK",
+ "data": {
+  "asset_tags": null,
+  "audio": {
+   "title": ""
+  },
+  "author": {
+   "article_count": 362,
+   "author_kind": "default",
+   "avatar": "https://wpimg-wscn.awtmt.com/8c92094f-c04e-4ae0-a746-348c1b956aa2",
+   "bio": "",
+   "display_name": "弋文涛",
+   "editor_choice_articles": [],
+   "followers_count": 1012,
+   "id": 120000004861,
+   "is_followed": false,
+   "uri": "https://wallstreetcn.com/authors/120000004861"
+  },
+  "categories": [
+   {
+    "key": "global",
+    "name": "见闻首页"
+   },
+   {
+    "key": "wscn-platform",
+    "name": "见闻"
+   }
+  ],
+  "columns": [
+   {
+    "id": 1008351,
+    "key": "yizhouhuigu",
+    "name": "数据追踪",
+    "uri": "https://wallstreetcn.com/columns/1008351"
+   }
+  ],
+  "comment_count": 0,
+  "comment_disabled": false,
+  "content": "<p style=\"text-align: left;\">美国柴油市场正经历前所未有的供需冲击。9月以来，美国零售柴油价格持续攀升，近期一度升至6.53美元/加仑以上，创历史新高，年内涨幅高达83%。同期纽商所取暖油期货价格最高达到5.26美元/加仑，折合约220美元/桶，美国馏分油裂解价差升至约105美元/桶，为过去15年中位水平的4倍。</p>\n<p style=\"text-align: justify;\"><img class=\"wscnph\" title=\"\" src=\"https://wpimg-wscn.awtmt.com/7339c062-4973-4c86-b12f-ec399c3ee357.png\" alt=\"\" data-wscntype=\"image\" data-wscnsize=\"291060\" data-wscnh=\"420\" data-wscnw=\"693\" /></p>\n<p style=\"text-align: justify;\">与此同时，霍尔木兹海峡航运中断导致中东约150万桶/日炼油产能无法有效利用，柴油出口同比减少约50万桶/日；而乌袭俄炼油厂致使俄约350万桶/日炼油产能停运，柴油出口同比减少约80万桶/日。两者合计造成全球柴油供应缺口约130万桶/日，占海运市场约15%。这也让美国成为全球柴油最后的供应商，柴油出口量一度飙升至近200万桶/日的周度纪录，净出口约160万桶/日。</p>\n<p style=\"text-align: justify;\"><img class=\"wscnph\" title=\"\" src=\"https://wpimg-wscn.awtmt.com/b5da950e-af46-47ad-b0d9-e20511d48eba.png\" alt=\"\" data-wscntype=\"image\" data-wscnsize=\"313950\" data-wscnh=\"390\" data-wscnw=\"805\" /></p>\n<p style=\"text-align: justify;\">当前美国柴油库存也降至40年来同期最低水平，较去年同期下降约13%。而现阶段正处于美国中西部农业州的秋收高峰期，加之中期选举临近，9月27日特朗普表示正认真考虑实施短期（如90天）美国柴油出口禁令。目前美国政府正在评估短期禁令、自愿削减出口、暂停柴油消费税以及放松红色柴油限制等多种方案。</p>\n<p style=\"text-align: justify;\">上述方案在力度和影响上差异较大，且政策信号反复不定，使市场难以形成稳定预期。交易员无法将出口禁令视为确定情景来定价，只能以风险溢价形式反映这种不确定性。因此，最终是否实施禁令、采取哪种方案以及持续多久，成为市场关注焦点。</p>\n<p style=\"text-align: justify;\"><img class=\"wscnph\" title=\"\" src=\"https://wpimg-wscn.awtmt.com/f28c6606-1913-41d9-a79b-3fed4d196d88.png\" alt=\"\" data-wscntype=\"image\" data-wscnsize=\"356769\" data-wscnh=\"441\" data-wscnw=\"809\" /></p>\n<h2 style=\"text-align: left;\"><strong>出口禁令短期压低美国柴油，长期推高全球柴油和美国汽油</strong></h2>\n<p style=\"text-align: justify;\">禁令的核心影响在于短期压价、长期反噬。禁令初期，美国柴油价格每持续一周约下降0.25美元/加仑；30天禁令配合琼斯法案豁免，可使零售柴油价格从6.5美元/加仑降至4.4美元/加仑。</p>\n<p style=\"text-align: justify;\">但美国炼油系统以全球市场为设计基础，柴油、汽油、航空煤油高度联产。</p>",
+  "content_short": "美国柴油创新高，特朗普考虑出口禁令，但禁令短期压柴油、长期推高汽油、加剧全球油市紧张。",
+  "custom_tag": "",
+  "display_time": 1790653194,
+  "end_time": 0,
+  "funds": null,
+  "has_transfer_audio": true,
+  "id": 3782635,
+  "image": {
+   "uri": "https://wpimg-wscn.awtmt.com/88c0b879-cc0f-42e3-acfe-18d70af67fe9.png",
+   "height": 641,
+   "width": 1024,
+   "size": 1004646
+  },
+  "images": [
+   {
+    "uri": "https://wpimg-wscn.awtmt.com/88c0b879-cc0f-42e3-acfe-18d70af67fe9.png",
+    "height": 641,
+    "width": 1024,
+    "size": 1004646
+   }
+  ],
+  "influence_score": 0,
+  "is_need_pay": true,
+  "is_priced": true,
+  "is_trial": false,
+  "is_video": false,
+  "is_vip": false,
+  "layout": "wscn-layout",
+  "limited_time": 0,
+  "membership_uri": "https://wallstreetcn.com/membership?member_type=gold",
+  "next": null,
+  "pageviews": 567,
+  "plates": [],
+  "previous": {
+   "id": 3782459,
+   "image": {
+    "uri": "https://wpimg-wscn.awtmt.com/b5ea7d6d-3500-4621-b40f-555458ccd7bb.png",
+    "height": 626,
+    "width": 678,
+    "size": 209048
+   },
+   "title": "5%的美债还杀不死AI：真正的AI Capex“斩杀线”在哪里？",
+   "url": "https://wallstreetcn.com/premium/articles/3782459?layout=wscn-layout"
+  },
+  "product": null,
+  "product_id": 62368,
+  "recommend_vip_img_uri": "https://wpimg-wscn.awtmt.com/e2808654-2f4a-4d5a-ac01-e8eb41435157.png",
+  "recommend_vip_uri": "https://wallstreetcn.com/member/buy/gold",
+  "related_topics": [
+   {
+    "author_short_intro": "高效，简洁，不可错过",
+    "channel_data_id": 41,
+    "discount_copywriting": "限时优惠中",
+    "discount_text": "限时优惠中",
+    "group_id": 75491,
+    "id": 1000023,
+    "image": {
+     "horizontal_image_uri": "https://wpimg-wscn.awtmt.com/2e229b38-047c-40a3-a1fa-d4f7f0cf0267.jpg",
+     "vertical_image_uri": "https://wpimg-wscn.awtmt.com/fb61ce7e-efd4-4b1c-aed2-52a0e5e77f76.jpg"
+    },
+    "is_bind_physical_product": false,
+    "is_internal": true,
+    "latest_article_title": "6.5美元/加仑历史新高！美国柴油禁运是否进入倒计时？",
+    "most_recent_content_time": 1790653194,
+    "product": {
+     "activities": [],
+     "bought_count": 25863,
+     "discount_copywriting": "原价2388",
+     "discount_text": "原价2388",
+     "end_time_timestamp": 0,
+     "id": 120,
+     "is_can_renewal": true,
+     "is_multi_products": true,
+     "is_paid": false,
+     "min_product_price": 69900,
+     "name": "见闻主编精选",
+     "origin_price": 59900,
+     "period": 4,
+     "price": 69900,
+     "spu_id": 5326,
+     "weekly_bought_count": 0
+    },
+    "sub_title": "每日必读财经要闻",
+    "summary": "<p><img src=\"https://wpimg.wallstcn.com/4c40307d-ab8f-415f-8b55-cdf386bc653f.png\" data-wscntype=\"image\" data-wscnh=\"4320\" data-wscnw=\"750\" /></p>",
+    "title": "见闻主编精选",
+    "uri": "https://wallstreetcn.com/premium/topics/1000023"
+   }
+  ],
+  "show_like": true,
+  "source_name": "",
+  "source_uri": "",
+  "subtitle": "",
+  "tags": [],
+  "theme_group_map": null,
+  "themes": [
+   {
+    "key": "yizhouhuigu",
+    "name": "数据追踪"
+   }
+  ],
+  "title": "6.5美元/加仑历史新高！美国柴油禁运是否进入倒计时？",
+  "unshow_content_short": false,
+  "user_vip_type": "",
+  "vip_id": 1,
+  "vip_type": "gold",
+  "words_count": 1883
+ }
+}

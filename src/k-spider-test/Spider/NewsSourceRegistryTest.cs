@@ -7,6 +7,7 @@ using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Flash.Sina;
 using KSpider.Spider.News.Web.Sina;
+using KSpider.Spider.News.Web.Wscn;
 using KSpider.Spider.News.Flash.Wscn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -33,6 +34,10 @@ public class NewsSourceRegistryTest
         var sinaArticle = NewsSpiderRegistry.Get((int)FromTypeOfNews.SinaMedia);
         Assert.IsNotNull(sinaArticle, "SinaMedia ( 新浪财经文章源 ) 必须常驻网页型注册表");
         Assert.IsInstanceOfType<SinaArticleSpider>(sinaArticle);
+
+        var wscnArticle = NewsSpiderRegistry.Get((int)FromTypeOfNews.WscnMedia);
+        Assert.IsNotNull(wscnArticle, "WscnMedia ( 华尔街见闻文章源 ) 必须常驻网页型注册表");
+        Assert.IsInstanceOfType<WscnArticleSpider>(wscnArticle);
 
         // 东财按需启停 : 启用时必须是 DfNewsSpider
         var df = NewsSpiderRegistry.Get((int)FromTypeOfNews.DfMedia);
@@ -64,7 +69,8 @@ public class NewsSourceRegistryTest
     /// <summary>
     ///     同一网站可以同时拥有两条管线 : 枚举标识"网站来源" , 管线归属由注册表决定。
     ///     财联社共用 ClsMedia —— 电报走快讯注册表 , 文章频道走网页型注册表 ;
-    ///     新浪共用 SinaMedia —— 7x24 快讯走快讯注册表 , 文章源走网页型注册表
+    ///     新浪共用 SinaMedia —— 7x24 快讯走快讯注册表 , 文章源走网页型注册表 ;
+    ///     见闻共用 WscnMedia —— live 快讯走快讯注册表 , 文章源走网页型注册表
     /// </summary>
     [TestMethod]
     public void SameSiteMayOwnBothPipelines()
@@ -84,6 +90,14 @@ public class NewsSourceRegistryTest
         var sinaWeb = NewsSpiderRegistry.Get((int)FromTypeOfNews.SinaMedia);
         Assert.IsNotNull(sinaWeb, "新浪文章源应在 NewsSpiderRegistry");
         Assert.IsInstanceOfType<SinaArticleSpider>(sinaWeb);
+
+        var wscnFlash = FlashNewsSpiderRegistry.Get((int)FromTypeOfNews.WscnMedia);
+        Assert.IsNotNull(wscnFlash, "见闻 live 快讯应在 FlashNewsSpiderRegistry");
+        Assert.IsInstanceOfType<WscnNewsSpider>(wscnFlash);
+
+        var wscnWeb = NewsSpiderRegistry.Get((int)FromTypeOfNews.WscnMedia);
+        Assert.IsNotNull(wscnWeb, "见闻文章源应在 NewsSpiderRegistry");
+        Assert.IsInstanceOfType<WscnArticleSpider>(wscnWeb);
     }
 
     [TestMethod]
@@ -166,6 +180,16 @@ public class NewsSourceRegistryTest
                 $"新浪文章源分类号越界 : {column.ColumnName} = {column.CategoryNumber}");
             Assert.IsTrue(column.CategoryNumber >= 202,
                 $"新浪文章源分类号不应与 7x24 快讯 ( 201 ) 冲突 : {column.ColumnName} = {column.CategoryNumber}");
+        }
+
+        // 见闻文章源的分类号全部落在见闻段内 ( live 快讯 301 在前 , 文章 302-312 接后 )
+        var wscnArticleCategories = new[] { WscnArticleResource.DefaultCategoryNumber }
+            .Concat(WscnArticleResource.CategoryRuleList.Select(rule => rule.CategoryNumber));
+        foreach (var number in wscnArticleCategories)
+        {
+            var (min, max) = rangeBySource[FromTypeOfNews.WscnMedia];
+            Assert.IsTrue(number >= min && number <= max, $"见闻文章源分类号越界 : {number}");
+            Assert.IsTrue(number >= 302, $"见闻文章源分类号不应与 live 快讯 ( 301 ) 冲突 : {number}");
         }
 
         // 各源编号段互不重叠

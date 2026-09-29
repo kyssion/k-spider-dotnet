@@ -92,6 +92,7 @@ public interface INewsSpider
 | 新浪财经 7x24 | `SinaMedia = 3` | 1 个栏目「7x24」，`category = 201` | `page` 页码翻页 | **快讯管线**：拉到即终态 | 无鉴权，正文以【标题】开头；`ext.stocks` 提取关联标的 |
 | 新浪财经文章 | `SinaMedia = 3`（与 7x24 共用） | 22 个栏目（财经滚动 202 / 经济要闻 203 / 大盘评述 204 / 宏观研究 205 / 市场研究 206 / 机构观点 207 / 上市公司 208 / 主力动向 209 / 港股×3 210-212 / 基金 213 / 外汇 214 / 期货×2 215-216 / 黄金 217 / 银行×3 218-220 / 保险×3 221-223） | 双体系：滚动接口页码翻页（2516/2515）；栏目滚动页**整页即全量、无翻页** | 详情页整页 HTML（`origin_type = Html`），正文在 `div#artibody` | 无鉴权；`num>50` 静默钳制；列表两套来源（JSON 接口 + SSR 栏目页） |
 | 华尔街见闻 live | `WscnMedia = 4` | 1 个栏目「全球宏观」，`category = 301` | 接口自带 `next_cursor` | **快讯管线**：拉到即终态 | 无鉴权，约 1/3 条目无标题；`score=2` → 重要度 2 |
+| 华尔街见闻文章 | `WscnMedia = 4`（与 live 共用） | 1 个「文章全量流」栏目，分类号逐条从 `categories` 标签按优先级推断（302 要闻 / 303 A股 / 304 美股 / 305 债券 / 306 商品 / 307 外汇 / 308 ETF / 309 AI科技 / 310 产业公司 / 311 IPO） | 接口自带 `next_cursor`（单调向旧、零重叠） | 详情接口 JSON（`origin_type = Json`），正文在其 `data.content`（HTML 片段） | 无鉴权；`limit>30` 静默返回空 `data`；详情 `extract` 参数必填；付费文（`is_priced`）正文截断仍入库；带 `symbols` 关联标的与作者署名 |
 | 金十快讯 | `Jin10Media = 5` | 1 个栏目「快讯」，`category = 401` | `max_time` 时间游标（含边界） | **快讯管线**：拉到即终态 | 必须带客户端标识头；约 20% 为 PLUS 专享（有 vip_title 的保留标题、无任何公开信息的跳过）；`important` → 重要度 2 |
 
 > **「当前栏目」是开发进度，不是源的能力上限**。东财是开发最完整的源（35 个栏目），其余四个源目前每个只接了 1 个栏目，
@@ -165,6 +166,16 @@ public interface INewsSpider
 - 字段映射：`news_url` 取 `uri`；正文用 `content_text`（纯文本，接口同时给了 `content` 的 HTML 形态，避免再解析一次）；`display_time` 是 unix 秒，固定按东八区换算；`images` 数组产图片记录。
 - 约 1/3 条目没有 `title`，用正文前 60 字兜底；关键字只用业务 `tags`，频道 `channels` 是内部英文 slug 不放进关键字（原始 JSON 里保留）。
 
+### 华尔街见闻文章（`Spider/News/Web/Wscn/`）
+
+- 端点：`api-one-wscn.awtmt.com/apiv1/content/articles`（列表，`limit` + `cursor`）与 `/apiv1/content/articles/{id}?extract=0`（详情），与 live 快讯同站不同管线、共用 `WscnMedia`。
+- **只配一个「文章全量流」栏目**：实测 `global` 标签覆盖 119/120，按类别建多栏目会把同一批文章重复抓 N 遍；分类号改为逐条从条目 `categories` 多标签按优先级推断（垂直类先于宽泛类，见 `WscnArticleResource.CategoryRuleList`），都不命中归 302 要闻。
+- 翻页用响应 `data.next_cursor`（`"最新时间,最老时间"` 对，单调向旧、页间零重叠），短页即末页。
+- 两个实测坑：`limit>30` 时接口静默返回 `data:""`（code 仍 20000，已钳制）；详情 `extract` 参数必填（0=带图 HTML / 1=纯文本，缺失报 60327）。
+- 字段映射：`uri` 落 URL；`content_short` 落摘要；`display_time` unix 秒按东八区换算；来源优先 `author.display_name`（专职作者署名）回退 `source_name` 再回退平台名。
+- 付费文（`is_priced`，占比约 7%）详情正文截断（几百字预览），结构完整仍解析入库；全免费文正文完整（长文实测 3700+ 字）。
+- origin 存详情接口 JSON 原文（`NewsContentOriginType.Json`），解析段展开 `data.content` HTML 片段（标签集实测 `p/h2/img/blockquote/strong/span/div`）。
+
 ### 金十数据快讯（`Spider/News/Flash/Jin10/`）
 
 - 端点：`flash-api.jin10.com/get_flash_list`，参数 `channel=-8200`（全部快讯）/ `vip=1`，翻页用 `max_time=<时间串>`（URL 编码）。
@@ -183,7 +194,7 @@ public interface INewsSpider
 | 东方财富 | **完整** | 35 个栏目全部接入，详情接口 + HTML 结构化解析（段落/图片/表格/列表）、Playwright 兜底、时间格式强绑定 |
 | 财联社 | **电报最小可用 + 文章频道已接入** | 电报只接「电报」1 个栏目；签名算法已逆向并有实测向量锁定；文章频道 2026-09 接入 13 个栏目（共用 `ClsMedia`），品见/招财号未接入 |
 | 新浪 | **7x24 最小可用 + 文章源已接入** | 7x24 只接 1 个栏目；文章源 2026-09 接入 22 个栏目（滚动接口 2 + 栏目滚动页 20，共用 `SinaMedia`），详情整页 HTML 落 origin |
-| 华尔街见闻 | **最小可用** | 只接「全球宏观」1 个栏目；单条接口未利用（见已知限制） |
+| 华尔街见闻 | **live 最小可用 + 文章源已接入** | live 只接「全球宏观」1 个栏目；文章源 2026-09 接入全量流（单栏目 + 分类号逐条推断，共用 `WscnMedia`），三段全 API 化，带 symbols/作者/付费属性 |
 | 金十 | **最小可用** | 只接「快讯」1 个栏目；PLUS 专享条目只有标题 |
 
 四个快讯源的共同短板：

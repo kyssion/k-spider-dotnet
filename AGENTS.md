@@ -161,7 +161,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 - **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（新网站才加 `FromTypeOfNews` 枚举值；已有网站的第二个管线复用原值，如新浪文章复用 `SinaMedia`）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。侦察流程与验收标准见 [docs/web-source-playbook.md](docs/web-source-playbook.md)。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）、`Spider/News/Web/Sina/SinaArticleSpider.cs`（一个源两套列表体系 + 详情整页 HTML 作 origin）。
   - 翻页走 `GetListPage(column, pageSize, cursor)` 的不透明游标，`NextCursor = null` 表示没有更多。
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
-  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 7x24 201 + 新浪文章 202-223、见闻 301、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
+  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311、金十 401），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
 - **Playwright 必须保留在主项目中**：部分特殊页面需要浏览器渲染抓取（`Spider/News/Web/Eastmoney/Playwright/`），生产新闻链路是纯 HTTP（`Common/Http/HttpClientTools.CreateByHost` 伪装 Chrome 头），两者分工明确；该命名空间下调用库入口需写全限定 `Microsoft.Playwright.Playwright`（避免与命名空间撞名）。反爬验证的浏览器策略（`Spider/Verify/Solver/Browser/`）只在被拦截时按需启动浏览器，平时不参与抓取。
 - **Web 控制台（`src/k-spider-web` + 仓库根 `web/`）与爬虫进程只通过库通信**，主程序不开 HTTP 端口：
@@ -225,6 +225,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 20. **`k-spider-web` 开发模式的静态文件伺服自项目目录**（`staticwebassets.runtime.json` 清单），`bin` 下没有 `wwwroot` 物理目录：判断"前端产物是否存在"必须用 `WebRootFileProvider.GetFileInfo("index.html").Exists`，用 `WebRootPath` 拼 `File.Exists` 在 `dotnet run` 下恒为 false（已踩）；发布产物则两者一致。
 21. **手动触发类指令是异步的**：`POST /api/jobs/{name}/{action}` 返回 202 只代表已受理，生效靠 `NodeStateJob` 3 秒轮询消费；爬虫进程停着时指令停在 `pending`，进程恢复后被消费。自动化脚本判断生效要轮询 `/api/jobs/commands` 或 `/api/status/jobs`，不要立刻断言。
 22. **新浪财经一个网站两种管线**（与财联社同款先例）：7x24 快讯在快讯注册表，文章源在网页注册表（`Spider/News/Web/Sina/`），**共用 `SinaMedia=3`**，文章 category 用 202-223 段。文章源的三个实测边界：① 滚动接口 `num>50` 被静默钳到 50；② 栏目滚动页 `roll/c/{cid}.shtml` **整页即全量、没有翻页**（`?page=` 只跳回首页），页面时间 `(09月28日 22:15)` 无年份，年份从条目 URL 路径 `/yyyy-MM-dd/doc-` 补全，无日期路径条目跳过（实测 200 条里 14 条）；③ 频道页上挂着一批已下线的死链 cid（230808/264124/40811 等，`roll/c` 下一律 404），**栏目清单以实测存活为准，不要照抄频道页链接**。详情页整页 HTML 存 origin（`NewsContentOriginType.Html`），文末 `appendQr_wrap` 推广二维码块解析时整体跳过。
+23. **华尔街见闻文章接口的两个静默坑**：① 列表 `limit>30` 时接口返回 `data:""`（code 仍 20000，不是钳制而是无数据），`WscnArticleResource.MaxPageSize` 已钳制，解析层对"data 非对象"显式报错而非当空页；② 详情接口 `extract` 参数**必填**（0=带图 HTML / 1=纯文本），缺失报 `60327 "extract 不正确"`。文章流只配一个全量栏目（`global` 标签覆盖 119/120，多栏目必重复抓），分类号逐条从 `categories` 多标签按优先级推断；付费文（`is_priced`，约 7%）正文截断仍入库。
 
 ## 提交规范
 

@@ -6,6 +6,7 @@ using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Web.Sina;
+using KSpider.Spider.News.Web.Wscn;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
@@ -153,6 +154,39 @@ public class LiveConnectivityTest
 
         TestContext.WriteLine(
             $"新浪文章 {rollColumn.ColumnName}/{columnColumn.ColumnName} : 滚动 {rollPage.Items.Count} 条 + 栏目 {columnPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
+    }
+
+    [TestMethod]
+    public async Task WscnArticleLiveFetchListOriginAndParse()
+    {
+        var spider = new WscnArticleSpider();
+        var column = spider.Columns[0];
+
+        // 单栏目全量流 : 游标为接口给的 next_cursor ( 单调向旧 ) , 满页续拉一页验证不重叠
+        var page1 = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, null));
+        Assert.IsTrue(page1.Items.Count > 0, "见闻文章列表接口未返回任何数据");
+        AssertRealNewsRows(page1.Items.Select(item => (item.NewsUrl, item.NewsTitle, item.NewsFrom,
+            item.NewsTime, item.FromMedia, item.Category)).ToList());
+        if (page1.NextCursor != null)
+        {
+            var page2 = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, page1.NextCursor));
+            Assert.IsTrue(page2.Items.Count > 0, "用游标续拉未取到数据 ( 游标语义可能已变更 )");
+            var overlap = page1.Items.Select(item => item.NewsUrl)
+                .Intersect(page2.Items.Select(item => item.NewsUrl)).Count();
+            Assert.AreEqual(0, overlap, "游标翻页两页不应重叠");
+        }
+
+        // 详情 : 免费文与付费文各验一篇 ( 付费正文被截断但仍应解析出结构化内容 )
+        var newsItem = page1.Items[0];
+        var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
+        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
+        Assert.IsTrue(!string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText) ||
+                      parseResult.Images.Count > 0, "解析后正文与图片均为空");
+
+        TestContext.WriteLine(
+            $"见闻文章 {column.ColumnName} : 首页 {page1.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
     }
 
     /// <summary>

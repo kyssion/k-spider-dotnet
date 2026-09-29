@@ -1,0 +1,114 @@
+{
+ "code": 20000,
+ "message": "OK",
+ "data": {
+  "asset_tags": null,
+  "audio": {
+   "title": ""
+  },
+  "audio_info": {
+   "uri": "https://wpimg-wscn.awtmt.com/16ae55d2-6966-40fe-9794-536a23877a5b.mp3",
+   "start_time": "0.000000",
+   "duration": "573.336000",
+   "size": "1720053"
+  },
+  "audio_uri": "https://wpimg-wscn.awtmt.com/16ae55d2-6966-40fe-9794-536a23877a5b.mp3",
+  "author": {
+   "article_count": 7838,
+   "author_kind": "default",
+   "avatar": "https://wpimg-wscn.awtmt.com/67191b13-814b-43e7-9b4e-a33a369e23dd",
+   "bio": "",
+   "display_name": "龙玥",
+   "editor_choice_articles": [],
+   "followers_count": 4879,
+   "id": 120000002320,
+   "is_followed": false,
+   "uri": "https://wallstreetcn.com/authors/120000002320"
+  },
+  "categories": [
+   {
+    "key": "global",
+    "name": "见闻首页"
+   },
+   {
+    "key": "us-shares",
+    "name": "港美股"
+   },
+   {
+    "key": "ai",
+    "name": "AI"
+   },
+   {
+    "key": "wscn-platform",
+    "name": "见闻"
+   }
+  ],
+  "columns": [],
+  "comment_count": 0,
+  "comment_disabled": false,
+  "content": "<p style=\"text-align: left;\">个人AI代理赛道正在跑出一匹速度惊人的黑马。</p>\n<p style=\"text-align: left;\">9月28日，旧金山初创公司Instinct宣布完成10亿美元C轮融资，由红杉资本、Benchmark Capital和Coatue联合领投，估值达100亿美元（约合人民币671亿元）。</p>\n<p>这是一次令硅谷震动的极速狂飙：就在今年8月，《华尔街日报》才报道Instinct正寻求以25亿美元估值完成B轮融资。<strong>仅仅一个月后，其估值就直接暴涨至原来的4倍。</strong>自2025年成立至今，这家背后公司名为Spear Street Technology的创企，累计筹集资金已超13.5亿美元。更令人惊叹的是，撑起这具庞然大物的整个团队，目前仅有区区14名员工。</p>\n<p>公司灵魂人物、创始人兼CEO诺亚·辛（Noah Shinn）今年仅23岁。他于2023年从美国东北大学辍学，此前主修化学与计算机科学，曾深入参与机器学习和大语言模型研究，并曾作为早期员工加入知名客服AI独角兽Sierra。</p>\n<p>如今，这家成立仅约一年、产品仍处于邀请制内测阶段的公司，<strong>目前平台年交易流水已超10亿美元，用户日环比增速维持在约10%——且营销支出为零。</strong></p>\n<p style=\"text-align: left;\">Noah Shinn在接受播客节目\"Invest Like The Best\"主持人Patrick O'Shaughnessy专访时首次公开详述公司运营细节。他表示，这笔融资将用于扩大用户覆盖和持续推进产品研发，\"我们才刚刚开始\"。</p>\n<p style=\"text-align: left;\">这轮融资的背后，是投资人对个人AI代理这一新兴赛道的高度押注。Noah Shinn在访谈中直言：\"这可能是有史以来最激动人心的软件竞赛，最终的结果是数万亿美元的市场。\"</p>\n<p style=\"text-align: left;\"><img class=\" wscnph\" src=\"https://wpimg-wscn.awtmt.com/5c24b9c5-d556-440c-856a-c8e374fe5a88.png\" data-wscntype=\"image\" data-wscnh=\"630\" data-wscnw=\"1071\" /></p>\n<p style=\"text-align: center;\"><span style=\"color: #b3b3b3;\">Noah Shinn</span></p>\n<h2>叫板Meta Muse？没有App，只有一个电话号码和邮箱</h2>\n<p style=\"text-align: left;\">Instinct的产品逻辑与市面上大多数AI工具截然不同——它没有独立应用，用户通过短信、电话或电子邮件与其交互。Noah Shinn解释道：</p>\n<blockquote>\n<p style=\"text-align: left;\"><strong>这不是一个新App，也不是一个新工具，而是一种新体验。它有自己的手机和电脑，你可以发短信给它，可以打电话给它，它也可以主动打电话给你。</strong></p>\n</blockquote>\n<p style=\"text-align: left;\">他举例说明这种\"主动性\"：</p>\n<blockquote>\n<p style=\"text-align: left;\"><strong>如果有一件真正紧迫的事情，它会打电话给你说：'我不想打扰你太多，但你需要在下午3点前签署这份文件，现在是2点55分，你能处理一下吗？它在你的收件箱里，我甚至可以再发一封邮件把它推到最顶部。'</strong></p>\n</blockquote>\n<p style=\"text-align: left;\">这种设计背后有一个核心原则。Noah Shinn说：\"我不想把简单的界面与有限的能力混为一谈。它有一台电脑，所以它几乎可以做你在互联网上想做的任何事情。\"</p>\n<p style=\"text-align: left;\">而这一模式直接将它推到了Meta个人AI产品“Muse”的正面交锋上。近期，Meta Muse凭借隔离沙盒架构与常驻执行能力大火，推动AI从问答走向替人办事。但与Muse背靠Meta庞大社交生态、运行在虚拟环境（Secure VM）中不同，Instinct走了一条更极致的“拟人化管家”路线：它拥有自己的虚拟手机与电脑，直接深入现实通信网络替用户办事。</p>\n<h2 style=\"text-align: left;\">年交易流水超10亿美元，旅行占一半</h2>\n<p style=\"text-align: left;\">尽管仍是邀请制，Instinct的商业规模已相当可观。</p>\n<p style=\"text-align: left;\">Noah Shinn在访谈中透露<strong>：\"我们目前年交易流水已接近并超过10亿美元，而用户基数还非常小。其中50%来自旅行。\"</strong></p>\n<p style=\"text-align: left;\">他描述了一个典型场景：用户只需发一条语音消息说\"我今晚需要到纽约\"，Instinct便会自动识别用户当前位置，根据其偏好的航空公司、座位类型、信用卡，完成机票预订，再衔接酒店、机场接送Uber，并同步到日历——\"用户真正做的，只是录了一段语音。其他一切都解决了。\"</p>\n<p style=\"text-align: left;\">他认为，这种体验将从根本上改变旅行预订行业的格局：\"旅行代理商提供的价值在于整合和呈现，但现在有了一个更好的体验。\"</p>\n<h2>增长：0元营销，日增10%</h2>\n<p style=\"text-align: left;\">Instinct的增长路径同样引人注目。</p>\n<p style=\"text-align: left;\">Noah Shinn描述了增长的起点：\"我们最初把产品给了大约200人，都是亲近的朋友和家人。第二天来了大概5个人，然后是210个……然后增速开始加快，从1%、2%，到3%、4%，再到6%、7%、8%、9%，<strong>现在我们大概是每天10%到11%的日环比增长。</strong>\"</p>\n<p style=\"text-align: left;\">每位用户只有5个邀请名额。Noah Shinn说：\"每天大约有10%的用户决定把自己宝贵的邀请名额之一给别人，而这每天都在发生。\"</p>\n<p style=\"text-align: left;\">这种稀缺感催生了二级市场。\"我前几天看到有人在eBay上出售邀请码，大概300美元一个。\"他说。</p>\n<p style=\"text-align: left;\">整个过程中，Instinct的营销支出为零。</p>\n<h2>信任是核心变量：3周后40%用户交出信用卡</h2>\n<p style=\"text-align: left;\"><strong>个人AI代理面临的核心挑战是信任。用户愿意把多少敏感信息交给它，直接决定了它能做多少事。</strong></p>\n<p style=\"text-align: left;\">Noah Shinn分享了一组数据：\"我们发现，建立信任大约需要几周时间。入网三周后，<strong>有40%的用户已经向Instinct共享了个人信用卡。</strong>\"</p>\n<p style=\"text-align: left;\">他将\"首次共享信用卡的时间\"视为信任的代理指标，并强调这一数字的含义：\"这40%还包括了在此之前已经流失的用户比例。\"</p>\n<p style=\"text-align: left;\">更关键的是留存数据：\"我们发现，<strong>当用户向Instinct共享至少一条敏感信息并真正信任它之后，留存率高达80%。对于一款消费级产品来说，这个数字相当惊人。</strong>\"</p>\n<h2 style=\"text-align: left;\">商业模式：对标Apple Pay，拒绝广告</h2>\n<p style=\"text-align: left;\">Noah Shinn明确拒绝了广告变现路径。</p>\n<p style=\"text-align: left;\">\"我不想构建那种现实，\"他说，\"想象一个Instinct比用户更聪明的世界——如果它利用自己的智能去影响用户购买他们不想买的东西，那将是非常危险的。\"</p>\n<p style=\"text-align: left;\">他将Google、TikTok、Instagram等平台的广告模式定性为\"用户不付费，用户就是产品\"，并表示Instinct的设计原则是\"完全站在用户一边行动\"。</p>\n<p style=\"text-align: left;\">在商业模式上，他的思路是交易抽佣。\"我看到的是一个覆盖全平台的交易抽佣模式，就像Apple Pay——用户免费使用，商家为获得分发渠道而付费。\"他以旅行行业为例，指出部分精品酒店愿意为每笔成交支付高达30%的佣金，而Shopify的抽佣率约为2%至3%，Amazon约为10%，Apple应用内购买为30%。\"我们还不知道自己会落在这条曲线的哪个位置，但我们的目标是在高端。\"</p>\n<h2 style=\"text-align: left;\">算力是最大的焦虑</h2>\n<p style=\"text-align: left;\">Noah Shinn坦言，他约40%的时间都在思考算力问题。</p>\n<p style=\"text-align: left;\">\"这不像传统消费产品，用户翻倍，你买2倍资源就够了，\"他说，\"问题在于，算力的采购有几个月的交货周期。如果你现在以10%的日增速运行，3到4个月后就是1亿用户。你现在要为1亿用户买算力吗？如果你买错了，代价是3到4倍。\"</p>\n<p style=\"text-align: left;\">他还指出，Instinct的算力需求与代码生成类产品有本质区别：</p>\n<blockquote>\n<p style=\"text-align: left;\"><strong>Instinct可以在一天中的任何时刻'醒来'和'入睡'。它可能早上6点就醒来，因为它知道你7点起床，它会扫描所有事情，确保一切为你准备好。这种后台工作量是代码生成产品完全没有的。所需的算力将比我们预想的多出数个数量级。</strong></p>\n</blockquote>\n<p style=\"text-align: left;\">他同时透露，Instinct已找到一套成本优化方案：通过定制化推理部署，将不需要实时响应的后台任务与即时交互任务分开处理，在相同算力下实现3倍至8倍的效率提升，从而以接近前沿模型（如Opus 5）的性能水平，以极低成本提供服务。</p>\n<h2 style=\"text-align: left;\">“Instinct互联”网络与行业重构</h2>\n<p style=\"text-align: left;\">Instinct近期推出了\"可信人际网络\"（Trusted Person Network）功能，允许两个用户的Instinct代理直接通信，自动协调日程、共享文件。</p>\n<p style=\"text-align: left;\">Noah Shinn描述了一个典型场景：\"你只需说出意图——我想在本周末前和这个人见面。它会和对方的Instinct协调，找到双方都有空的时间，然后把会议放进日历。\"</p>\n<p style=\"text-align: left;\">他认为，这一功能将对现有数字服务产生深远影响，但他的态度是合作而非对抗。\"我认为大多数数字服务不会被颠覆，而是会被改变和转型，\"他说，\"我们的方式是去找到这些企业，告诉他们：这是我们认为你的业务现在的样子，这是Instinct用户现在与你的业务互动的方式，我们能做什么来让双方都更好？\"</p>\n<h2>狂奔背后的隐忧：高权限风险与隐私争议</h2>\n<p>然而，将现实生活全盘托付给一个拥有极高权限的Agent，也引发了巨大争议。</p>\n<p><strong>要完成高难度事务，用户必须向Instinct深度开放邮箱、日历、个人账户甚至位置与信用卡等绝对私密的数据。部分早期用户对Agent“可能在没有充分确认的情况下误操作敏感交易”表达了强烈担忧。</strong></p>\n<p>更具争议的是据《华尔街日报》报道，Instinct当前的服务条款允许公司使用用户数据来训练AI模型。尽管诺亚·辛强调团队已部署了“隔离沙盒”与“短时本地凭证”，并上线了能够主动拦截幻觉的检测系统，但如何在“替用户办妥一切”的便利性与“数据边界/责任归属”之间取得平衡，将是这家14人超级独角兽在挑战Meta王座路上必须直面的考验。</p><div style=\"color: #666; margin-bottom: 15px;\">风险提示及免责条款</div>\n          <div style=\"font-size: 12px;font-family: 黑体;color: #666;line-height: 20px;\">\n            市场有风险，投资需谨慎。本文不构成个人投资建议，也未考虑到个别用户特殊的投资目标、财务状况或需要。用户应考虑本文中的任何意见、观点或结论是否符合其特定状况。据此投资，责任自负。\n          </div>\n",
+  "content_short": "团队仅14人、创始人今年仅23岁、投后估值达到100亿美元（约合人民币671亿元），一个月内估值狂飙至4倍——硅谷正在诞生Meta Muse的最强劲敌：Instinct。公司成立仅一年，但年交易流水已超10亿美元，用户日环比增速约10%。CEO透露，与Instinct共享敏感信息用户留存率达80%。",
+  "custom_tag": "",
+  "display_time": 1790654990,
+  "funds": null,
+  "has_transfer_audio": true,
+  "id": 3782700,
+  "image": {
+   "uri": "https://wpimg-wscn.awtmt.com/e299e002-a570-45b9-bdb5-a4df776154a2.png",
+   "height": 629,
+   "width": 955,
+   "size": 468792
+  },
+  "images": [
+   {
+    "uri": "https://wpimg-wscn.awtmt.com/e299e002-a570-45b9-bdb5-a4df776154a2.png",
+    "height": 629,
+    "width": 955,
+    "size": 468792
+   }
+  ],
+  "influence_score": 0,
+  "is_need_pay": false,
+  "is_priced": false,
+  "is_trial": false,
+  "is_video": false,
+  "layout": "wscn-layout",
+  "limited_time": 0,
+  "membership_uri": "",
+  "next": {
+   "id": 3782713,
+   "image": {
+    "uri": "https://wpimg-wscn.awtmt.com/404bb5a0-07a5-44a0-8400-70b52de2ceea.jpeg",
+    "height": 495,
+    "width": 792,
+    "size": 22667
+   },
+   "title": "澳洲联储如期加息25基点至4.35%，警告通胀上行风险显现、不排除进一步收紧",
+   "url": "https://wallstreetcn.com/articles/3782713"
+  },
+  "pageviews": 5272,
+  "plates": [],
+  "previous": {
+   "id": 3782706,
+   "image": {
+    "uri": "https://wpimg-wscn.awtmt.com/5c4ad056-52f3-4562-ab04-fdd51efa09d3.jpeg",
+    "height": 495,
+    "width": 792,
+    "size": 243952
+   },
+   "title": "A股三大股指午盘翻红，地产爆发、万科涨停，固态电池拉升，恒科指跌超1%，科网股普遍下跌",
+   "url": "https://wallstreetcn.com/articles/3782706"
+  },
+  "related_topics": [],
+  "show_like": true,
+  "source_name": "",
+  "source_uri": "",
+  "subtitle": "",
+  "tags": [],
+  "theme_group_map": null,
+  "themes": [],
+  "title": "“用户日增速10%”！23岁天才辍学生造出Meta Muse最大劲敌，14人团队撑起671亿估值",
+  "unshow_content_short": false,
+  "words_count": 2625
+ }
+}

@@ -19,6 +19,9 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 | `sina_article_column_56592.html` | `GET https://finance.sina.com.cn/roll/c/56592.shtml`（页面 HTML 原样保存） | 2026-09-29 00:41 | 「上市公司」栏目滚动页（SSR 整页列表），200 条 li 里 14 条无日期路径（覆盖跳过分支），首条《准万亿城市"卡位战"，悬念再起》（09月28日 23:54） |
 | `sina_article_detail.html` | `GET https://finance.sina.com.cn/stock/usstock/c/2026-09-29/doc-initmeav9622448.shtml`（页面 HTML 原样保存） | 2026-09-29 00:41 | 新浪文章详情页（SSR），正文在 `div#artibody`，含 1 张 `div.img_wrapper` 正文图与文末 appendQr 推广二维码块（锁定"二维码不入图片列表"），标题《财报前夕，美光"超级多头"重申2000美元目标价》 |
 | `sina_article_detail_rich.html` | `GET https://finance.sina.com.cn/stock/usstock/c/2026-09-28/doc-initmeau2811260.shtml`（页面 HTML 原样保存） | 2026-09-29 00:41 | 含 `blockquote` 引用块的文章详情页，标题《奥多比预测今年美国假日季线上购物将创历史新高》 |
+| `wscn_article_list_page1.json` / `wscn_article_list_page2.json` | `GET https://api-one-wscn.awtmt.com/apiv1/content/articles?limit=30`（第二页带 `cursor=1790663006,1790651700`） | 2026-09-29 14:24 (东八区) | 见闻文章全量流两页各 30 条，页间零重叠；首页首条《加入个人AI Agent大战！豆包被曝将推个人助理产品"Spell"，4月已内测》（display_time=1790663006） |
+| `wscn_article_detail.json` | `GET https://api-one-wscn.awtmt.com/apiv1/content/articles/3782700?extract=0` | 2026-09-29 14:24 | 免费长文详情（正文约 3700 字 + 1 图），标题《"用户日增速10%"！23岁天才辍学生造出Meta Muse最大劲敌，14人团队》 |
+| `wscn_article_detail_paid.json` | `GET https://api-one-wscn.awtmt.com/apiv1/content/articles/3782635?extract=0` | 2026-09-29 14:24 | 付费文详情（is_priced，正文截断约 700 字），锁定"付费预览仍解析入库"路径 |
 | `wscn_live_page1.json` / `wscn_live_page2.json` | `GET https://api-one.wallstcn.com/apiv1/content/lives?channel=global-channel&client=pc&limit=20`（第二页带 `cursor=1789785930`） | 2026-09-19 11:06 | 华尔街见闻 live 两页各 20 条 |
 | `jin10_flash_page1.json` / `jin10_flash_page2.json` | `GET https://flash-api.jin10.com/get_flash_list?channel=-8200&vip=1`（带 `x-app-id` / `x-version` 头，第二页带 `max_time`） | 2026-09-19 11:06 | 金十快讯两页各 20 余条，含 4 条 PLUS 专享（正文锁定）条目 |
 
