@@ -76,4 +76,19 @@ public class SpiderNewsContentOriginModel : ILongIdEntity, IUpdateTimeEntity
     /// </summary>
     [SugarColumn(ColumnName = "is_paid")]
     public bool IsPaid { get; set; }
+
+
+    /// <summary>
+    ///     媒体标识 ( 与 spider_news_list.from_media 同枚举 , 下载时冗余写入 )——origin 表自包含 ,
+    ///     重放作业不依赖列表表即可路由
+    /// </summary>
+    [SugarColumn(ColumnName = "from_media")]
+    public int FromMedia { get; set; }
+
+    /// <summary>
+    ///     解析器标识 ( 如 wscn-article-v1 ) : 标记本行原始内容用哪个解析方法生成结构化内容 ;
+    ///     空 = 未标记的存量行 , 重放时回退按 from_media 走注册表。解析逻辑不兼容变更时 bump 版本号
+    /// </summary>
+    [SugarColumn(ColumnName = "parser_code")]
+    public string? ParserCode { get; set; }
 }

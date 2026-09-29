@@ -26,9 +26,17 @@ public interface INewsSpider
     Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor);
 
     /// <summary>
+    ///     解析器标识 , 随 origin 行落库 ( spider_news_content_origin.parser_code ) :
+    ///     格式 {源}-{形态}-v{N} ( 如 wscn-article-v1 ) , 供脱离注册表的重放作业按行路由解析方法 ;
+    ///     解析逻辑不兼容变更 ( 源改版换解析路径 ) 时 bump 版本号 , 小修不 bump
+    /// </summary>
+    string ParserCode { get; }
+
+    /// <summary>
     ///     下载单条新闻的原始内容 ( 详情页 / 详情接口 )
     /// </summary>
     Task<NewsContentOrigin> GetContentOrigin(SpiderNewsListModel newsItem);
+
 
     /// <summary>
     ///     解析原始内容为结构化详情与图片列表 ( 不落库 )

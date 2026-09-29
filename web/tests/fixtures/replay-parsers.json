@@ -1,0 +1,22 @@
+[
+  {
+    "code": "df-article-v1",
+    "fromMedia": 1,
+    "sourceName": "DfMedia"
+  },
+  {
+    "code": "cls-article-v1",
+    "fromMedia": 2,
+    "sourceName": "ClsMedia"
+  },
+  {
+    "code": "sina-html-v1",
+    "fromMedia": 3,
+    "sourceName": "SinaMedia"
+  },
+  {
+    "code": "wscn-article-v1",
+    "fromMedia": 4,
+    "sourceName": "WscnMedia"
+  }
+]

@@ -17,6 +17,9 @@ public class DfNewsSpider : INewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.DfMedia;
 
+    /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
+    public string ParserCode => DfNewsResource.ParserCode;
+
     public IReadOnlyList<NewsColumn> Columns { get; } = DfNewsResource.DfListUrlResourceList
         .Select(item => new NewsColumn(item.ListResourceNumber.ToString(), item.CategoryInfo.CategoryName))
         .ToList();
@@ -46,7 +49,9 @@ public class DfNewsSpider : INewsSpider
             OriginType = origin.OriginType,
             NewsOriginContent = origin.NewsOriginContent,
             Status = origin.Status,
-            Message = origin.Message
+            Message = origin.Message,
+            ParserCode = ParserCode,
+            FromMedia = (int)FromMedia
         };
     }
 

@@ -2,6 +2,7 @@ using KSpider.Config;
 using KSpider.Data;
 using KSpider.Web.Api;
 using KSpider.Web.Query;
+using KSpider.Web.Replay;
 using Microsoft.Extensions.Configuration;
 
 namespace KSpider.Web;
@@ -30,17 +31,21 @@ public static class Program
         builder.Services.Configure<DatabaseOptions>(
             builder.Configuration.GetSection(DatabaseOptions.SectionName));
         builder.Services.AddSingleton<Pg>();
+        builder.Services.AddSingleton<SpiderNewsDao>();
         builder.Services.AddSingleton<SystemStatusDao>();
         builder.Services.AddSingleton<StatusQueryService>();
         builder.Services.AddSingleton<NewsQueryService>();
         builder.Services.AddSingleton<FlashQueryService>();
         builder.Services.AddSingleton<AnalysisQueryService>();
         builder.Services.AddSingleton<JobCommandService>();
+        builder.Services.AddSingleton<OriginReplayService>();
 
         // 开发期 OpenAPI 文档 ( /openapi/v1.json ) , 生产不暴露
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
+        // 幂等补齐系统表 ( 含重放任务表 ) : Web 可能先于主程序部署在同一个库上跑
+        app.Services.GetRequiredService<Pg>().EnsureSystemDbObjects();
         if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
         // 前端为构建产物静态文件 ( scripts/build-web.sh 拷入 wwwroot ) ; 未构建时只提供 API

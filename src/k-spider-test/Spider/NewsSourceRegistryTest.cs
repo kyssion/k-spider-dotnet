@@ -198,4 +198,28 @@ public class NewsSourceRegistryTest
             Assert.IsTrue(ranges[i].Min > ranges[i - 1].Max,
                 $"编号段重叠 : [{ranges[i - 1].Min},{ranges[i - 1].Max}] 与 [{ranges[i].Min},{ranges[i].Max}]");
     }
+
+    /// <summary>
+    ///     解析器码约束 : 每源非空且唯一、格式为 {源}-{形态}-v{N} ;
+    ///     重放路由按码命中 , 未知/空码回退按 from_media 走注册表
+    /// </summary>
+    [TestMethod]
+    public void ParserCodeUniqueAndReplayRoutingFallsBack()
+    {
+        var codes = NewsSpiderRegistry.All.Select(spider => spider.ParserCode).ToList();
+        Assert.IsTrue(codes.All(code => !string.IsNullOrWhiteSpace(code)), "存在源未声明 ParserCode");
+        Assert.AreEqual(codes.Count, codes.Distinct().Count(), "解析器码必须唯一");
+        foreach (var code in codes)
+            StringAssert.Matches(code, new System.Text.RegularExpressions.Regex(@"^[a-z]+-[a-z]+-v\d+$"),
+                $"解析器码格式应为 {{源}}-{{形态}}-v{{N}} : {code}");
+
+        // 按码命中
+        var wscn = NewsParserRegistry.Resolve("wscn-article-v1", 0);
+        Assert.IsInstanceOfType<WscnArticleSpider>(wscn);
+
+        // 空/未知码回退按 from_media
+        Assert.IsInstanceOfType<SinaArticleSpider>(NewsParserRegistry.Resolve(null, (int)FromTypeOfNews.SinaMedia));
+        Assert.IsInstanceOfType<SinaArticleSpider>(NewsParserRegistry.Resolve("sina-html-v9", (int)FromTypeOfNews.SinaMedia));
+        Assert.IsNull(NewsParserRegistry.Resolve("sina-html-v9", 0), "码与媒体都不命中应返回 null");
+    }
 }

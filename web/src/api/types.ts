@@ -131,3 +131,29 @@ export interface JobCommand {
   consumedAt: string | null
   createTime: string
 }
+
+export interface ParserInfo {
+  code: string
+  fromMedia: number
+  sourceName: string
+}
+
+export interface ReplayTask {
+  id: number
+  filter: string | null
+  status: 'running' | 'done' | 'failed'
+  total: number
+  successCount: number
+  failCount: number
+  message: string | null
+  createTime: string
+  finishTime: string | null
+}
+
+export interface ReplayRequestParams {
+  fromMedia?: number | null
+  parserCode?: string | null
+  start?: string | null
+  end?: string | null
+  maxCount?: number | null
+}

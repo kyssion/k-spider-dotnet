@@ -5,6 +5,8 @@ namespace KSpider.Spider.News.Web.Eastmoney;
 /// </summary>
 public static class DfNewsResource
 {
+    /// <summary>解析器标识 : 东财 JSON 详情接口 → 结构化片段 ( origin 行路由用 )</summary>
+    public const string ParserCode = "df-article-v1";
     // 列表页面请求数据的url地址
     public const string RequestDfListUrl =
         "https://np-listapi.eastmoney.com/comm/web/getNewsByColumns?client=web&biz=web_news_col&column={0}&order={1}&page_index={2}&page_size={3}&req_trace={4}&fields=code,showTime,title,mediaName,summary,image,url,uniqueUrl,Np_dst";

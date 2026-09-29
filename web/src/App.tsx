@@ -3,6 +3,7 @@ import {
   BarChart3,
   LayoutDashboard,
   Newspaper,
+  RotateCw,
   Settings2,
   Zap,
 } from 'lucide-react'
@@ -12,6 +13,7 @@ import NewsPage from './pages/NewsPage'
 import FlashPage from './pages/FlashPage'
 import AnalysisPage from './pages/AnalysisPage'
 import JobsPage from './pages/JobsPage'
+import ReplayPage from './pages/ReplayPage'
 
 const NAV_ITEMS = [
   { to: '/', label: '总览', icon: LayoutDashboard },
@@ -19,6 +21,7 @@ const NAV_ITEMS = [
   { to: '/flash', label: '实时快讯', icon: Zap },
   { to: '/analysis', label: '数据分析', icon: BarChart3 },
   { to: '/jobs', label: '任务管理', icon: Settings2 },
+  { to: '/replay', label: '数据重放', icon: RotateCw },
 ]
 
 export default function App() {
@@ -65,6 +68,7 @@ export default function App() {
           <Route path="/flash" element={<FlashPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/replay" element={<ReplayPage />} />
         </Routes>
       </main>
     </div>

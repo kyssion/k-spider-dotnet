@@ -65,6 +65,25 @@ public class Pg
                 "ALTER TABLE public.spider_news_list ADD COLUMN IF NOT EXISTS is_paid boolean DEFAULT false NOT NULL");
             connection.Ado.ExecuteCommand(
                 "ALTER TABLE public.spider_news_content_origin ADD COLUMN IF NOT EXISTS is_paid boolean DEFAULT false NOT NULL");
+            // origin 解析路由标记 : from_media 冗余自列表行 + parser_code 解析器标识 ( 空 = 回退注册表 )
+            connection.Ado.ExecuteCommand(
+                "ALTER TABLE public.spider_news_content_origin ADD COLUMN IF NOT EXISTS from_media integer DEFAULT 0 NOT NULL");
+            connection.Ado.ExecuteCommand(
+                "ALTER TABLE public.spider_news_content_origin ADD COLUMN IF NOT EXISTS parser_code text");
+            // 存量回填 ( 幂等 : 只动 from_media=0 的行 ) : 媒体标识按列表行回填 , 解析器码按当前注册表版本 ( v1 ) 回填
+            connection.Ado.ExecuteCommand(
+                """
+                UPDATE public.spider_news_content_origin o
+                SET from_media = COALESCE(l.from_media, 0),
+                    parser_code = CASE COALESCE(l.from_media, 0)
+                        WHEN 1 THEN 'df-article-v1'
+                        WHEN 2 THEN 'cls-article-v1'
+                        WHEN 3 THEN 'sina-html-v1'
+                        WHEN 4 THEN 'wscn-article-v1'
+                        ELSE NULL END
+                FROM public.spider_news_list l
+                WHERE o.news_url = l.news_url AND o.from_media = 0
+                """);
             connection.Ado.ExecuteCommand(
                 """
                 CREATE INDEX IF NOT EXISTS idx_news_list_download_status
@@ -188,7 +207,24 @@ public class Pg
                 )
                 """);
             // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
-            foreach (var table in (string[])["spider_job_state", "spider_job_command", "spider_node_status"])
+            // 数据重放任务表 ( Web 控制台重放工具 )
+            connection.Ado.ExecuteCommand("""
+                CREATE TABLE IF NOT EXISTS public.spider_replay_log
+                (
+                    id           bigserial NOT NULL,
+                    filter       text,
+                    status       text      NOT NULL DEFAULT 'running',
+                    total        integer   NOT NULL DEFAULT 0,
+                    success_count integer  NOT NULL DEFAULT 0,
+                    fail_count   integer   NOT NULL DEFAULT 0,
+                    message      text,
+                    create_time  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    finish_time  timestamp,
+                    CONSTRAINT spider_replay_log_pkey PRIMARY KEY (id)
+                )
+                """);
+            foreach (var table in (string[])["spider_job_state", "spider_job_command", "spider_node_status", "spider_replay_log"])
             {
                 connection.Ado.ExecuteCommand($"DROP TRIGGER IF EXISTS update_modified_column ON public.{table}");
                 connection.Ado.ExecuteCommand(

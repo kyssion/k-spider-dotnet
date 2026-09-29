@@ -13,6 +13,9 @@ namespace KSpider.Spider.News.Web.Sina;
 /// </summary>
 public static class SinaArticleResource
 {
+
+    /// <summary>解析器标识 : 新浪详情整页 HTML div#artibody → 结构化片段 ( origin 行路由用 )</summary>
+    public const string ParserCode = "sina-html-v1";
     /// <summary>
     ///     财经滚动列表接口 , {0}=lid 栏目号 , {1}=单页条数 , {2}=页码 ; 页码翻页 , 按 ctime 严格降序、页间不重叠
     /// </summary>

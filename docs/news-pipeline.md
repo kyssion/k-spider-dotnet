@@ -82,6 +82,12 @@ public interface INewsSpider
 - 各源 `category` 用**独立编号段**（东财 1-22、财联社 101 起），不复用别源的语义。
 - 各源的 HTTP 请求统一走 `Spider/Verify/VerifiedHttp`（自带会话回放与反爬验证的自动识别/通过），不要直接调 `HttpClientTools`；被拦住时抛 `VerificationRequiredException`（带验证类型），过不了的源会在 `NewsCheckJob` 里汇总告警。设计见 [anti-bot-verification.md](anti-bot-verification.md)。
 
+## 三点五、解析路由与数据重放
+
+- 解析方法的路由有两条等价路径：`NewsContentJob` 按列表行 `from_media` 走 `NewsSpiderRegistry`（现行路径）；数据重放按 origin 行 `parser_code` 走 `NewsParserRegistry`（码优先，空/未知码回退 from_media）——两条路径同源构建，不会漂移。
+- 每个源在 `INewsSpider.ParserCode` 声明解析器码（`df-article-v1` / `cls-article-v1` / `sina-html-v1` / `wscn-article-v1`），随 origin 行落库；解析逻辑不兼容变更时 bump 版本号。
+- 重放入口：Web 控制台"数据重放"页（`POST /api/replay`，筛选 源/解析器/入库时间窗/条数上限），执行在 Web 进程内异步进行，进度落 `spider_replay_log`。解析成功推进列表 `status=1`，失败不动列表状态只计数。
+
 ## 四、已接入的源
 
 | 源 | 标识 | 当前栏目 | 翻页模型 | 原始内容 | 备注 |

@@ -33,6 +33,9 @@ public partial class WscnArticleSpider : INewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.WscnMedia;
 
+    /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
+    public string ParserCode => WscnArticleResource.ParserCode;
+
     // 单栏目全量流 : 见 WscnArticleResource.ColumnId 注释 ( 不按类别建多栏目 , 分类号逐条推断 )
     public IReadOnlyList<NewsColumn> Columns { get; } =
         [new(WscnArticleResource.ColumnId, WscnArticleResource.ColumnName)];
@@ -100,6 +103,8 @@ public partial class WscnArticleSpider : INewsSpider
             NewsUrl = url,
             // 详情接口 JSON 原文即原始内容 ( 正文在其 data.content 字段 , 解析阶段再展开 )
             OriginType = NewsContentOriginType.Json,
+            ParserCode = WscnArticleResource.ParserCode,
+            FromMedia = (int)FromTypeOfNews.WscnMedia,
             NewsOriginContent = ""
         };
         try

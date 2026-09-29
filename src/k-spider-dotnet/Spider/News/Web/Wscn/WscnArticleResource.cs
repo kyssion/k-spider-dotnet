@@ -10,6 +10,9 @@ namespace KSpider.Spider.News.Web.Wscn;
 /// </summary>
 public static class WscnArticleResource
 {
+
+    /// <summary>解析器标识 : 见闻详情 JSON data.content → 结构化片段 ( origin 行路由用 )</summary>
+    public const string ParserCode = "wscn-article-v1";
     /// <summary>
     ///     文章列表接口 : ?limit={单页条数}[&amp;cursor={上一页 next_cursor}] ; 游标为响应里的 next_cursor
     ///     ( "最新时间,最老时间" 对 , 接口自解释 , 调用方透传 )
@@ -25,6 +28,7 @@ public static class WscnArticleResource
     public const string ResourceHost = "api-one-wscn.awtmt.com";
 
     public const string NewsFromName = "华尔街见闻";
+
 
     /// <summary>
     ///     单页上限 : 实测 limit 超过 30 时接口返回 data 为空字符串 ( code 仍 20000 OK ,

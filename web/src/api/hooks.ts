@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost, type QueryParams } from './client'
+import { apiGet, apiPost, apiPostBody, type QueryParams } from './client'
 import type {
   DistributeDto,
   FlashItem,
@@ -10,7 +10,10 @@ import type {
   NewsListItem,
   NodeStatus,
   PageResult,
+  ParserInfo,
   PipelineStatus,
+  ReplayRequestParams,
+  ReplayTask,
   VolumeDto,
 } from './types'
 
@@ -117,5 +120,37 @@ export function useSendCommand() {
       queryClient.invalidateQueries({ queryKey: ['commands'] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
     },
+  })
+}
+
+/** —— 数据重放 —— */
+
+export function useReplayParsers() {
+  return useQuery({
+    queryKey: ['replay-parsers'],
+    queryFn: () => apiGet<ParserInfo[]>('/replay/parsers'),
+  })
+}
+
+export function useReplayPreview() {
+  return useMutation({
+    mutationFn: (params: ReplayRequestParams) =>
+      apiPostBody<{ count: number }>('/replay/preview', params),
+  })
+}
+
+export function useSubmitReplay() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: ReplayRequestParams) => apiPostBody<ReplayTask>('/replay', params),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['replay-tasks'] }),
+  })
+}
+
+export function useReplayTasks() {
+  return useQuery({
+    queryKey: ['replay-tasks'],
+    queryFn: () => apiGet<ReplayTask[]>('/replay/tasks'),
+    refetchInterval: 3_000,
   })
 }

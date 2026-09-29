@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "filter": "{\"fromMedia\":3,\"parserCode\":\"sina-html-v1\",\"maxCount\":5000}",
+    "status": "done",
+    "total": 120,
+    "successCount": 118,
+    "failCount": 2,
+    "message": null,
+    "createTime": "2026-09-29T10:00:00",
+    "finishTime": "2026-09-29T10:01:30"
+  },
+  {
+    "id": 2,
+    "filter": "{\"parserCode\":\"wscn-article-v1\",\"maxCount\":20000}",
+    "status": "running",
+    "total": 640,
+    "successCount": 639,
+    "failCount": 1,
+    "message": null,
+    "createTime": "2026-09-29T11:00:00",
+    "finishTime": null
+  }
+]

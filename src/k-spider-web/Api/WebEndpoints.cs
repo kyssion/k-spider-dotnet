@@ -20,5 +20,6 @@ public static class WebEndpoints
         api.MapFlashApis();
         api.MapAnalysisApis();
         api.MapJobCommandApis();
+        api.MapReplayApis();
     }
 }

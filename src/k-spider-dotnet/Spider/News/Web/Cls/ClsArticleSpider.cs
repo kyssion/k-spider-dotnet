@@ -37,6 +37,9 @@ public partial class ClsArticleSpider : INewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.ClsMedia;
 
+    /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
+    public string ParserCode => ClsArticleResource.ParserCode;
+
     public IReadOnlyList<NewsColumn> Columns { get; } = ClsArticleResource.ArticleChannelResourceList
         .Select(item => new NewsColumn(item.ChannelId.ToString(), item.ChannelName))
         .ToList();
@@ -111,6 +114,8 @@ public partial class ClsArticleSpider : INewsSpider
         {
             NewsUrl = newsItem.NewsUrl ?? "",
             OriginType = NewsContentOriginType.Json,
+            ParserCode = ClsArticleResource.ParserCode,
+            FromMedia = (int)FromTypeOfNews.ClsMedia,
             NewsOriginContent = ""
         };
         try

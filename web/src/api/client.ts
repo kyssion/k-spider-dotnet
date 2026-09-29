@@ -26,3 +26,17 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
   }
   return res.json() as Promise<T>
 }
+
+/** 带 JSON 请求体的 POST ( 重放的预览 / 提交 ) */
+export async function apiPostBody<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`POST ${path} → ${res.status} ${text.slice(0, 200)}`)
+  }
+  return res.json() as Promise<T>
+}

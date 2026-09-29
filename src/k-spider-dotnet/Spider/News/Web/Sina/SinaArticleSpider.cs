@@ -35,6 +35,9 @@ public partial class SinaArticleSpider : INewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.SinaMedia;
 
+    /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
+    public string ParserCode => SinaArticleResource.ParserCode;
+
     public IReadOnlyList<NewsColumn> Columns { get; } = SinaArticleResource.ArticleColumnList
         .Select(item => new NewsColumn(item.ColumnId, item.ColumnName))
         .ToList();
@@ -133,6 +136,8 @@ public partial class SinaArticleSpider : INewsSpider
             NewsUrl = url,
             // 详情页整页即原始内容 ( 站点没有结构化详情接口 , 页面本身就是数据载体 )
             OriginType = NewsContentOriginType.Html,
+            ParserCode = SinaArticleResource.ParserCode,
+            FromMedia = (int)FromTypeOfNews.SinaMedia,
             NewsOriginContent = ""
         };
         try

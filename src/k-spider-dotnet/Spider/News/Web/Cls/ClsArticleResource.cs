@@ -10,6 +10,9 @@ namespace KSpider.Spider.News.Web.Cls;
 /// </summary>
 public static class ClsArticleResource
 {
+
+    /// <summary>解析器标识 : 财联社文章 SSR __NEXT_DATA__ → 结构化片段 ( origin 行路由用 )</summary>
+    public const string ParserCode = "cls-article-v1";
     /// <summary>
     ///     频道文章列表接口 , {0} 为频道 id ; 时间游标翻页 ( last_time = 上一页最老一条 ctime )
     /// </summary>

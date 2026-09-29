@@ -181,11 +181,36 @@ CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")
   WHERE download_status_code IN (0, 2, 3, 4);
 
+-- origin 解析路由标记 ( 2026-09 增量演进 : origin 表自包含 , 重放作业按行路由解析方法 )
+-- from_media 冗余自列表行 ; parser_code 空 = 存量行回退按 from_media 走注册表
+ALTER TABLE "public"."spider_news_content_origin" ADD COLUMN IF NOT EXISTS "from_media" integer NOT NULL DEFAULT 0;
+ALTER TABLE "public"."spider_news_content_origin" ADD COLUMN IF NOT EXISTS "parser_code" text;
+COMMENT ON COLUMN "public"."spider_news_content_origin"."from_media" IS '媒体标识 ( 下载时冗余自列表行 , origin 自包含路由用 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."parser_code" IS '解析器标识 ( 如 wscn-article-v1 ) , 空则回退按 from_media 路由';
+
 -- 付费内容标记 ( 2026-09 增量演进 : 列表与原始内容两表同语义 , 无此信息的源恒为 false )
 ALTER TABLE "public"."spider_news_list" ADD COLUMN IF NOT EXISTS "is_paid" boolean NOT NULL DEFAULT false;
 COMMENT ON COLUMN "public"."spider_news_list"."is_paid" IS '是否付费/会员专享内容 ( 列表接口侧标记 )';
 ALTER TABLE "public"."spider_news_content_origin" ADD COLUMN IF NOT EXISTS "is_paid" boolean NOT NULL DEFAULT false;
 COMMENT ON COLUMN "public"."spider_news_content_origin"."is_paid" IS '原始内容是否来自付费文章 ( 详情侧标记 )';
+
+-- 数据重放任务记录 ( k-spider-web 的重放工具落档 : 筛选条件 / 进度 / 结果 )
+CREATE TABLE IF NOT EXISTS "public"."spider_replay_log" (
+  "id" bigserial NOT NULL,
+  "filter" text,
+  "status" text NOT NULL DEFAULT 'running',
+  "total" integer NOT NULL DEFAULT 0,
+  "success_count" integer NOT NULL DEFAULT 0,
+  "fail_count" integer NOT NULL DEFAULT 0,
+  "message" text,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "finish_time" timestamp without time zone,
+  CONSTRAINT "spider_replay_log_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "public"."spider_replay_log" IS '数据重放任务 ( Web 控制台发起 , origin 重新解析生成 content )';
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_replay_log FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
 --
 -- 系统运行状态表 ( 2026-09 新增 : Web 控制台 ( k-spider-web ) 的跨进程状态与指令通道 ;

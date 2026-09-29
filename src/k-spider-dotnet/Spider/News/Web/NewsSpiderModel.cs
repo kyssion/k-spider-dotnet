@@ -39,6 +39,12 @@ public class NewsContentOrigin
     /// </summary>
     public bool IsPaid { get; set; }
 
+    /// <summary>媒体标识 ( 下载时冗余自列表行 ) , origin 自包含路由用</summary>
+    public int FromMedia { get; set; }
+
+    /// <summary>解析器标识 ( 源声明的 ParserCode ) , 重放作业按行路由解析方法</summary>
+    public string? ParserCode { get; set; }
+
     public SpiderNewsContentOriginModel ToModel()
     {
         return new SpiderNewsContentOriginModel
@@ -48,7 +54,9 @@ public class NewsContentOrigin
             NewsOriginType = (int)OriginType,
             Status = (int)Status,
             Message = Message,
-            IsPaid = IsPaid
+            IsPaid = IsPaid,
+            FromMedia = FromMedia,
+            ParserCode = ParserCode
         };
     }
 }
