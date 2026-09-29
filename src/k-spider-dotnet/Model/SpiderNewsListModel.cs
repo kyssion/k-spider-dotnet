@@ -111,4 +111,10 @@ public class SpiderNewsListModel : ILongIdEntity, IUpdateTimeEntity
     /// </summary>
     [SugarColumn(ColumnName = "fail_count")]
     public int FailCount { get; set; }
+
+    /// <summary>
+    ///     是否付费/会员专享内容 ( 列表接口侧的付费标记 , 如见闻 is_priced ) ; 无此信息的源恒为 false
+    /// </summary>
+    [SugarColumn(ColumnName = "is_paid")]
+    public bool IsPaid { get; set; }
 }

@@ -60,6 +60,11 @@ public class Pg
             using var connection = Connection();
             connection.Ado.ExecuteCommand(
                 "ALTER TABLE public.spider_news_list ADD COLUMN IF NOT EXISTS fail_count integer DEFAULT 0 NOT NULL");
+            // 付费内容标记 ( 列表与 origin 两表同语义 , 老库由启动幂等补齐 )
+            connection.Ado.ExecuteCommand(
+                "ALTER TABLE public.spider_news_list ADD COLUMN IF NOT EXISTS is_paid boolean DEFAULT false NOT NULL");
+            connection.Ado.ExecuteCommand(
+                "ALTER TABLE public.spider_news_content_origin ADD COLUMN IF NOT EXISTS is_paid boolean DEFAULT false NOT NULL");
             connection.Ado.ExecuteCommand(
                 """
                 CREATE INDEX IF NOT EXISTS idx_news_list_download_status

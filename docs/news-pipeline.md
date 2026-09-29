@@ -173,7 +173,7 @@ public interface INewsSpider
 - 翻页用响应 `data.next_cursor`（`"最新时间,最老时间"` 对，单调向旧、页间零重叠），短页即末页。
 - 两个实测坑：`limit>30` 时接口静默返回 `data:""`（code 仍 20000，已钳制）；详情 `extract` 参数必填（0=带图 HTML / 1=纯文本，缺失报 60327）。
 - 字段映射：`uri` 落 URL；`content_short` 落摘要；`display_time` unix 秒按东八区换算；来源优先 `author.display_name`（专职作者署名）回退 `source_name` 再回退平台名。
-- 付费文（`is_priced`，占比约 7%）详情正文截断（几百字预览），结构完整仍解析入库；全免费文正文完整（长文实测 3700+ 字）。
+- 付费文（`is_priced`，占比约 7%）详情正文截断（几百字预览），结构完整仍解析入库；全免费文正文完整（长文实测 3700+ 字）。付费标记双侧落库：列表行写 `spider_news_list.is_paid`（来自列表接口 `is_priced`），origin 行写 `spider_news_content_origin.is_paid`（下载后从详情 JSON 回读，`WscnArticleSpider.ReadIsPaid`）；付费条目的 uri 带 `?layout=` 可变查询串，入库前统一剥掉（去重键稳定形态）。
 - origin 存详情接口 JSON 原文（`NewsContentOriginType.Json`），解析段展开 `data.content` HTML 片段（标签集实测 `p/h2/img/blockquote/strong/span/div`）。
 
 ### 金十数据快讯（`Spider/News/Flash/Jin10/`）

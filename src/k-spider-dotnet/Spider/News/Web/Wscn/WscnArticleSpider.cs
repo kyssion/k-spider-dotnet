@@ -109,6 +109,7 @@ public partial class WscnArticleSpider : INewsSpider
                 throw new DownloadHttpRequestException(url, "[WscnArticleSpider GetContentOrigin] URL 缺少文章 id");
             var detailUrl = string.Format(WscnArticleResource.ArticleDetailUrlTemplate, articleId);
             ans.NewsOriginContent = await VerifiedHttp.GetStringAsync(WscnArticleResource.ResourceHost, detailUrl);
+            ans.IsPaid = ReadIsPaid(ans.NewsOriginContent);
             ans.Status = NewsContentOriginStatus.Success;
             return ans;
         }
@@ -120,6 +121,21 @@ public partial class WscnArticleSpider : INewsSpider
         }
 
         return ans;
+    }
+
+    /// <summary>
+    ///     从详情响应 JSON 读付费标记 ( data.is_priced ) ; 解析失败不拦截入库流程 , 按非付费处理
+    /// </summary>
+    public static bool ReadIsPaid(string detailJson)
+    {
+        try
+        {
+            return JsonNode.Parse(detailJson)?["data"]?["is_priced"]?.GetValue<bool>() ?? false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public NewsContentParseResult ParseContent(string originContent, string newsUrl)

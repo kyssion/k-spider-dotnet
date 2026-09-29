@@ -225,7 +225,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 + 分�
 20. **`k-spider-web` 开发模式的静态文件伺服自项目目录**（`staticwebassets.runtime.json` 清单），`bin` 下没有 `wwwroot` 物理目录：判断"前端产物是否存在"必须用 `WebRootFileProvider.GetFileInfo("index.html").Exists`，用 `WebRootPath` 拼 `File.Exists` 在 `dotnet run` 下恒为 false（已踩）；发布产物则两者一致。
 21. **手动触发类指令是异步的**：`POST /api/jobs/{name}/{action}` 返回 202 只代表已受理，生效靠 `NodeStateJob` 3 秒轮询消费；爬虫进程停着时指令停在 `pending`，进程恢复后被消费。自动化脚本判断生效要轮询 `/api/jobs/commands` 或 `/api/status/jobs`，不要立刻断言。
 22. **新浪财经一个网站两种管线**（与财联社同款先例）：7x24 快讯在快讯注册表，文章源在网页注册表（`Spider/News/Web/Sina/`），**共用 `SinaMedia=3`**，文章 category 用 202-223 段。文章源的三个实测边界：① 滚动接口 `num>50` 被静默钳到 50；② 栏目滚动页 `roll/c/{cid}.shtml` **整页即全量、没有翻页**（`?page=` 只跳回首页），页面时间 `(09月28日 22:15)` 无年份，年份从条目 URL 路径 `/yyyy-MM-dd/doc-` 补全，无日期路径条目跳过（实测 200 条里 14 条）；③ 频道页上挂着一批已下线的死链 cid（230808/264124/40811 等，`roll/c` 下一律 404），**栏目清单以实测存活为准，不要照抄频道页链接**。详情页整页 HTML 存 origin（`NewsContentOriginType.Html`），文末 `appendQr_wrap` 推广二维码块解析时整体跳过。
-23. **华尔街见闻文章接口的两个静默坑**：① 列表 `limit>30` 时接口返回 `data:""`（code 仍 20000，不是钳制而是无数据），`WscnArticleResource.MaxPageSize` 已钳制，解析层对"data 非对象"显式报错而非当空页；② 详情接口 `extract` 参数**必填**（0=带图 HTML / 1=纯文本），缺失报 `60327 "extract 不正确"`。文章流只配一个全量栏目（`global` 标签覆盖 119/120，多栏目必重复抓），分类号逐条从 `categories` 多标签按优先级推断；付费文（`is_priced`，约 7%）正文截断仍入库。
+23. **华尔街见闻文章接口的两个静默坑**：① 列表 `limit>30` 时接口返回 `data:""`（code 仍 20000，不是钳制而是无数据），`WscnArticleResource.MaxPageSize` 已钳制，解析层对"data 非对象"显式报错而非当空页；② 详情接口 `extract` 参数**必填**（0=带图 HTML / 1=纯文本），缺失报 `60327 "extract 不正确"`。文章流只配一个全量栏目（`global` 标签覆盖 119/120，多栏目必重复抓），分类号逐条从 `categories` 多标签按优先级推断；付费文（`is_priced`，约 7%）正文截断仍入库，付费标记写两表的 `is_paid` 列（列表侧来自接口、origin 侧从详情回读），付费条目 uri 的 `?layout=` 查询串入库前剥掉。
 
 ## 提交规范
 

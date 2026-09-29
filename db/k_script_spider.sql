@@ -181,6 +181,12 @@ CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")
   WHERE download_status_code IN (0, 2, 3, 4);
 
+-- 付费内容标记 ( 2026-09 增量演进 : 列表与原始内容两表同语义 , 无此信息的源恒为 false )
+ALTER TABLE "public"."spider_news_list" ADD COLUMN IF NOT EXISTS "is_paid" boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN "public"."spider_news_list"."is_paid" IS '是否付费/会员专享内容 ( 列表接口侧标记 )';
+ALTER TABLE "public"."spider_news_content_origin" ADD COLUMN IF NOT EXISTS "is_paid" boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN "public"."spider_news_content_origin"."is_paid" IS '原始内容是否来自付费文章 ( 详情侧标记 )';
+
 --
 -- 系统运行状态表 ( 2026-09 新增 : Web 控制台 ( k-spider-web ) 的跨进程状态与指令通道 ;
 -- 主程序上报 / 消费 , k-spider-web 读取展示与写入指令 , 老库由启动时 Pg.EnsureSystemDbObjects 幂等补齐 )

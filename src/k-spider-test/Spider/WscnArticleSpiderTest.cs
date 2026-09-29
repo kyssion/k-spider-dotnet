@@ -39,6 +39,28 @@ public class WscnArticleSpiderTest
         // display_time=1790663006 → 东八区 2026-09-29 14:23:26
         Assert.AreEqual(new DateTime(2026, 9, 29, 14, 23, 26), first.NewsTime);
         Assert.IsFalse(string.IsNullOrEmpty(first.NewsSummary), "content_short 应进入摘要");
+        Assert.IsFalse(first.IsPaid, "免费条目 is_priced=false");
+    }
+
+    [TestMethod]
+    public void ListMarksPaidItemsAndNormalizesUrl()
+    {
+        var page = WscnArticleSpider.ParseListPage(ReadFixture("wscn_article_list_page1.json"), 30);
+        var paid = page.Items.Where(item => item.IsPaid).ToList();
+
+        // 夹具第 25/26 条为同一篇付费文 ( is_priced=true , uri 带 ?layout= 查询串 )
+        Assert.AreEqual("https://wallstreetcn.com/premium/articles/3782635", paid[0].NewsUrl,
+            "付费条目 uri 的可变查询串应被剥掉 ( 去重键稳定形态 )");
+        Assert.IsTrue(paid.All(item => item.NewsUrl.IndexOf('?') < 0), "入库 URL 不应带查询串");
+    }
+
+    [TestMethod]
+    public void ReadIsPaidReadsDetailFlag()
+    {
+        Assert.IsFalse(WscnArticleSpider.ReadIsPaid(ReadFixture("wscn_article_detail.json")));
+        Assert.IsTrue(WscnArticleSpider.ReadIsPaid(ReadFixture("wscn_article_detail_paid.json")));
+        // 坏载荷按非付费处理 , 不拦截入库流程
+        Assert.IsFalse(WscnArticleSpider.ReadIsPaid("not-json"));
     }
 
     [TestMethod]

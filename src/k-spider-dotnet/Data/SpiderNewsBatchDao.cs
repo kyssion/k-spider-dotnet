@@ -105,7 +105,8 @@ public class SpiderNewsBatchDao
                                                                   news_origin_content   = EXCLUDED.news_origin_content,
                                                                   news_origin_type      = EXCLUDED.news_origin_type,
                                                                   status                = EXCLUDED.status,
-                                                                  message               = EXCLUDED.message
+                                                                  message               = EXCLUDED.message,
+                                                                  is_paid               = EXCLUDED.is_paid
                              """;
             return connection.Ado.ExecuteCommand(sqlTemple);
         }

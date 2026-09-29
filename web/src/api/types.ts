@@ -18,6 +18,7 @@ export interface NewsListItem {
   category: number
   downloadStatusCode: number
   failCount: number
+  isPaid?: boolean
 }
 
 export interface NewsDetail {

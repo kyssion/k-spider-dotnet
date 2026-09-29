@@ -34,6 +34,11 @@ public class NewsContentOrigin
     /// </summary>
     public string Message { get; set; } = "";
 
+    /// <summary>
+    ///     原始内容是否来自付费/会员专享文章 ( 详情侧标记 ) , 落 spider_news_content_origin.is_paid
+    /// </summary>
+    public bool IsPaid { get; set; }
+
     public SpiderNewsContentOriginModel ToModel()
     {
         return new SpiderNewsContentOriginModel
@@ -42,7 +47,8 @@ public class NewsContentOrigin
             NewsOriginContent = NewsOriginContent,
             NewsOriginType = (int)OriginType,
             Status = (int)Status,
-            Message = Message
+            Message = Message,
+            IsPaid = IsPaid
         };
     }
 }

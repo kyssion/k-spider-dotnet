@@ -34,12 +34,19 @@ public class WscnArticleListItem
 
     public int Category { get; set; }
 
+    /// <summary>付费/会员专享 ( 见闻 is_priced ) : 正文会被截断 , 落库标记 spider_news_list.is_paid</summary>
+    public bool IsPaid { get; set; }
+
     /// <summary>uri / 时间缺失、标题与导语全空、或非文章布局 ( layout != wscn-layout , 如视频卡片 ) , 不入库</summary>
     public bool ShouldSkip { get; set; }
 
     public static WscnArticleListItem FromJson(JsonNode node)
     {
+        // uri 规范化 : 付费条目带 "?layout=wscn-layout" 可变查询串 ( 如 /premium/articles/3782635?layout=... ) ,
+        // 去重键必须用稳定形态 , 统一剥掉查询串
         var url = node["uri"]?.ToString() ?? "";
+        var queryIndex = url.IndexOf('?');
+        if (queryIndex >= 0) url = url[..queryIndex];
         var displayTime = long.TryParse(node["display_time"]?.ToString(), out var timeValue) ? timeValue : 0;
         var title = node["title"]?.ToString() ?? "";
         var brief = node["content_short"]?.ToString() ?? "";
@@ -56,6 +63,7 @@ public class WscnArticleListItem
             NewsDownloadTime = DateTime.Now,
             FromMedia = FromTypeOfNews.WscnMedia,
             Category = WscnArticleResource.InferCategory(categories),
+            IsPaid = node["is_priced"]?.GetValue<bool>() ?? false,
             ShouldSkip = string.IsNullOrEmpty(url) || displayTime <= 0 ||
                          (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(brief)) ||
                          node["layout"]?.ToString() != "wscn-layout"
@@ -73,7 +81,8 @@ public class WscnArticleListItem
             NewsFrom = NewsFrom,
             NewsTime = NewsTime,
             NewsDownloadTime = NewsDownloadTime,
-            Category = Category
+            Category = Category,
+            IsPaid = IsPaid
         };
     }
 

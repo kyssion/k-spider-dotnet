@@ -14,7 +14,8 @@ test('列表渲染三行与状态徽标', async ({ page }) => {
   await expect(page.getByText('东方财富测试新闻标题一')).toBeVisible()
   // 状态徽标用单元格定位 : 精确文本会与筛选下拉的 option 撞名
   await expect(page.getByRole('cell', { name: '待下载', exact: true })).toBeVisible()
-  await expect(page.getByRole('cell', { name: '已下载', exact: true })).toBeVisible()
+  // 夹具第 2 条为已下载 + 付费 ( 两徽标同格 , 格名合并为 "已下载 付费" )
+  await expect(page.getByRole('cell', { name: '已下载 付费' })).toBeVisible()
   await expect(page.getByRole('cell', { name: '已解析', exact: true })).toBeVisible()
   await expect(page.getByText('共 3 条 · 第 1 / 1 页')).toBeVisible()
 })

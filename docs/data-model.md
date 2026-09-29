@@ -7,8 +7,8 @@
 
 | 表 | 职责 | 唯一键 | 写入方 |
 |---|---|---|---|
-| `spider_news_list` | 新闻列表与流水线状态（`download_status_code` / `fail_count` / `from_media` / `category`） | `news_url` | `NewsListJob` |
-| `spider_news_content_origin` | 原始响应（整篇 JSON / HTML），解析可重跑的底料 | `news_url` | `NewsContentOriginJob` / `NewsListJob`（快讯型源） |
+| `spider_news_list` | 新闻列表与流水线状态（`download_status_code` / `fail_count` / `from_media` / `category` / `is_paid` 付费标记） | `news_url` | `NewsListJob` |
+| `spider_news_content_origin` | 原始响应（整篇 JSON / HTML）与付费标记（`is_paid`，详情侧），解析可重跑的底料 | `news_url` | `NewsContentOriginJob` / `NewsListJob`（快讯型源） |
 | `spider_news_content` | 结构化详情：`news_content_json`（片段数组）+ `news_content_text` + `news_keyword` | `news_url` | `NewsContentJob` |
 | `spider_news_image_list` | 正文图片地址与文件名 | `image_resource_url` | `NewsContentJob` |
 | `spider_flash_news` | 实时快讯（列表即全文，拉到即终态：标题/正文/标签/重要度 1-3/关联标的/图片/原始 JSON） | `(from_media, news_url)` | `FlashNewsJob` |

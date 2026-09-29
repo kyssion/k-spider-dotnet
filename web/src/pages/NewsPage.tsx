@@ -101,6 +101,7 @@ export default function NewsPage() {
                         <Badge variant={(info?.tone as 'default') ?? 'outline'}>
                           {info?.label ?? item.downloadStatusCode}
                         </Badge>
+                        {item.isPaid && <Badge variant="warning" className="ml-1">付费</Badge>}
                       </TD>
                       <TD className="text-right tabular-nums">
                         {item.failCount > 0 ? item.failCount : '—'}

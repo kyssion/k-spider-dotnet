@@ -70,4 +70,10 @@ public class SpiderNewsContentOriginModel : ILongIdEntity, IUpdateTimeEntity
     /// </summary>
     [SugarColumn(ColumnName = "message")]
     public string? Message { get; set; }
+
+    /// <summary>
+    ///     原始内容是否来自付费/会员专享文章 ( 详情侧标记 , 如见闻 is_priced ) ; 与列表侧的 spider_news_list.is_paid 同步观察
+    /// </summary>
+    [SugarColumn(ColumnName = "is_paid")]
+    public bool IsPaid { get; set; }
 }

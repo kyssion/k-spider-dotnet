@@ -46,6 +46,7 @@ public class LiveConnectivityTest
         var newsItem = listPage.Items[0];
         var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
         Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        Assert.AreEqual(newsItem.IsPaid, origin.IsPaid, "origin 侧付费标记应与列表侧一致");
 
         var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
         Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
@@ -93,6 +94,7 @@ public class LiveConnectivityTest
         var newsItem = listPage.Items[0];
         var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
         Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        Assert.AreEqual(newsItem.IsPaid, origin.IsPaid, "origin 侧付费标记应与列表侧一致");
 
         var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
         Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
@@ -145,6 +147,7 @@ public class LiveConnectivityTest
         var newsItem = rollPage.Items[0];
         var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
         Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        Assert.AreEqual(newsItem.IsPaid, origin.IsPaid, "origin 侧付费标记应与列表侧一致");
 
         var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
         Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
@@ -180,6 +183,7 @@ public class LiveConnectivityTest
         var newsItem = page1.Items[0];
         var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
         Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        Assert.AreEqual(newsItem.IsPaid, origin.IsPaid, "origin 侧付费标记应与列表侧一致");
         var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
         Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
         Assert.IsTrue(!string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText) ||
