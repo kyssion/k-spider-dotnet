@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流与金十「市场参考」5 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流与金十「市场参考」5 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live / 金十快讯 / 同花顺 7x24；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -175,7 +175,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 ( 含�
 - **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（新网站才加 `FromTypeOfNews` 枚举值；已有网站的第二个管线复用原值，如新浪文章复用 `SinaMedia`）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。侦察流程与验收标准见 [docs/web-source-playbook.md](docs/web-source-playbook.md)。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）、`Spider/News/Web/Sina/SinaArticleSpider.cs`（一个源两套列表体系 + 详情整页 HTML 作 origin）。
   - 翻页走 `GetListPage(column, pageSize, cursor)` 的不透明游标，`NextCursor = null` 表示没有更多。
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
-  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114 + 品见 115、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311、金十 401 + 金十文章 402-406），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
+  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114 + 品见 115、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311、金十 401 + 金十文章 402-406、同花顺 501），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
 - **新增研报源 / 研报栏目**（第三管线，`spider_research_report` 专属表）：研报是"列表即结构化元数据"的形态（评级/个股/机构/盈利预测在列表接口一次给全），**不进两个新闻注册表**，由 `ResearchReportJob` 直连源类。参考实现：`Spider/News/Report/Eastmoney/`（三件套 Resource/SpiderModel/Spider）+ `ResearchReportJob` + `SpiderResearchReportDao`。要点：① `report_kind` 枚举（1 个股/2 行业/3 宏观）对应接口 qType，枚举值 = qType + 1；② 详情页三类模板路径不同（zw_stock/zw_industry/zw_macresearch），加新研报类型时先实测模板；③ `pageSize` 钳 100（实测 200 不报错但没必要）；④ 表结构变更同步 `Model/`、`db/k_script_spider.sql` 与 `Pg.EnsureResearchReportDbObjects` 三处。
 - **新立管线类型**（数据形态与 Web/Flash/Report 都不同，如日历/公告/榜单）：管线类型由数据形态决定、不由网站决定；判别标准是需要**新表体系 + 新 Job + 新写入/重试语义**——满足即新类型，**先把"类型契约"（形态定义 / 存储与去重键 / 节奏 / 写入语义 / 监控 / 生态挂接 / 测试基线 七项）定进 [docs/architecture.md](docs/architecture.md) 的"管线类型契约"小节再动代码**，Report 型是完整参照实现；只是往现有类型加源则不适用本条，照上面各类型的套路走。
@@ -232,7 +232,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 ( 含�
 11. **财联社签名绑定前端版本号**：`sign = MD5(SHA1(参数按 key 升序拼接))`，其中 `sv`（前端版本号，当前 8.7.9）写死在 `ClsNewsResource`。财联社升级前端后接口会开始返回 `errno 10012 签名错误`（`NewsCheckJob` 探测日志会暴露），更新 `Sv` 即可；`ClsNewsSpiderTest.SignMatchesVerifiedVector` 锁了一组实测向量，改算法必须同步该用例。
 12. **财联社电报列表 `rn` 超过 50 会静默返回空数组**（errno 仍为 0，看起来像"没有新闻"），已在 `ClsNewsResource.MaxPageSize` 钳制。另外它的时间游标是**严格小于**语义，`NextCursor` 取本页最老一条 ctime + 1，否则同一秒内的其它条目会被永久跳过（边界条目重复由 `ON CONFLICT DO NOTHING` 吸收）。
 13. **金十快讯接口必须带 `x-app-id` / `x-version` 头**，缺失直接 502（值写在 `Jin10NewsResource`，被拒时对照网页端请求更新）。它的 `max_time` 游标是**含边界**语义（`NextCursor` 直接用最老一条时间，边界重复由去重吸收）；约 20% 条目是 PLUS 专享，正文为空、只有 `vip_title` 可用（实现已兜底，详见 docs/news-pipeline.md）。
-14. 四个快讯源（财联社/新浪/见闻/金十）走独立的 `FlashNewsJob` 管线写 `spider_flash_news`（15 秒一轮、拉到即终态），与网页抓取型管线（三张表 + 状态机）完全分离；不要把快讯源注册进 `NewsSpiderRegistry`。加新快讯源时照抄 `Spider/News/Flash/Cls/` 或 `Spider/News/Flash/Jin10/` 的结构。
+14. 五个快讯源（财联社/新浪/见闻/金十/同花顺）走独立的 `FlashNewsJob` 管线写 `spider_flash_news`（15 秒一轮、拉到即终态），与网页抓取型管线（三张表 + 状态机）完全分离；不要把快讯源注册进 `NewsSpiderRegistry`。加新快讯源时照抄 `Spider/News/Flash/Cls/` 或 `Spider/News/Flash/Ths/` 的结构（时间游标 / 页码游标两种先例）。
 15. **财联社一个网站两种管线**：电报在快讯注册表，文章频道在网页注册表（`Spider/News/Web/Cls/`），**共用 `ClsMedia=2`**——枚举标识"网站来源"，管线归属由注册表决定；文章与电报共用一套全局 id（一个 id 只属一种内容类型），`/detail/{id}` 落不同表不会撞键。文章频道的**翻页游标不保证单调**（列表按 SortScore 编辑混排、服务端不按 rn 裁页），末页只以空页为准，重叠靠入库去重吸收；`source` 可空（回退"财联社"）；品见已接入（`ClsArticleSpider` 第二列表族，伪栏目号 `pinjian` + category 115，拼装流整页即全量无翻页，文章 id 同空间复用详情流程）；招财号未接入（机构 UGC 平台，网页侧无确认可用的匿名列表接口）。侦察与接入方法论见 docs/web-source-playbook.md。
 16. **反爬验证的浏览器策略依赖 Chromium**：目标机需执行一次 `playwright install chromium`（步骤见 docs/operations.md 的部署章节）。未安装时 `BrowserChallengeSolver` 失败并在日志里给出该提示，**识别与告警仍然生效**、抓取链路不受影响——别把它当成"验证模块坏了"。
 17. **会话回放走 `HttpClientTools.ApplyCookies`（写进 handler 的 CookieContainer），不要给请求手动加 `Cookie` 头**：手动头会与容器里的同名旧值拼成两份同名 cookie（实测 `sid=SOLVED; sid=STALE`，服务端取哪份未定义，重复 cookie 本身也是注入指纹）。回放只带 cookie、**不带 UA** —— 请求头由 `HttpClientTools` 统一伪装（`DisguiseUserAgent` 常量），浏览器侧必须复用同一串 UA，否则指纹不一致会被再拦一次。注意 `CreateByHost` 的 CookieContainer 是进程内共享的，`ApplyCookies` 会按名清理并覆盖同名项，改这段要连带跑 `VerifiedHttpTest`。

@@ -160,7 +160,10 @@ public enum FromTypeOfNews
     WscnMedia = 4,
 
     // 金十数据 ( 快讯 )
-    Jin10Media = 5
+    Jin10Media = 5,
+
+    // 同花顺 ( 7x24 快讯 )
+    ThsMedia = 6
 }
 
 /// <summary>

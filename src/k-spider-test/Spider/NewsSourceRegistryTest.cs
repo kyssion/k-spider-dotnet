@@ -57,7 +57,8 @@ public class NewsSourceRegistryTest
             (FromTypeOfNews.ClsMedia, typeof(ClsNewsSpider)),
             (FromTypeOfNews.SinaMedia, typeof(SinaNewsSpider)),
             (FromTypeOfNews.WscnMedia, typeof(WscnNewsSpider)),
-            (FromTypeOfNews.Jin10Media, typeof(Jin10NewsSpider))
+            (FromTypeOfNews.Jin10Media, typeof(Jin10NewsSpider)),
+            (FromTypeOfNews.ThsMedia, typeof(KSpider.Spider.News.Flash.Ths.ThsNewsSpider))
         };
 
         foreach (var (fromMedia, spiderType) in expected)
@@ -154,7 +155,8 @@ public class NewsSourceRegistryTest
             [FromTypeOfNews.ClsMedia] = (101, 199),
             [FromTypeOfNews.SinaMedia] = (201, 299),
             [FromTypeOfNews.WscnMedia] = (301, 399),
-            [FromTypeOfNews.Jin10Media] = (401, 499)
+            [FromTypeOfNews.Jin10Media] = (401, 499),
+            [FromTypeOfNews.ThsMedia] = (501, 599)
         };
 
         var sourceCategory = new Dictionary<FromTypeOfNews, int>
@@ -162,7 +164,8 @@ public class NewsSourceRegistryTest
             [FromTypeOfNews.ClsMedia] = ClsNewsResource.TelegraphCategoryNumber,
             [FromTypeOfNews.SinaMedia] = SinaNewsResource.LiveCategoryNumber,
             [FromTypeOfNews.WscnMedia] = WscnNewsResource.LiveCategoryNumber,
-            [FromTypeOfNews.Jin10Media] = Jin10NewsResource.FlashCategoryNumber
+            [FromTypeOfNews.Jin10Media] = Jin10NewsResource.FlashCategoryNumber,
+            [FromTypeOfNews.ThsMedia] = KSpider.Spider.News.Flash.Ths.ThsNewsResource.FlashCategoryNumber
         };
         foreach (var (fromMedia, category) in sourceCategory)
         {

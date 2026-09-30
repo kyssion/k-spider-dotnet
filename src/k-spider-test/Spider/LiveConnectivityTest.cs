@@ -82,6 +82,12 @@ public class LiveConnectivityTest
     }
 
     [TestMethod]
+    public async Task ThsLiveFetchFlashPage()
+    {
+        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Ths.ThsNewsSpider(), "同花顺 7x24");
+    }
+
+    [TestMethod]
     public async Task ClsArticleLiveFetchListOriginAndParse()
     {
         var spider = new ClsArticleSpider();
