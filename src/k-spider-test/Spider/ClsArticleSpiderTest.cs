@@ -155,4 +155,69 @@ public class ClsArticleSpiderTest
             spider.ParseContent("{\"props\":{\"pageProps\":{}}}", DetailUrl));
         Assert.ThrowsExactly<HtmlFormException>(() => spider.ParseContent("not-json", DetailUrl));
     }
+
+    // ── 品见 ( 第二列表族 : /v5/web/pinjian/assembled2 拼装流 ) ──
+
+    [TestMethod]
+    public void ParsePinjianPageMapsFieldsAndSkipsSubjectCards()
+    {
+        var page = ClsArticleSpider.ParsePinjianPage(ReadFixture("cls_pinjian_assembled_page1.json"),
+            ClsArticleResource.PinjianCategoryNumber);
+
+        // 夹具实测 : 5 个专题 , 11 个置顶专题卡 ( ctype=1 , 跳过 ) , 24 篇真实文章
+        Assert.AreEqual(24, page.Items.Count);
+        Assert.IsNull(page.NextCursor, "拼装流整页即全量 , 无翻页游标");
+        var first = page.Items[0];
+        Assert.AreEqual("https://www.cls.cn/detail/2482499", first.NewsUrl, "文章 id 与财联社全局 id 同空间 , 详情页同形态");
+        Assert.AreEqual("潮讯 | 世界级酒吧齐聚SIP鸡尾酒节，戴森新一代科技亮相，阿联酋航空推出全球首款电动豪华经济舱座椅，宜家推出厨房局部焕新解决方案", first.NewsTitle);
+        Assert.AreEqual("责编：若瑜", first.NewsFrom, "品见署名在 author 字段");
+        Assert.AreEqual(ClsArticleResource.PinjianCategoryNumber, first.Category);
+        Assert.AreEqual((int)FromTypeOfNews.ClsMedia, first.FromMedia);
+        Assert.AreEqual(new DateTime(2026, 9, 14, 17, 41, 31), first.NewsTime, "ctime 按东八区换算");
+        Assert.IsFalse(string.IsNullOrEmpty(first.NewsSummary), "brief 应进摘要");
+        Assert.IsTrue(page.Items.All(item => item.Category == ClsArticleResource.PinjianCategoryNumber));
+    }
+
+    [TestMethod]
+    public void ParsePinjianPageThrowsOnMissingArticleArray()
+    {
+        Assert.ThrowsExactly<HtmlFormException>(() =>
+            ClsArticleSpider.ParsePinjianPage("{\"errno\":0,\"data\":{\"banner\":[]}}",
+                ClsArticleResource.PinjianCategoryNumber));
+        Assert.ThrowsExactly<HtmlFormException>(() =>
+            ClsArticleSpider.ParsePinjianPage("{\"errno\":10012,\"msg\":\"签名错误\"}",
+                ClsArticleResource.PinjianCategoryNumber));
+    }
+
+    [TestMethod]
+    public void ParsePinjianPageSkipsAdAndExternalItems()
+    {
+        // 用真实结构构造的广告与站外条目 ( 夹具里 24 篇全是正常条目 , 分支用构造样本锁定 )
+        const string response = """
+                                {"errno":0,"msg":"","data":{"banner":[],"pinjian_home_article":[
+                                  {"subject_id":8421,"pinjian_article_arr":[
+                                    {"id":2482500,"title":"广告条目","ctime":1789378891,"ctype":0,"is_ad":1,"external_link":"","brief":"","author":""},
+                                    {"id":2482501,"title":"站外条目","ctime":1789378892,"ctype":0,"is_ad":0,"external_link":"https://example.com","brief":"","author":""},
+                                    {"id":0,"title":"缺 id","ctime":1789378893,"ctype":0,"is_ad":0,"external_link":"","brief":"","author":""},
+                                    {"id":2482502,"title":"正常条目","ctime":1789378894,"ctype":0,"is_ad":0,"external_link":"","brief":"摘要","author":"责编：某人"}
+                                  ]}
+                                ]}}
+                                """;
+
+        var page = ClsArticleSpider.ParsePinjianPage(response, ClsArticleResource.PinjianCategoryNumber);
+
+        Assert.AreEqual(1, page.Items.Count, "广告 / 站外 / 缺 id 条目应跳过");
+        Assert.AreEqual("https://www.cls.cn/detail/2482502", page.Items[0].NewsUrl);
+        Assert.AreEqual("责编：某人", page.Items[0].NewsFrom);
+    }
+
+    [TestMethod]
+    public void PinjianColumnIsExposed()
+    {
+        var spider = new ClsArticleSpider();
+        var pinjian = spider.Columns.Single(column => column.ColumnId == ClsArticleResource.PinjianColumnId);
+        Assert.AreEqual(ClsArticleResource.PinjianChannelName, pinjian.ColumnName);
+        // depth 频道 13 个 + 品见 1 个
+        Assert.AreEqual(14, spider.Columns.Count);
+    }
 }

@@ -12,6 +12,7 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 | `cls_depth_list_1000_page2.json` | 同上，`last_time=1790247667`（page1 末条 ctime；列表按 SortScore 混排，末条并非最老时间） | 2026-09-25 03:00 | 「头条」第二页 30 行，与 page1 有 13 行重叠（重叠靠入库去重吸收） |
 | `cls_article_detail.html` | `GET https://www.cls.cn/detail/2492814`（页面 HTML 原样保存） | 2026-09-25 03:00 | 财联社文章详情页（SSR），正文在 `__NEXT_DATA__` 的 `articleDetail.content`，标题《谷歌TPU，下周出发去太空》 |
 | `cls_article_detail_rich.html` | `GET https://www.cls.cn/detail/2492703`（页面 HTML 原样保存） | 2026-09-25 03:30 | 含 `blockquote` 引用块的文章详情页（批量实测 20 篇中顶层标签分布：p/strong/img/a/h1-h3/blockquote），标题《甲骨文重磅项目现风险信号：据称正为数据中心延期留后路》 |
+| `cls_pinjian_assembled_page1.json` | `GET https://www.cls.cn/v5/web/pinjian/assembled2?app=…&os=web&rn=100&sv=8.7.9&sign=…`（签名算法同电报） | 2026-09-30 (东八区) | 财联社「品见」拼装流整页（5 个专题：11 个置顶专题卡 ctype=1 + 24 篇真实文章 ctype=0，rn/last_time 不影响返回即整页全量无翻页）；真实文章与财联社全局 id 同空间，首条《潮讯 | 世界级酒吧齐聚SIP鸡尾酒节…》（id=2482499，ctime=1789378891，author=责编：若瑜） |
 | `df_list_344.json` | `GET https://np-listapi.eastmoney.com/comm/web/getNewsByColumns?…&column=344&page_index=1&page_size=20&…` | 2026-09-19 01:52 | 东方财富「财经导读」栏目列表 20 条 |
 | `df_article_real.json` | `GET https://newsinfo.eastmoney.com/kuaixun/v2/api/article/202609183878840472?guid=…` | 2026-09-19 01:52 | 东方财富正文接口（含图片段落，正文 9827 字符） |
 | `sina_live_page1.json` / `sina_live_page2.json` | `GET https://zhibo.sina.com.cn/api/zhibo/feed?page=1/2&page_size=20&zhibo_id=152&tag_id=0&dire=f&dpc=1` | 2026-09-19 11:06 (东八区) | 新浪 7x24 快讯两页各 20 条 |

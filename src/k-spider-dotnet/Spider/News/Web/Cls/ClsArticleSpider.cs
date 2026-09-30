@@ -19,7 +19,8 @@ namespace KSpider.Spider.News.Web.Cls;
 ///     财联社文章频道爬虫 ( 网页抓取型三段 ) : 频道列表 → 详情页原始内容 → 解析正文。
 ///     与电报快讯 ( Spider/News/Flash/Cls , 列表即全文 ) 是同一网站的两条管线 ,
 ///     共用 FromTypeOfNews.ClsMedia , 分别注册在 NewsSpiderRegistry 与 FlashNewsSpiderRegistry。
-///     详情页为服务端渲染 , 正文 HTML 内嵌在 __NEXT_DATA__ 里 , 无需浏览器渲染。
+///     一个 Spider 挂两套列表体系 ( 照新浪先例 ) : depth 频道时间游标翻页 + 品见专用拼装流 ( 整页即全量 ) ,
+///     两者文章 id 同空间 , 详情页都是 SSR __NEXT_DATA__ , origin / 解析完全共用。
 /// </summary>
 public partial class ClsArticleSpider : INewsSpider
 {
@@ -42,10 +43,15 @@ public partial class ClsArticleSpider : INewsSpider
 
     public IReadOnlyList<NewsColumn> Columns { get; } = ClsArticleResource.ArticleChannelResourceList
         .Select(item => new NewsColumn(item.ChannelId.ToString(), item.ChannelName))
+        .Append(new NewsColumn(ClsArticleResource.PinjianColumnId, ClsArticleResource.PinjianChannelName))
         .ToList();
 
     public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
     {
+        // 同站第二列表族 : 品见走专用拼装流接口 ( 整页即全量无游标 ) , depth 频道走时间游标翻页
+        if (column.ColumnId == ClsArticleResource.PinjianColumnId)
+            return await GetPinjianPageAsync(column);
+
         var channel = ChannelResourceMap[column.ColumnId];
         // 游标即上一页最老一条的 ctime ( 站点前端同款用法 ) , 首页传 0
         var lastTime = string.IsNullOrEmpty(cursor) ? "0" : cursor;
@@ -69,6 +75,71 @@ public partial class ClsArticleSpider : INewsSpider
             Log.LogError(message);
             throw new HtmlFormException(url, message, e);
         }
+    }
+
+    /// <summary>
+    ///     拉取品见拼装流 : 参数只带 app/os/sv/rn ( 实测其余分页参数无效 ) ,
+    ///     一次请求即完整列表 , 每轮重拉由入库去重吸收
+    /// </summary>
+    private async Task<NewsListPage> GetPinjianPageAsync(NewsColumn column)
+    {
+        var parameters = new Dictionary<string, string>
+        {
+            ["app"] = ClsNewsResource.App,
+            ["os"] = ClsNewsResource.Os,
+            ["sv"] = ClsNewsResource.Sv,
+            ["rn"] = ClsArticleResource.RequestPageSize.ToString()
+        };
+        var queryString = ClsSignature.BuildQueryString(parameters);
+        var url = $"{ClsArticleResource.PinjianAssembledUrl}?{queryString}&sign={ClsSignature.Sign(queryString)}";
+        try
+        {
+            var responseString = await VerifiedHttp.GetStringAsync(ClsArticleResource.ResourceHost, url);
+            return ParsePinjianPage(responseString, ClsArticleResource.PinjianCategoryNumber);
+        }
+        catch (Exception e)
+        {
+            var message =
+                $"[ClsArticleSpider GetPinjianPageAsync] 拉取品见列表失败 , url : {url} , err : {e}";
+            Log.LogError(message);
+            throw new HtmlFormException(url, message, e);
+        }
+    }
+
+    /// <summary>
+    ///     解析品见拼装流响应 ( 独立成公开静态方法供离线测试 ) :
+    ///     data.pinjian_home_article 是专题数组 , 每个专题挂 pinjian_article_arr 文章数组 ;
+    ///     跳过 ctype != 0 的置顶专题卡 ( 无 ctime 无详情页 ) 与广告/站外条目 ;
+    ///     整页即全量 , NextCursor 恒为 null ; banner 区不是文章 , 忽略
+    /// </summary>
+    public static NewsListPage ParsePinjianPage(string responseString, int categoryNumber)
+    {
+        var jsonNode = JsonNode.Parse(responseString) ?? throw new HtmlFormException(ClsArticleResource.PinjianAssembledUrl,
+            "[ClsArticleSpider ParsePinjianPage] 响应不是合法 JSON");
+        var errno = jsonNode["errno"]?.ToString();
+        if (errno != "0")
+            throw new HtmlFormException(ClsArticleResource.PinjianAssembledUrl,
+                $"[ClsArticleSpider ParsePinjianPage] 接口返回错误 errno : {errno} , msg : {jsonNode["msg"]}");
+        if (jsonNode["data"]?["pinjian_home_article"] is not JsonArray subjects)
+            throw new HtmlFormException(ClsArticleResource.PinjianAssembledUrl,
+                "[ClsArticleSpider ParsePinjianPage] 响应缺少 data.pinjian_home_article ( 页面结构可能已改版 )");
+
+        var items = new List<SpiderNewsListModel>();
+        foreach (var subject in subjects)
+        {
+            if (subject?["pinjian_article_arr"] is not JsonArray articles) continue;
+            foreach (var node in articles)
+            {
+                if (node == null) continue;
+                // ctype=1 是置顶专题卡 ( schema 指向专题而非文章 , ctime=0 ) , 只有 ctype=0 是真实文章
+                if ((int)(node["ctype"] ?? 1) != 0) continue;
+                var listItem = ClsArticleListItem.FromJson(node, categoryNumber);
+                if (listItem.ShouldSkip) continue;
+                items.Add(listItem.ToSpiderNewListModel());
+            }
+        }
+
+        return new NewsListPage { Items = items, NextCursor = null };
     }
 
     /// <summary>

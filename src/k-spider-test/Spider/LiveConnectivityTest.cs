@@ -115,6 +115,31 @@ public class LiveConnectivityTest
     }
 
     [TestMethod]
+    public async Task ClsPinjianLiveFetchListAndParse()
+    {
+        var spider = new ClsArticleSpider();
+        var column = spider.Columns.Single(item => item.ColumnId == ClsArticleResource.PinjianColumnId);
+
+        var listPage = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, null));
+        Assert.IsTrue(listPage.Items.Count > 0, "品见拼装流未返回任何数据");
+        // 专题流是编辑策展而非时间流 , 条目可回溯数月 : 只验字段完整 , 不套 RecentWindow 鲜活窗口
+        AssertNewsFieldsComplete(listPage.Items.Select(item => (item.NewsUrl, item.NewsTitle, item.NewsFrom,
+            item.NewsTime, item.FromMedia, item.Category)).ToList());
+        Assert.IsNull(listPage.NextCursor, "拼装流整页即全量 , 不应有翻页游标");
+
+        // 详情 : 品见文章 id 与财联社全局 id 同空间 , 走同一 /detail/{id} __NEXT_DATA__ 流程
+        var newsItem = listPage.Items.OrderByDescending(item => item.NewsTime).First();
+        var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
+        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
+        Assert.IsTrue(!string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText) || parseResult.Images.Count > 0,
+            "解析后正文与图片均为空");
+
+        TestContext.WriteLine($"品见 : {listPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
+    }
+
+    [TestMethod]
     public async Task SinaArticleLiveFetchListOriginAndParse()
     {
         var spider = new SinaArticleSpider();

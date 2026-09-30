@@ -40,7 +40,8 @@ public class ClsArticleListItem
     public string NewsSummary { get; set; } = "";
 
     /// <summary>
-    ///     来源 : source 是记者/编辑名 , 投稿/转载类条目可能为空 , 回退平台名 ( 与电报同款兜底 )
+    ///     来源 : source 是记者/编辑名 , 投稿/转载类条目可能为空 , 回退平台名 ( 与电报同款兜底 ) ;
+    ///     品见条目署名在 author 字段 ( 如 "责编：若瑜" ) , 与 source 互斥出现 , 作第二优先级
     /// </summary>
     public string NewsFrom { get; set; } = "";
 
@@ -79,6 +80,7 @@ public class ClsArticleListItem
         var title = node["title"]?.ToString() ?? "";
         var brief = node["brief"]?.ToString() ?? "";
         var source = node["source"]?.ToString() ?? "";
+        if (string.IsNullOrEmpty(source)) source = node["author"]?.ToString() ?? "";
 
         return new ClsArticleListItem
         {
