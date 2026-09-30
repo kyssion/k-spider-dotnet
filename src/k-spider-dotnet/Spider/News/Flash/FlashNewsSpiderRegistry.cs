@@ -1,4 +1,5 @@
 using KSpider.Spider.News.Flash.Cls;
+using KSpider.Spider.News.Flash.Gelonghui;
 using KSpider.Spider.News.Flash.Jin10;
 using KSpider.Spider.News.Flash.Sina;
 using KSpider.Spider.News.Flash.Ths;
@@ -18,7 +19,8 @@ public static class FlashNewsSpiderRegistry
         { FromTypeOfNews.SinaMedia, new SinaNewsSpider() },
         { FromTypeOfNews.WscnMedia, new WscnNewsSpider() },
         { FromTypeOfNews.Jin10Media, new Jin10NewsSpider() },
-        { FromTypeOfNews.ThsMedia, new ThsNewsSpider() }
+        { FromTypeOfNews.ThsMedia, new ThsNewsSpider() },
+        { FromTypeOfNews.GelonghuiMedia, new GelonghuiNewsSpider() }
     };
 
     /// <summary>

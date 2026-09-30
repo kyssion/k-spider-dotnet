@@ -96,6 +96,13 @@ public class LiveConnectivityTest
     }
 
     [TestMethod]
+    public async Task GelonghuiLiveFetchFlashPage()
+    {
+        var spider = new KSpider.Spider.News.Flash.Gelonghui.GelonghuiNewsSpider();
+        await CheckFlashSourceLiveAsync(spider, spider.Columns[0], "格隆汇 live");
+    }
+
+    [TestMethod]
     public async Task ClsArticleLiveFetchListOriginAndParse()
     {
         var spider = new ClsArticleSpider();

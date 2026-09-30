@@ -163,7 +163,10 @@ public enum FromTypeOfNews
     Jin10Media = 5,
 
     // 同花顺 ( 7x24 快讯 )
-    ThsMedia = 6
+    ThsMedia = 6,
+
+    // 格隆汇 ( live 快讯 )
+    GelonghuiMedia = 7
 }
 
 /// <summary>
