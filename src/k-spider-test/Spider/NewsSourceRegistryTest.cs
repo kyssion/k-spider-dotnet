@@ -114,6 +114,14 @@ public class NewsSourceRegistryTest
         var jin10Web = NewsSpiderRegistry.Get((int)FromTypeOfNews.Jin10Media);
         Assert.IsNotNull(jin10Web, "金十文章源应在 NewsSpiderRegistry");
         Assert.IsInstanceOfType<Jin10ArticleSpider>(jin10Web);
+
+        var thsFlash = FlashNewsSpiderRegistry.Get((int)FromTypeOfNews.ThsMedia);
+        Assert.IsNotNull(thsFlash, "同花顺 7x24 应在 FlashNewsSpiderRegistry");
+        Assert.IsInstanceOfType<KSpider.Spider.News.Flash.Ths.ThsNewsSpider>(thsFlash);
+
+        var thsWeb = NewsSpiderRegistry.Get((int)FromTypeOfNews.ThsMedia);
+        Assert.IsNotNull(thsWeb, "同花顺文章源应在 NewsSpiderRegistry");
+        Assert.IsInstanceOfType<KSpider.Spider.News.Web.Ths.ThsArticleSpider>(thsWeb);
     }
 
     [TestMethod]
@@ -231,6 +239,16 @@ public class NewsSourceRegistryTest
                 $"金十文章源分类号越界 : {column.ColumnName} = {column.CategoryNumber}");
             Assert.IsTrue(column.CategoryNumber >= 402,
                 $"金十文章源分类号不应与快讯 ( 401 ) 冲突 : {column.ColumnName} = {column.CategoryNumber}");
+        }
+
+        // 同花顺文章源的分类号全部落在同花顺段内 ( 快讯 501 在前 , 文章 502-511 接后 )
+        foreach (var channel in KSpider.Spider.News.Web.Ths.ThsArticleResource.ArticleColumnResourceList)
+        {
+            var (min, max) = rangeBySource[FromTypeOfNews.ThsMedia];
+            Assert.IsTrue(channel.CategoryNumber >= min && channel.CategoryNumber <= max,
+                $"同花顺文章源分类号越界 : {channel.ColumnName} = {channel.CategoryNumber}");
+            Assert.IsTrue(channel.CategoryNumber >= 502,
+                $"同花顺文章源分类号不应与快讯 ( 501 ) 冲突 : {channel.ColumnName} = {channel.CategoryNumber}");
         }
 
         // 各源编号段互不重叠

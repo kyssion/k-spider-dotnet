@@ -2,6 +2,7 @@ using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Web.Jin10;
 using KSpider.Spider.News.Web.Sina;
+using KSpider.Spider.News.Web.Ths;
 using KSpider.Spider.News.Web.Wscn;
 
 namespace KSpider.Spider.News.Web;
@@ -14,7 +15,8 @@ namespace KSpider.Spider.News.Web;
 ///     财联社 ClsMedia —— 电报在快讯注册表 , 文章频道在这里 ;
 ///     新浪 SinaMedia —— 7x24 快讯在快讯注册表 , 文章源在这里 ;
 ///     见闻 WscnMedia —— live 快讯在快讯注册表 , 文章源在这里 ;
-///     金十 Jin10Media —— 快讯在快讯注册表 , 「市场参考」文章源在这里。
+///     金十 Jin10Media —— 快讯在快讯注册表 , 「市场参考」文章源在这里 ;
+///     同花顺 ThsMedia —— 7x24 快讯在快讯注册表 , 文章频道在这里。
 /// </summary>
 public static class NewsSpiderRegistry
 {
@@ -24,7 +26,8 @@ public static class NewsSpiderRegistry
         { FromTypeOfNews.ClsMedia, new ClsArticleSpider() },
         { FromTypeOfNews.SinaMedia, new SinaArticleSpider() },
         { FromTypeOfNews.WscnMedia, new WscnArticleSpider() },
-        { FromTypeOfNews.Jin10Media, new Jin10ArticleSpider() }
+        { FromTypeOfNews.Jin10Media, new Jin10ArticleSpider() },
+        { FromTypeOfNews.ThsMedia, new ThsArticleSpider() }
     };
 
     /// <summary>

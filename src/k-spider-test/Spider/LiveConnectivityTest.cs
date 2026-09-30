@@ -330,6 +330,37 @@ public class LiveConnectivityTest
             $"东财研报 : 个股 {stockPage.Items.Count} + 行业 {industryPage.Items.Count} + 宏观 {macroPage.Items.Count} 条 , 样例 {first.Title}");
     }
 
+    [TestMethod]
+    public async Task ThsArticleLiveFetchListOriginAndParse()
+    {
+        var spider = new KSpider.Spider.News.Web.Ths.ThsArticleSpider();
+        var column = spider.Columns[0];
+
+        var listPage = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, null));
+        Assert.IsTrue(listPage.Items.Count > 0, "同花顺文章列表未返回任何数据");
+        // 栏目页是存量列表 ( 有分页存档 ) , 不套鲜活窗口 , 只验字段完整
+        AssertNewsFieldsComplete(listPage.Items.Select(item => (item.NewsUrl, item.NewsTitle, item.NewsFrom,
+            item.NewsTime, item.FromMedia, item.Category)).ToList());
+        if (listPage.NextCursor != null)
+        {
+            var olderPage = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, listPage.NextCursor));
+            Assert.IsTrue(olderPage.Items.Count > 0, "页码翻页未取到数据");
+            var overlap = listPage.Items.Select(item => item.NewsUrl)
+                .Intersect(olderPage.Items.Select(item => item.NewsUrl)).Count();
+            Assert.AreEqual(0, overlap, "页码翻页两页不应重叠");
+        }
+
+        // 详情 : GBK 列表页 + UTF-8 详情页 , 走同一 VerifiedHttp 出口 ( 编码按响应头自动处理 )
+        var newsItem = listPage.Items[0];
+        var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
+        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText), "解析后正文为空");
+
+        TestContext.WriteLine($"同花顺文章 {column.ColumnName} : {listPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
+    }
+
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>

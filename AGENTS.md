@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流与金十「市场参考」5 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live（7 频道）/ 金十快讯 / 同花顺 7x24 / 格隆汇 live；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流、金十「市场参考」5 个栏目与同花顺文章 10 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live（7 频道）/ 金十快讯 / 同花顺 7x24 / 格隆汇 live；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -175,7 +175,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 ( 含�
 - **新增网页抓取型新闻源**（有独立详情页）：实现 `Spider/News/Web/INewsSpider.cs`（列表 / 原始内容 / 解析 三段）+ 在 `NewsSpiderRegistry` 注册一行（新网站才加 `FromTypeOfNews` 枚举值；已有网站的第二个管线复用原值，如新浪文章复用 `SinaMedia`）+ `Model/` 与 DDL 无需改动（`from_media` 已在表上）。侦察流程与验收标准见 [docs/web-source-playbook.md](docs/web-source-playbook.md)。参考实现：`Spider/News/Web/Eastmoney/DfNewsSpider.cs`（页码翻页 + 详情接口）、`Spider/News/Web/Cls/ClsArticleSpider.cs`（时间游标 + 详情页 SSR `__NEXT_DATA__`）、`Spider/News/Web/Sina/SinaArticleSpider.cs`（一个源两套列表体系 + 详情整页 HTML 作 origin）。
   - 翻页走 `GetListPage(column, pageSize, cursor)` 的不透明游标，`NextCursor = null` 表示没有更多。
 - **新增实时快讯源**（"列表即全文"）：实现 `Spider/News/Flash/IFlashNewsSpider.cs`（一个方法：`GetFlashPage` 拉一页完整记录）+ 在 `FlashNewsSpiderRegistry` 注册一行。参考实现：`Spider/News/Flash/Cls/ClsNewsSpider.cs`（时间游标）、`Spider/News/Flash/Jin10/Jin10NewsSpider.cs`（含 PLUS 锁定条目兜底与跳过）。写 `spider_flash_news` , 无状态机、无下载/解析阶段。
-  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114 + 品见 115、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311 + live 频道 312-317、金十 401 + 金十文章 402-406、同花顺 501、格隆汇 601），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
+  - 各源 `category` 用独立编号段（东财 1-22、财联社电报 101、财联社文章 102-114 + 品见 115、新浪 7x24 201 + 新浪文章 202-223、见闻 301 + 见闻文章 302-311 + live 频道 312-317、金十 401 + 金十文章 402-406、同花顺 501 + 文章 502-511、格隆汇 601），不要去复用别源的语义；`level` 重要度统一 1/2/3（各源映射见 docs/news-pipeline.md）。
   - 两个任务都按源并发，**源实现必须是线程安全的**：不要用可变实例字段保存请求状态（如"当前游标"），游标与页状态一律走方法参数与返回值。
 - **新增研报源 / 研报栏目**（第三管线，`spider_research_report` 专属表）：研报是"列表即结构化元数据"的形态（评级/个股/机构/盈利预测在列表接口一次给全），**不进两个新闻注册表**，由 `ResearchReportJob` 直连源类。参考实现：`Spider/News/Report/Eastmoney/`（三件套 Resource/SpiderModel/Spider）+ `ResearchReportJob` + `SpiderResearchReportDao`。要点：① `report_kind` 枚举（1 个股/2 行业/3 宏观）对应接口 qType，枚举值 = qType + 1；② 详情页三类模板路径不同（zw_stock/zw_industry/zw_macresearch），加新研报类型时先实测模板；③ `pageSize` 钳 100（实测 200 不报错但没必要）；④ 表结构变更同步 `Model/`、`db/k_script_spider.sql` 与 `Pg.EnsureResearchReportDbObjects` 三处。
 - **新立管线类型**（数据形态与 Web/Flash/Report 都不同，如日历/公告/榜单）：管线类型由数据形态决定、不由网站决定；判别标准是需要**新表体系 + 新 Job + 新写入/重试语义**——满足即新类型，**先把"类型契约"（形态定义 / 存储与去重键 / 节奏 / 写入语义 / 监控 / 生态挂接 / 测试基线 七项）定进 [docs/architecture.md](docs/architecture.md) 的"管线类型契约"小节再动代码**，Report 型是完整参照实现；只是往现有类型加源则不适用本条，照上面各类型的套路走。

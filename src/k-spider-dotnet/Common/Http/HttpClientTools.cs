@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 
 namespace KSpider.Common.Http;
 
@@ -9,6 +10,13 @@ namespace KSpider.Common.Http;
 /// </summary>
 public static class HttpClientTools
 {
+    static HttpClientTools()
+    {
+        // 注册 GBK/GB2312 等代码页编码器 : 部分传统站点 ( 同花顺文章列表页 ) 响应头带 charset=gbk ,
+        // HttpClient 按 charset 解码需要该 provider , 不注册会静默回退 UTF-8 产生乱码 ( 2026-09-30 实测 )
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
+
     /// <summary>
     ///     伪装 UA : 公开给浏览器侧复用 ( 见 Spider/Verify 的 BrowserGate ) ——
     ///     过验证时浏览器与 HTTP 请求必须用同一串 UA , 否则指纹不一致会被再拦一次
