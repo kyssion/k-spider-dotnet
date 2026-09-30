@@ -175,7 +175,8 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 
 | 要加什么 | 怎么做 |
 |---|---|
-| 新闻源 | 实现 `Spider/News/Web/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md) |
+| 同类型的新闻源 | 实现 `Spider/News/Web/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md)。快讯源同构（`FlashNewsSpiderRegistry`），研报源直连（见下条） |
+| **管线类型**（数据形态是新的） | 先按下方"管线类型契约"清单把契约定进本文档，再动代码。判别：需要**新表体系 + 新 Job + 新重试/写入语义**就是新类型，只往现有类型的表加行则按上一条走 |
 | 反爬验证识别方式 / 通过手段 | `Spider/Verify/` 下实现 `IVerificationDetector` 或 `IVerificationSolver` → 在 `VerificationRegistry` 注册一行（识别器位置即优先级）→ `VerificationKind` 按需加值；按源调整策略用 `VerificationRegistry.SetPolicy`。参考 [anti-bot-verification.md](anti-bot-verification.md) |
 | 抓取层的 HTTP 请求 | 一律走 `VerifiedHttp.GetStringAsync` / `SendStringAsync`（自带会话回放与自动过验证），不要直接调 `HttpClientTools`；需要自定义请求头时传请求工厂（`HttpRequestMessage` 不能重发） |
 | 定时任务 | 继承 `Job/SpiderJob.cs`（只需实现 `Execute`）→ 构造函数注入 DAO/Pg/`ILogger<T>` → `Program.AddSpiderJobs` 加 `AddJob` + `AddTrigger` 两行（`DisallowConcurrentExecution` 必加） |
@@ -184,3 +185,19 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 | Web API 端点 | `src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务 |
 | 前端页面 | `web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求用 `api/hooks.ts` 的 TanStack Query 封装 |
 | 需要浏览器渲染的页面 | `Spider/News/Web/Eastmoney/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |
+
+### 管线类型契约（新立类型时先定契约再写代码）
+
+管线类型由**数据形态**决定（形态决定轮询节奏、表结构、写入与重试语义），而不是由网站决定——同一网站可以挂多种类型（财联社 = Flash 电报 + Web 文章）。当前已有三种：Web 网页抓取型（三段 + 状态机）、Flash 实时快讯型（单段直写）、Report 研报型（列表即结构化元数据 + 摘要回填）。
+
+引入第四种类型（如：Calendar 事件日历——带未来时间戳且事件值会修正；Announcement 公告——结构化文档 + 证券维度 + 附件；Ranking 盘面榜单——周期性数值快照）之前，**必须先把下列契约定进本文档**，参照 Report 型的先例逐项落定：
+
+1. **数据形态定义**：什么特征的数据归此类型，与现有类型如何判别；
+2. **存储**：表结构、去重键、热路径索引（含部分索引）、`Pg.Ensure*DbObjects()` 幂等建表方法与 `db/k_script_spider.sql` 增量段双同步；
+3. **节奏**：轮询间隔、单轮批量、翻页 / 停机回补上限；
+4. **写入语义**：冲突策略（`DO NOTHING` / `DO UPDATE` 及其条件，如"值会修正"的类型必须定义回填条件）、失败重试语义（计数上限、`KDbException` 不消耗计数）；
+5. **监控**：接口探测、实时性滞后指标（阈值按数据节奏定）、积压巡检 SQL（进 operations.md）；
+6. **生态挂接**：`k-spider-sync` 纳入同步、`NewsCheckJob` 探测、是否进 Web 控制台（无消费方不进）；
+7. **测试基线**：夹具回归 + `LiveConnectivityTest` 连通性 + DAO 手拼 SQL 形态锁 + `JobDependencyTest` 覆盖新 Job 构造依赖。
+
+完整参照实现：Report 型全链路（`Spider/News/Report/Eastmoney/` + `ResearchReportJob` + `SpiderResearchReportDao` + `spider_research_report`）。契约立好后，同类型的每个新源只是"往里加行"：新 Resource/Spider 模块 + 直连或注册一行，不再重复决策。

@@ -37,6 +37,7 @@
 | 前端页面 / 依赖变更（`web/`） | [architecture.md](architecture.md) 的前端栈说明；`web/pnpm-lock.yaml` 随源提交；新页面补 `web/tests/` 对应 E2E 用例 |
 | 系统表（`spider_job_state` / `spider_job_command` / `spider_node_status`）结构变更 | [data-model.md](data-model.md)、`db/k_script_spider.sql`、`Pg.EnsureSystemDbObjects` 三处同步 |
 | 新增 / 修改定时任务（`Job/`、`Program.AddSpiderJobs`） | [architecture.md](architecture.md) 任务表、[operations.md](operations.md) 任务清单、README 任务表 |
+| **新立管线类型**（新表体系 + 新 Job + 新写入语义，如日历/公告/榜单） | [architecture.md](architecture.md) 的"管线类型契约"清单（动手前先定契约）与任务表、[data-model.md](data-model.md) 表清单、AGENTS.md 的类型套路；后续同类型新源加行时同步 news-pipeline.md 或对应类型文档 |
 | 表结构 / 索引 / 唯一键变更（`Model/`、`db/`、`Pg.EnsureSpiderNewsListDbObjects`） | [data-model.md](data-model.md)、`db/k_script_spider.sql` |
 | 状态机 / 重试语义 / 落库语义变更 | [news-pipeline.md](news-pipeline.md) |
 | 配置键 / 环境变量 / 部署方式变更 | [operations.md](operations.md)、README 配置章节 |
