@@ -290,6 +290,40 @@ CREATE INDEX IF NOT EXISTS "idx_announcement_publish_time"
 
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_announcement FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
+-- 官方文件 ( 2026-09 新增 : Policy 管线 , 政府/官方机构发布的文件与政策 ,
+-- 文件元数据 + 正文全文 ( 政策文本即核心语料 ) , 发布即终态 ; 契约见 docs/architecture.md )
+CREATE TABLE IF NOT EXISTS "public"."spider_policy_document" (
+  "id" bigserial NOT NULL,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "from_media" integer NOT NULL,
+  "doc_id" varchar(120) NOT NULL,
+  "title" varchar(500) NOT NULL,
+  "institution" varchar(100) NOT NULL,
+  "document_number" varchar(200),
+  "publish_time" timestamp without time zone NOT NULL,
+  "url" varchar(500) NOT NULL,
+  "content_text" text,
+  "attachments" text,
+  "raw_content" text,
+  CONSTRAINT "spider_policy_document_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "uk_policy_media_doc" UNIQUE ("from_media", "doc_id")
+);
+
+COMMENT ON TABLE "public"."spider_policy_document" IS '官方文件 ( 政府机构文件与政策 , 正文全文入库 , 发布即终态 )';
+COMMENT ON COLUMN "public"."spider_policy_document"."from_media" IS '来源官方站 , 每站一枚举 ( 10 统计局 / 11 证监会 , 见 FromTypeOfNews )';
+COMMENT ON COLUMN "public"."spider_policy_document"."doc_id" IS '源内文档唯一键 ( 统计局=路径月份段+文档号 / 证监会=栏目文档 id )';
+COMMENT ON COLUMN "public"."spider_policy_document"."institution" IS '发文机关 ( 官方文件核心维度 : 国家统计局 / 中国证监会 / 各部委… )';
+COMMENT ON COLUMN "public"."spider_policy_document"."document_number" IS '文号 ( 如 国统局字〔2026〕X 号 , 规范引用键 , 提不到为空 )';
+COMMENT ON COLUMN "public"."spider_policy_document"."content_text" IS '正文纯文本 ( 段落+表格文本化 , 政策文本即核心语料 )';
+COMMENT ON COLUMN "public"."spider_policy_document"."attachments" IS '附件地址 JSON 数组 ( 统计局数据表 xls 等 )';
+
+-- 按发布时间查询 ( 文件列表 )
+CREATE INDEX IF NOT EXISTS "idx_policy_publish_time"
+  ON "public"."spider_policy_document" ("publish_time" DESC);
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_policy_document FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
 -- 新闻流水线轮询部分索引 ( 老库由启动时 Pg.EnsureSpiderNewsListDbObjects 幂等补齐 )
 CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")

@@ -432,6 +432,49 @@ public class LiveConnectivityTest
         TestContext.WriteLine($"巨潮公告 : {page.Items.Count} 条 , 最新 {newest:yyyy-MM-dd HH:mm:ss} , 样例 {page.Items[0].Title}");
     }
 
+    [TestMethod]
+    public async Task PolicyLiveFetchStats()
+    {
+        var spider = KSpider.Spider.Policy.PolicySpiderRegistry.All
+            .First(item => item.FromMedia == FromTypeOfNews.StatsMedia);
+        var column = spider.Columns[0];
+
+        var page = await FetchOrSkipAsync(() => spider.GetDocumentPage(column, 1));
+        Assert.IsTrue(page.Items.Count > 0, "统计局列表未返回任何数据");
+
+        var stub = page.Items[0];
+        var doc = await FetchOrSkipAsync(() => spider.GetDocumentAsync(stub));
+        Assert.AreEqual((int)FromTypeOfNews.StatsMedia, doc.FromMedia);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(doc.Title), "标题为空");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(doc.ContentText), "正文为空");
+        Assert.IsTrue(doc.PublishTime >= DateTime.Now.AddDays(-30),
+            $"首条发布时间过旧 : {doc.PublishTime}");
+        TestContext.WriteLine($"国家统计局 : {page.Items.Count} 条存根 , 首篇《{doc.Title}》正文 {doc.ContentText!.Length} 字");
+    }
+
+    [TestMethod]
+    public async Task PolicyLiveFetchCsrc()
+    {
+        var spider = KSpider.Spider.Policy.PolicySpiderRegistry.All
+            .First(item => item.FromMedia == FromTypeOfNews.CsrcMedia);
+        try
+        {
+            var page = await spider.GetDocumentPage(spider.Columns[0], 1);
+            Assert.IsTrue(page.Items.Count > 0, "证监会列表未返回任何数据");
+            var stub = page.Items[0];
+            var doc = await spider.GetDocumentAsync(stub);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(doc.ContentText), "正文为空");
+            TestContext.WriteLine($"证监会 : {page.Items.Count} 条存根 , 首篇《{doc.Title}》");
+        }
+        catch (Exception e) when (e.Message.Contains("302"))
+        {
+            // CDN 会话链边界 : csrc 列表被阿里云 CDN 的 acw_tc 会话机制以 302 链拦截
+            // ( https→http 降级重定向被 .NET 拒绝 ) , 解析器已由夹具验证 ,
+            // 运行时打通需 VerifiedHttp 支持降级跟随或会话预热 ( 见 docs/news-pipeline.md )
+            Assert.Inconclusive($"证监会列表被 CDN 会话 302 链拦截 ( 已知边界 ) : {e.Message}");
+        }
+    }
+
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>

@@ -235,3 +235,23 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 **7. 测试基线**：夹具（巨潮真实响应）+ 解析回归（字段映射 / 分类解析 / 坏数据跳过）+ `LiveConnectivityTest` 连通 + `JobDependencyTest` 覆盖新 Job。
 
 参照实现：`Spider/Announcement/Cninfo/`（Resource/Model/Spider）+ `Job/Announcement/AnnouncementJob.cs` + `Data/SpiderAnnouncementDao.cs` + `spider_announcement`。
+
+### Policy 官方文件型契约（第三个按清单立项的类型）
+
+**1. 数据形态定义**：政府/官方机构发布的**文件元数据 + 正文全文**（发文机关、文号、效力级别、正文纯文本、附件链接）。与公告同为文档元数据，但两处本质差异：① **正文即价值**——政策文本是核心语料，必须入库（公告是"链接即交付物"不下载正文）；② **维度不同**——公告有证券维度，官方文件有发文机关/文号维度、无证券。主体谱系 = 国务院/部委/地方，类型谱系 = 法规/政策文件/数据发布/征求意见/处罚决定。政府站多为 TRS 建站系统，解析器体系独立（`PolicyContentExtractor` 共用提取件）。
+
+**2. 存储**：单表 `spider_policy_document`，去重键 **`(from_media, doc_id)`**（每官方站一枚举：`StatsMedia=10`/`CsrcMedia=11`…；`doc_id` 为源内文档唯一键）；`content_text` 正文纯文本列（段落+表格文本化）；`attachments` 附件 JSON 数组；热路径索引 `publish_time DESC`；幂等建表 `Pg.EnsurePolicyDbObjects()` 与 DDL 增量段双同步。
+
+**3. 节奏**：`PolicyJob` 每 60 分钟（政府披露以小时/天计，非秒级）；源清单 `PolicySpiderRegistry` 遍历，两源当前均为单页全量列表（`common_xq_list`/`zxfb` 无静态分页），`MaxPageNumber=10` 保护。
+
+**4. 写入语义**：`ON CONFLICT DO NOTHING`（文件发布即终态；政府站的修订是新 URL 新行）。详情下载失败单篇记日志不中断整列（政府站点可用性波动常见），下一轮自然重试。
+
+**5. 监控**：`NewsCheckJob` 逐源列表探测 + 滞后监控（最新发布距今超 3 天告警，只记日志）；巡检 SQL 进 operations.md。
+
+**6. 生态挂接**：`k-spider-sync` 纳入（第 9 张数据表）；不进新闻注册表；Web 控制台政策页未建不进。
+
+**7. 测试基线**：夹具（统计局列表+详情、证监会列表+详情真实页面）+ 解析回归（行键/正文提取/附件/meta 元数据/坏数据）+ `LiveConnectivityTest` 分源连通（证监会见边界）+ `JobDependencyTest` 覆盖新 Job。
+
+参照实现：`Spider/Policy/Stats/` + `Spider/Policy/Csrc/`（`IPolicySpider` 两步取数：列表存根→详情组装）+ `Job/Policy/PolicyJob.cs` + `Data/SpiderPolicyDao.cs` + `spider_policy_document`。
+
+**已知边界**：① 证监会列表被阿里云 CDN 会话机制拦截（首次 302 + `acw_tc` cookie + https→http 降级 Location，.NET 拒绝降级跟随）——解析器已由夹具验证，运行时打通需 VerifiedHttp 支持降级跟随或会话预热；② gov.cn 政策文件库（中央聚合库，杠杆最大）为 SPA 动态加载，接口需浏览器抓包定位；③ 中国人民银行为 JS 加密反爬，需 Playwright 路线。三者的侦察结论见 news-pipeline.md。

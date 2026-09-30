@@ -321,6 +321,56 @@ public class Pg
     }
 
     /// <summary>
+    ///     官方文件表的幂等建表 ( 表 + 唯一键 + 发布时间索引 + update_time 触发器 )。
+    ///     契约见 docs/architecture.md 的 Policy 类型契约 ; 新环境由 DDL 建 ,
+    ///     这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsurePolicyDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TABLE IF NOT EXISTS public.spider_policy_document
+                (
+                    id              bigserial    NOT NULL,
+                    create_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    from_media      integer      NOT NULL,
+                    doc_id          varchar(120) NOT NULL,
+                    title           varchar(500) NOT NULL,
+                    institution     varchar(100) NOT NULL,
+                    document_number varchar(200),
+                    publish_time    timestamp    NOT NULL,
+                    url             varchar(500) NOT NULL,
+                    content_text    text,
+                    attachments     text,
+                    raw_content     text,
+                    CONSTRAINT spider_policy_document_pkey PRIMARY KEY (id),
+                    CONSTRAINT uk_policy_media_doc UNIQUE (from_media, doc_id)
+                )
+                """);
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_policy_publish_time
+                    ON public.spider_policy_document (publish_time DESC)
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            connection.Ado.ExecuteCommand("DROP TRIGGER IF EXISTS update_modified_column ON public.spider_policy_document");
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.spider_policy_document
+                    FOR EACH ROW EXECUTE FUNCTION public.update_time_func()
+                """);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsurePolicyDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     系统状态表的幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 , 写入见 SystemStatusDao )。
     ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
     /// </summary>

@@ -6,6 +6,7 @@ using KSpider.Spider;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Report.Eastmoney;
 using KSpider.Spider.Announcement.Cninfo;
+using KSpider.Spider.Policy;
 using KSpider.Spider.Ranking.Eastmoney;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
@@ -40,6 +41,7 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
             CheckReportLag();
             CheckRankingLag();
             CheckAnnouncementLag();
+            CheckPolicyLag();
             ReportNodeStatus(apiErrors, backlog, flashLag, verifyBlocked);
         });
     }
@@ -121,6 +123,19 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
             errors.Add($"[{(int)FromTypeOfNews.CninfoMedia} 巨潮公告] column announcement : {e.Message}");
             logger.LogError("[NewsCheckJob CheckListApiAlive] announcement api err : {}", e);
         }
+
+        // 官方文件 ( Policy 管线 ) : 逐源列表非空即存活
+        foreach (var spider in PolicySpiderRegistry.All)
+            try
+            {
+                var page = await spider.GetDocumentPage(spider.Columns[0], 1);
+                if (page.Items.Count == 0) throw new Exception("接口未返回数据");
+            }
+            catch (Exception e)
+            {
+                errors.Add($"[{(int)spider.FromMedia} {spider.Institution}] column policy : {e.Message}");
+                logger.LogError("[NewsCheckJob CheckListApiAlive] policy api err : {} , source : {}", e, spider.FromMedia);
+            }
 
         return errors;
     }
@@ -292,6 +307,33 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
         catch (Exception e)
         {
             logger.LogError("[NewsCheckJob CheckAnnouncementLag] err : {}", e);
+        }
+    }
+
+    /// <summary>
+    ///     官方文件实时性 : 最新发布时间距今多久。政府站披露节奏不一 ( 统计局按数据日程 ,
+    ///     证监会要闻工作日高频 ) , 统一取 3 天窗口告警 , 只记日志不入节点快照。
+    /// </summary>
+    private void CheckPolicyLag()
+    {
+        try
+        {
+            using var connection = pg.Connection();
+            var newest = connection.Queryable<SpiderPolicyDocumentModel>().Max(it => it.PublishTime);
+            if (newest == default)
+            {
+                logger.LogWarning("[NewsCheckJob CheckPolicyLag] no policy data yet");
+                return;
+            }
+
+            var lagDays = (int)(DateTime.Today - newest.Date).TotalDays;
+            var level = lagDays > 3 ? LogLevel.Warning : LogLevel.Information;
+            logger.Log(level,
+                "[NewsCheckJob CheckPolicyLag] newest : {Newest:yyyy-MM-dd HH:mm} , lag : {Lag}d", newest, lagDays);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[NewsCheckJob CheckPolicyLag] err : {}", e);
         }
     }
 

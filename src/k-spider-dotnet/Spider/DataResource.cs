@@ -172,7 +172,13 @@ public enum FromTypeOfNews
     NbdMedia = 8,
 
     // 巨潮资讯 ( 公告 , 沪深京全市场法定披露 )
-    CninfoMedia = 9
+    CninfoMedia = 9,
+
+    // 国家统计局 ( 官方文件 , 数据发布与政策 )
+    StatsMedia = 10,
+
+    // 中国证监会 ( 官方文件 , 要闻与监管信息 )
+    CsrcMedia = 11
 }
 
 /// <summary>
