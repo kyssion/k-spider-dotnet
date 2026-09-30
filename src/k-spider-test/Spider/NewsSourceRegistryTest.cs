@@ -199,7 +199,7 @@ public class NewsSourceRegistryTest
                 $"新浪文章源分类号不应与 7x24 快讯 ( 201 ) 冲突 : {column.ColumnName} = {column.CategoryNumber}");
         }
 
-        // 见闻文章源的分类号全部落在见闻段内 ( live 快讯 301 在前 , 文章 302-312 接后 )
+        // 见闻文章源的分类号全部落在见闻段内 ( live 快讯 301 在前 , 文章 302-311 接后 )
         var wscnArticleCategories = new[] { WscnArticleResource.DefaultCategoryNumber }
             .Concat(WscnArticleResource.CategoryRuleList.Select(rule => rule.CategoryNumber));
         foreach (var number in wscnArticleCategories)
@@ -207,6 +207,16 @@ public class NewsSourceRegistryTest
             var (min, max) = rangeBySource[FromTypeOfNews.WscnMedia];
             Assert.IsTrue(number >= min && number <= max, $"见闻文章源分类号越界 : {number}");
             Assert.IsTrue(number >= 302, $"见闻文章源分类号不应与 live 快讯 ( 301 ) 冲突 : {number}");
+        }
+
+        // 见闻 live 频道扩展的分类号 ( 312-317 ) 接在文章 302-311 之后 , 不与文章冲突
+        foreach (var channel in KSpider.Spider.News.Flash.Wscn.WscnNewsResource.LiveChannelResourceList)
+        {
+            var (min, max) = rangeBySource[FromTypeOfNews.WscnMedia];
+            Assert.IsTrue(channel.CategoryNumber >= min && channel.CategoryNumber <= max,
+                $"见闻 live 频道分类号越界 : {channel.ChannelName} = {channel.CategoryNumber}");
+            Assert.IsFalse(wscnArticleCategories.Contains(channel.CategoryNumber),
+                $"见闻 live 频道分类号与文章源冲突 : {channel.ChannelName} = {channel.CategoryNumber}");
         }
 
         // 金十文章源的分类号全部落在金十段内 ( 快讯 401 在前 , 文章 402-406 接后 )

@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using KSpider.Model;
 using KSpider.Spider;
+using KSpider.Spider.News;
 using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Report.Eastmoney;
@@ -60,31 +61,38 @@ public class LiveConnectivityTest
     [TestMethod]
     public async Task ClsTelegraphLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Cls.ClsNewsSpider(), "财联社电报");
+        var spider = new KSpider.Spider.News.Flash.Cls.ClsNewsSpider();
+        await CheckFlashSourceLiveAsync(spider, spider.Columns[0], "财联社电报");
     }
 
     [TestMethod]
     public async Task SinaLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Sina.SinaNewsSpider(), "新浪 7x24");
+        var spider = new KSpider.Spider.News.Flash.Sina.SinaNewsSpider();
+        await CheckFlashSourceLiveAsync(spider, spider.Columns[0], "新浪 7x24");
     }
 
     [TestMethod]
     public async Task WscnLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Wscn.WscnNewsSpider(), "华尔街见闻 live");
+        // 7 频道逐个验证 ( 频道间有实质增量 , 美股/商品与全球宏观仅约 7% 重叠 )
+        var spider = new KSpider.Spider.News.Flash.Wscn.WscnNewsSpider();
+        foreach (var column in spider.Columns)
+            await CheckFlashSourceLiveAsync(spider, column, $"见闻 {column.ColumnName}");
     }
 
     [TestMethod]
     public async Task Jin10LiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Jin10.Jin10NewsSpider(), "金十快讯");
+        var spider = new KSpider.Spider.News.Flash.Jin10.Jin10NewsSpider();
+        await CheckFlashSourceLiveAsync(spider, spider.Columns[0], "金十快讯");
     }
 
     [TestMethod]
     public async Task ThsLiveFetchFlashPage()
     {
-        await CheckFlashSourceLiveAsync(new KSpider.Spider.News.Flash.Ths.ThsNewsSpider(), "同花顺 7x24");
+        var spider = new KSpider.Spider.News.Flash.Ths.ThsNewsSpider();
+        await CheckFlashSourceLiveAsync(spider, spider.Columns[0], "同花顺 7x24");
     }
 
     [TestMethod]
@@ -318,9 +326,9 @@ public class LiveConnectivityTest
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>
-    private async Task CheckFlashSourceLiveAsync(IFlashNewsSpider spider, string sourceName)
+    private async Task CheckFlashSourceLiveAsync(IFlashNewsSpider spider, NewsColumn column, string sourceName)
     {
-        var page = await FetchOrSkipAsync(() => spider.GetFlashPage(spider.Columns[0], 20, null));
+        var page = await FetchOrSkipAsync(() => spider.GetFlashPage(column, 20, null));
         Assert.IsTrue(page.Items.Count > 0, $"{sourceName} 接口未返回任何数据");
         AssertRealNewsRows(page.Items.Select(item =>
             ((string?)item.NewsUrl, (string?)item.Title, (string?)"快讯", (DateTime?)item.NewsTime,

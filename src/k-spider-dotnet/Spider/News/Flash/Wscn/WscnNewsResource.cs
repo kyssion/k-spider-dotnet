@@ -11,11 +11,6 @@ public static class WscnNewsResource
     public const string LivesUrl = "https://api-one.wallstcn.com/apiv1/content/lives";
     public const string ResourceHost = "api-one.wallstcn.com";
 
-    /// <summary>
-    ///     全球宏观频道 ; 另有 A 股 / 外汇 / 商品等频道 , v1 只接全球宏观
-    /// </summary>
-    public const string GlobalChannel = "global-channel";
-
     public const string Client = "pc";
 
     /// <summary>
@@ -29,14 +24,35 @@ public static class WscnNewsResource
     public const string FallbackNewsUrlTemplate = "https://wallstreetcn.com/livenews/{0}";
 
     /// <summary>
-    ///     见闻源内部栏目编号段
+    ///     见闻源内部栏目编号段起点 ( 全球宏观 301 ; 频道扩展 312-317 接在文章 302-311 之后 , 仍在 301-399 段内 )
     /// </summary>
     public const int LiveCategoryNumber = 301;
 
     public const string NewsFromName = "华尔街见闻";
 
     /// <summary>
-    ///     v1 只接 "全球宏观" 一个栏目
+    ///     live 频道清单 ( 2026-09-30 实测 7 频道全部可用 , code 20000 ) :
+    ///     频道间有实质增量 —— 美股/商品频道与全球宏观仅约 7% 重叠 , 全球宏观不是其它频道的超集。
+    ///     ColumnId 直接用接口的频道 slug。
     /// </summary>
-    public static readonly NewsColumn GlobalColumn = new("global", "全球宏观");
+    public static readonly LiveChannelResource[] LiveChannelResourceList =
+    {
+        new() { ChannelSlug = "global-channel", ChannelName = "全球宏观", CategoryNumber = 301 },
+        new() { ChannelSlug = "a-stock-channel", ChannelName = "A股", CategoryNumber = 312 },
+        new() { ChannelSlug = "us-stock-channel", ChannelName = "美股", CategoryNumber = 313 },
+        new() { ChannelSlug = "hk-stock-channel", ChannelName = "港股", CategoryNumber = 314 },
+        new() { ChannelSlug = "forex-channel", ChannelName = "外汇", CategoryNumber = 315 },
+        new() { ChannelSlug = "commodity-channel", ChannelName = "商品", CategoryNumber = 316 },
+        new() { ChannelSlug = "bond-channel", ChannelName = "债券", CategoryNumber = 317 }
+    };
+
+    public struct LiveChannelResource
+    {
+        /// <summary>接口 channel 参数 , 同时作为 NewsColumn 的 ColumnId</summary>
+        public string ChannelSlug { get; set; }
+
+        public string ChannelName { get; set; }
+
+        public int CategoryNumber { get; set; }
+    }
 }

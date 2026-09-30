@@ -82,12 +82,12 @@ public class WscnLiveItem
         };
     }
 
-    public SpiderFlashNewsModel ToFlashNewsModel(string itemJson)
+    public SpiderFlashNewsModel ToFlashNewsModel(string itemJson, int categoryNumber)
     {
         return new SpiderFlashNewsModel
         {
             FromMedia = (int)FromTypeOfNews.WscnMedia,
-            Category = WscnNewsResource.LiveCategoryNumber,
+            Category = categoryNumber,
             NewsUrl = NewsUrl,
             NewsTime = NewsTime,
             Title = DisplayTitle,

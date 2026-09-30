@@ -18,33 +18,41 @@ public class WscnNewsSpider : IFlashNewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.WscnMedia;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = [WscnNewsResource.GlobalColumn];
+    /// <summary>频道 slug → 频道资源 , 供 GetFlashPage 反查接口参数与分类号</summary>
+    private static readonly Dictionary<string, WscnNewsResource.LiveChannelResource> ChannelResourceMap =
+        WscnNewsResource.LiveChannelResourceList.ToDictionary(item => item.ChannelSlug);
+
+    public IReadOnlyList<NewsColumn> Columns { get; } = WscnNewsResource.LiveChannelResourceList
+        .Select(item => new NewsColumn(item.ChannelSlug, item.ChannelName))
+        .ToList();
 
     public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
     {
+        var channel = ChannelResourceMap[column.ColumnId];
         var requestSize = Math.Min(pageSize, WscnNewsResource.MaxPageSize);
         // 见闻用响应里给出的 next_cursor 翻页
         var cursorParam = string.IsNullOrEmpty(cursor) ? "" : $"&cursor={cursor}";
-        var url = $"{WscnNewsResource.LivesUrl}?channel={WscnNewsResource.GlobalChannel}" +
+        var url = $"{WscnNewsResource.LivesUrl}?channel={channel.ChannelSlug}" +
                   $"&client={WscnNewsResource.Client}&limit={requestSize}{cursorParam}";
         try
         {
             var responseString = await VerifiedHttp.GetStringAsync(WscnNewsResource.ResourceHost, url);
-            return ParseFlashPage(responseString);
+            return ParseFlashPage(responseString, channel.CategoryNumber);
         }
         catch (Exception e)
         {
             var message =
-                $"[WscnNewsSpider GetFlashPage] 拉取 live 快讯失败 , column : {column.ColumnId} , cursor : {cursor} , url : {url} , err : {e}";
+                $"[WscnNewsSpider GetFlashPage] 拉取 live 快讯失败 , channel : {column.ColumnId} , cursor : {cursor} , url : {url} , err : {e}";
             Log.LogError(message);
             throw new HtmlFormException(url, message, e);
         }
     }
 
     /// <summary>
-    ///     解析列表响应 ( 独立成公开静态方法供离线测试 ) ; 单页数据即完整记录
+    ///     解析列表响应 ( 独立成公开静态方法供离线测试 ) ; 单页数据即完整记录 ,
+    ///     分类号由频道资源带入 ( 全球宏观 301 , 扩展频道 312-317 )
     /// </summary>
-    public static FlashNewsPage ParseFlashPage(string responseString)
+    public static FlashNewsPage ParseFlashPage(string responseString, int categoryNumber)
     {
         var jsonNode = JsonNode.Parse(responseString) ?? throw new HtmlFormException(WscnNewsResource.LivesUrl,
             "[WscnNewsSpider ParseFlashPage] 响应不是合法 JSON");
@@ -61,7 +69,7 @@ public class WscnNewsSpider : IFlashNewsSpider
             if (node == null) continue;
             var liveItem = WscnLiveItem.FromJson(node);
             if (liveItem.Id == 0) continue;
-            items.Add(liveItem.ToFlashNewsModel(node.ToJsonString()));
+            items.Add(liveItem.ToFlashNewsModel(node.ToJsonString(), categoryNumber));
         }
 
         return new FlashNewsPage

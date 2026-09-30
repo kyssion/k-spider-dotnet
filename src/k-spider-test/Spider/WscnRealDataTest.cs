@@ -19,7 +19,7 @@ public class WscnRealDataTest
     [TestMethod]
     public void ParseRealPageMapEveryFlashRecord()
     {
-        var page = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"));
+        var page = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"), WscnNewsResource.LiveCategoryNumber);
 
         Assert.AreEqual(20, page.Items.Count);
         Assert.IsTrue(page.Items.All(item => item.NewsUrl.StartsWith("https://wallstreetcn.com/livenews/")));
@@ -35,7 +35,7 @@ public class WscnRealDataTest
     [TestMethod]
     public void ParseRealLevelFromScore()
     {
-        var page = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"));
+        var page = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"), WscnNewsResource.LiveCategoryNumber);
 
         // 真实夹具 20 条 : score=1 x18 ( level 1 ) + score=2 x2 ( level 2 重要 )
         Assert.AreEqual(18, page.Items.Count(item => item.Level == 1));
@@ -45,8 +45,8 @@ public class WscnRealDataTest
     [TestMethod]
     public void ParseRealSecondPageContinuesOlder()
     {
-        var page1 = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"));
-        var page2 = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page2.json"));
+        var page1 = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page1.json"), WscnNewsResource.LiveCategoryNumber);
+        var page2 = WscnNewsSpider.ParseFlashPage(LoadFixture("wscn_live_page2.json"), WscnNewsResource.LiveCategoryNumber);
 
         // 游标是接口给的 next_cursor , 不含边界条目
         var oldestOfPage1 = page1.Items.Min(item => item.NewsTime);
@@ -64,7 +64,7 @@ public class WscnRealDataTest
                    ]}}
                    """;
 
-        var page = WscnNewsSpider.ParseFlashPage(json);
+        var page = WscnNewsSpider.ParseFlashPage(json, WscnNewsResource.LiveCategoryNumber);
 
         Assert.AreEqual("见闻快讯正文", page.Items[0].Title);
         Assert.AreEqual("1789785930", page.NextCursor);
@@ -74,6 +74,6 @@ public class WscnRealDataTest
     public void ParseFlashPageThrowOnErrorCode()
     {
         Assert.ThrowsExactly<HtmlFormException>(() =>
-            WscnNewsSpider.ParseFlashPage("""{"code":40001,"message":"invalid"}"""));
+            WscnNewsSpider.ParseFlashPage("""{"code":40001,"message":"invalid"}""", WscnNewsResource.LiveCategoryNumber));
     }
 }
