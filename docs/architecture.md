@@ -52,7 +52,7 @@ k-spider-test ─┘
 2. `Host.CreateApplicationBuilder` 装配配置：`appsettings.json` → `appsettings.{环境}.json` → `K_SPIDER__` 前缀环境变量 → 代码默认值。
 3. DI 注册：`DatabaseOptions`（IOptions）、`Pg`、`SpiderNewsDao`、`SpiderNewsBatchDao`（均 Singleton）。
 4. `AddQuartz(AddSpiderJobs)` 集中注册任务与触发器；`AddQuartzHostedService(WaitForJobsToComplete = true)` 保证收到退出信号后等在跑任务收尾。
-5. `host.Build()` 后依次执行 `Pg.EnsureSpiderNewsListDbObjects()` / `EnsureFlashNewsDbObjects()` / `EnsureSystemDbObjects()` 幂等补齐库对象（库不可用时仅记日志，不阻断进程），再 `RunAsync()`。
+5. `host.Build()` 后依次执行 `Pg.EnsureSpiderNewsListDbObjects()` / `EnsureFlashNewsDbObjects()` / `EnsureResearchReportDbObjects()` / `EnsureSystemDbObjects()` 幂等补齐库对象（库不可用时仅记日志，不阻断进程），再 `RunAsync()`。
 
 ### 调度模型
 
@@ -69,6 +69,7 @@ k-spider-test ─┘
 | `NewsContentOriginJob` | 3 秒 | 200 条 | 全源 FIFO 下载原始内容 |
 | `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
 | `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 + 反爬验证阻塞告警 + 节点快照上报（`spider_node_status`） |
+| `ResearchReportJob` | 5 分钟 | 三类各最多 4 页 × 100 条 + 摘要回填 20 条 | 东财研报中心三类（个股/行业/宏观）列表即元数据直写 `spider_research_report`（`ON CONFLICT DO NOTHING`），摘要由详情页二段回填（`summary_fail_count < 3` 重试）；独立于两个新闻注册表，直连 `DfResearchReportSpider` |
 | `NodeStateJob` | 3 秒 | — | **状态通道**：刷新各任务调度态（下次触发/暂停）到 `spider_job_state` + 轮询消费 `spider_job_command` 指令；不许被暂停（它停了没人消费恢复指令） |
 | `TransferSpiderDataJob`（sync 进程） | 2 分钟 | 2000 行 / 批 | 远端 → 本地增量同步 |
 
@@ -116,6 +117,7 @@ src/k-spider-dotnet/
 ├── Job/              # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
 │   ├── News/Web/     #   网页型三段任务
 │   ├── News/Flash/   #   FlashNewsJob ( 15 秒 )
+│   ├── News/Report/  #   ResearchReportJob ( 5 分钟 , 研报第三管线 )
 │   ├── Check/        #   NewsCheckJob ( 含节点快照上报 )
 │   └── Node/         #   NodeStateJob + NodeIdentity ( 调度态上报与指令消费 )
 ├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组
@@ -123,7 +125,8 @@ src/k-spider-dotnet/
 │   ├── News/             # ── 新闻域 ──
 │   │   ├── NewsSharedModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
 │   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
-│   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
+│   │   ├── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
+│   │   └── Report/        # 研报 ( 第三管线 ) : DfResearchReportSpider 直连 , 无注册表 ( 单源 , 第二源出现再抽 )
 │   └── Verify/           # 反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
 │       ├── Model/         #   共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
 │       ├── Pipeline/      #   编排与运行时状态 : VerificationPipeline + VerificationSessionStore

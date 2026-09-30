@@ -4,6 +4,7 @@ using KSpider.Job.Node;
 using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
+using KSpider.Spider.News.Report.Eastmoney;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Spider.Verify.Model;
@@ -34,6 +35,7 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
             var backlog = CheckPipelineBacklog();
             var flashLag = CheckFlashNewsLag();
             var verifyBlocked = CheckVerificationBlocked();
+            CheckReportLag();
             ReportNodeStatus(apiErrors, backlog, flashLag, verifyBlocked);
         });
     }
@@ -71,6 +73,22 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
                 logger.LogError("[NewsCheckJob CheckListApiAlive] api err : {} , source : {} , column : {}", e,
                     spider.FromMedia, column.ColumnId);
             }
+
+        // 研报管线 ( 独立于两个注册表 , 直连 DfResearchReportSpider ) :
+        // 三类共用同一列表接口 , 探测个股类即可代表接口存活
+        try
+        {
+            var endDate = DateTime.Today;
+            var beginDate = endDate.AddDays(-DfResearchReportResource.QueryWindowDays);
+            var page = await new DfResearchReportSpider().GetReportPage(ResearchReportKind.Stock,
+                beginDate, endDate, 10, 1);
+            if (page.Items.Count == 0) throw new Exception("接口未返回数据");
+        }
+        catch (Exception e)
+        {
+            errors.Add($"[{(int)FromTypeOfNews.DfMedia} 东财研报] column report : {e.Message}");
+            logger.LogError("[NewsCheckJob CheckListApiAlive] report api err : {}", e);
+        }
 
         return errors;
     }
@@ -156,6 +174,34 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
         }
 
         return result;
+    }
+
+    /// <summary>
+    ///     研报实时性 : 最新一篇发布日期距今多久。研报每日都有发布 ,
+    ///     滞后超过 3 天说明列表接口异常 ( 摘要回填失败只影响 summary 为空 , 不影响此指标 )。
+    ///     暂只记日志不入节点快照 payload —— Web 控制台研报页未建 , 加了没有消费方。
+    /// </summary>
+    private void CheckReportLag()
+    {
+        try
+        {
+            using var connection = pg.Connection();
+            var newest = connection.Queryable<SpiderResearchReportModel>().Max(it => it.PublishDate);
+            if (newest == default)
+            {
+                logger.LogWarning("[NewsCheckJob CheckReportLag] no report data yet");
+                return;
+            }
+
+            var lagDays = (int)(DateTime.Today - newest.Date).TotalDays;
+            var level = lagDays > 3 ? LogLevel.Warning : LogLevel.Information;
+            logger.Log(level,
+                "[NewsCheckJob CheckReportLag] newest : {Newest:yyyy-MM-dd} , lag : {Lag}d", newest, lagDays);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[NewsCheckJob CheckReportLag] err : {}", e);
+        }
     }
 
     /// <summary>

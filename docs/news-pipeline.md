@@ -285,7 +285,8 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 新浪快讯图片未解析 | 图片在 `multimedia` 字段，实测 100 条仅 1 条非空 | 出现高频图片时补该字段解析 |
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
 | 跨源 URL 碰撞风险收窄但未根除 | 快讯源已独立写 `spider_flash_news`（唯一键含 `from_media`，源间天然隔离）；剩余风险在网页型三表——`ON CONFLICT (news_url)` 跨源全局去重，若未来新增的网页型源产出与东财相同的 URL，后写的会覆盖先写的原始内容（当前仅东财一个网页型源，实测各源域名互不重叠） | 真出现碰撞时给三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
-| 财联社品见 / 招财号未接入 | 品见走专用接口 `/v5/web/pinjian/assembled2`（实测可取数），招财号是独立内容入口；两者暂无抓取价值评估 | 有需求时按 [web-source-playbook.md](web-source-playbook.md) 流程侦察接入 |
+| 财联社品见 / 招财号未接入 | 品见走专用接口 `/v5/web/pinjian/assembled2`（实测可取数，需签名），招财号是机构入驻 UGC 平台（App 内入口为主，网页侧无确认可用的匿名列表接口）；两者暂无抓取价值评估 | 品见有需求时按 [web-source-playbook.md](web-source-playbook.md) 流程侦察接入（作为 `ClsArticleSpider` 第二列表族） |
+| 研报不入新闻管线（设计使然，非缺陷） | 东财研报（个股/行业/宏观）是"列表即结构化元数据"形态，走第三条管线直写 `spider_research_report`（独立表 + 独立 Job），评级/盈利预测等以结构化列存储而非文章正文；新闻三表与快讯表不含研报 | 需要按研报做下游分析时直接查 `spider_research_report`；接入更多研报源时照 `Spider/News/Report/Eastmoney/` 套路并届时再抽注册表 |
 | 财联社文章频道无重要度 | depth 列表条目 `level` 为空字符串，与电报的 A/B/C 重要度体系不同，落库统一为普通（1） | 若源侧开始下发重要度，在 `ClsArticleListItem` 补映射 |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |

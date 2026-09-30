@@ -1,6 +1,6 @@
 # 数据模型
 
-库名 `k_script_spider`，8 张表（4 张网页新闻 + 1 张实时快讯 + 3 张系统运行状态）。完整 DDL（pg_dump 导出 + 增量演进段）在
+库名 `k_script_spider`，9 张表（4 张网页新闻 + 1 张实时快讯 + 1 张研报 + 3 张系统运行状态）。完整 DDL（pg_dump 导出 + 增量演进段）在
 [`db/k_script_spider.sql`](../db/k_script_spider.sql)，新环境用它初始化。
 
 ## 一、表清单
@@ -12,6 +12,7 @@
 | `spider_news_content` | 结构化详情：`news_content_json`（片段数组）+ `news_content_text` + `news_keyword` | `news_url` | `NewsContentJob` |
 | `spider_news_image_list` | 正文图片地址与文件名 | `image_resource_url` | `NewsContentJob` |
 | `spider_flash_news` | 实时快讯（列表即全文，拉到即终态：标题/正文/标签/重要度 1-3/关联标的/图片/原始 JSON） | `(from_media, news_url)` | `FlashNewsJob` |
+| `spider_research_report` | 研报（东财研报中心个股/行业/宏观三类，列表即结构化元数据：评级/个股/机构/目标价/盈利预测；`summary` 摘要由详情页二段回填，`summary_fail_count` 控重试） | `info_code` | `ResearchReportJob` |
 | `spider_job_state` | 任务调度态（每节点×任务一行 upsert 不膨胀：下次触发/是否暂停 + 最近执行结果/连续失败） | `(node_id, job_name)` | 主程序（`JobRuntimeListener` 写执行列，`NodeStateJob` 刷调度列） |
 | `spider_job_command` | 任务指令（Web 控制台写 `pending`，爬虫节点 3 秒轮询消费后置 `done`/`rejected`；`action`：trigger/pause/resume） | `id` | `k-spider-web` 写 / 主程序消费 |
 | `spider_node_status` | 节点状态快照（NewsCheckJob 每 5 分钟 upsert：`payload` JSON 文本，含接口探测失败/管线积压/快讯滞后/验证冷却） | `node_id` | 主程序（`NewsCheckJob`） |
@@ -28,7 +29,7 @@
 
 ## 二、唯一键与去重语义
 
-- 网页新闻三表都以 `news_url` 去重，图片表以 `image_resource_url`，**跨源全局去重**（同一 URL 只落一次）；快讯表以 `(from_media, news_url)` 去重，各源独立命名空间（与"media 相互独立"的设计一致）。
+- 网页新闻三表都以 `news_url` 去重，图片表以 `image_resource_url`，**跨源全局去重**（同一 URL 只落一次）；快讯表以 `(from_media, news_url)` 去重，各源独立命名空间（与"media 相互独立"的设计一致）；研报表以 `info_code`（东财研报唯一标识）去重。
 - 约束改名：`spider_news_content` 上的约束名仍是调试期残留的 `uk_news_content_test_url`，如需改名执行 `ALTER TABLE public.spider_news_content RENAME CONSTRAINT uk_news_content_test_url TO uk_news_content_url;`（纯改名，不影响业务）。
 
 ## 三、索引与热路径
@@ -67,6 +68,6 @@
 
 ## 六、数据治理
 
-- `spider_news_content_origin` 与快讯表的 `raw_content` 存原始响应、图片表只增不删，长期运行会持续增长，需要定期归档清理（暂无自动保留策略，原治理脚本已移除，可从 git 历史找回）。
+- `spider_news_content_origin` 与快讯表 / 研报表的 `raw_content` 存原始响应、图片表只增不删，长期运行会持续增长，需要定期归档清理（暂无自动保留策略，原治理脚本已移除，可从 git 历史找回）。
 - 图片只记录 URL 不下载内容，因此图片表体积可控。
 - 远端库到本地库的同步只搬 5 张新闻表。

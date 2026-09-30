@@ -176,6 +176,53 @@ CREATE INDEX IF NOT EXISTS "idx_flash_news_media_time"
 
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_flash_news FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
+-- 研报 ( 2026-09 新增 : 东财研报中心个股/行业/宏观三类 , 列表即结构化元数据直写 ,
+-- 摘要正文由详情页二段回填 , 无状态机 ) ; 第三条管线专属表 , 不入新闻三表
+CREATE TABLE IF NOT EXISTS "public"."spider_research_report" (
+  "id" bigserial NOT NULL,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "info_code" varchar(64) NOT NULL,
+  "from_media" integer NOT NULL,
+  "report_kind" smallint NOT NULL,
+  "title" varchar(500) NOT NULL,
+  "stock_code" varchar(32),
+  "stock_name" varchar(64),
+  "org_name" varchar(128),
+  "rating_name" varchar(32),
+  "industry_name" varchar(64),
+  "aim_price_high" numeric(12,2),
+  "aim_price_low" numeric(12,2),
+  "eps_this_year" numeric(12,4),
+  "pe_this_year" numeric(12,2),
+  "eps_next_year" numeric(12,4),
+  "pe_next_year" numeric(12,2),
+  "researcher" varchar(200),
+  "summary" text,
+  "summary_fail_count" integer NOT NULL DEFAULT 0,
+  "publish_date" timestamp without time zone NOT NULL,
+  "raw_content" text,
+  CONSTRAINT "spider_research_report_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "uk_research_report_info_code" UNIQUE ("info_code")
+);
+
+COMMENT ON TABLE "public"."spider_research_report" IS '研报 ( 东财研报中心 , 列表即元数据 , 摘要由详情页回填 )';
+COMMENT ON COLUMN "public"."spider_research_report"."info_code" IS '东财研报唯一标识 ( 如 AP202609301830020241 ) , 去重键';
+COMMENT ON COLUMN "public"."spider_research_report"."report_kind" IS '研报类型 : 1 个股 / 2 行业 / 3 宏观 ( 对应接口 qType 0/1/2 )';
+COMMENT ON COLUMN "public"."spider_research_report"."publish_date" IS '发布日期 ( 接口只到日期级 , 时间恒为 00:00:00 )';
+COMMENT ON COLUMN "public"."spider_research_report"."summary" IS '摘要正文 ( 详情页 ctx-content 区纯文本 , 二段回填 )';
+COMMENT ON COLUMN "public"."spider_research_report"."summary_fail_count" IS '摘要回填失败次数 ( 达上限 3 后不再重试 )';
+
+-- 按发布日查询 ( 列表/分析 )
+CREATE INDEX IF NOT EXISTS "idx_research_report_publish_date"
+  ON "public"."spider_research_report" ("publish_date");
+
+-- 摘要回填热路径 : 只扫待回填且未达失败上限的行 ( ResearchReportJob 每 5 分钟限量取一批 )
+CREATE INDEX IF NOT EXISTS "idx_research_report_pending_summary"
+  ON "public"."spider_research_report" ("id") WHERE summary IS NULL AND summary_fail_count < 3;
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_research_report FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
 -- 新闻流水线轮询部分索引 ( 老库由启动时 Pg.EnsureSpiderNewsListDbObjects 幂等补齐 )
 CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")

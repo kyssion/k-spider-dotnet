@@ -151,6 +151,72 @@ public class Pg
     }
 
     /// <summary>
+    ///     研报表的幂等建表 ( 表 + 唯一键 + 摘要回填部分索引 + update_time 触发器 )。
+    ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsureResearchReportDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TABLE IF NOT EXISTS public.spider_research_report
+                (
+                    id                 bigserial    NOT NULL,
+                    create_time        timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time        timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    info_code          varchar(64)  NOT NULL,
+                    from_media         integer      NOT NULL,
+                    report_kind        smallint     NOT NULL,
+                    title              varchar(500) NOT NULL,
+                    stock_code         varchar(32),
+                    stock_name         varchar(64),
+                    org_name           varchar(128),
+                    rating_name        varchar(32),
+                    industry_name      varchar(64),
+                    aim_price_high     numeric(12,2),
+                    aim_price_low      numeric(12,2),
+                    eps_this_year      numeric(12,4),
+                    pe_this_year       numeric(12,2),
+                    eps_next_year      numeric(12,4),
+                    pe_next_year       numeric(12,2),
+                    researcher         varchar(200),
+                    summary            text,
+                    summary_fail_count integer      NOT NULL DEFAULT 0,
+                    publish_date       timestamp    NOT NULL,
+                    raw_content        text,
+                    CONSTRAINT spider_research_report_pkey PRIMARY KEY (id),
+                    CONSTRAINT uk_research_report_info_code UNIQUE (info_code)
+                )
+                """);
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_research_report_publish_date
+                    ON public.spider_research_report (publish_date)
+                """);
+            // 摘要回填热路径 : 只扫待回填且未达失败上限的行 ( ResearchReportJob 每 5 分钟限量取一批 )
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_research_report_pending_summary
+                    ON public.spider_research_report (id)
+                    WHERE summary IS NULL AND summary_fail_count < 3
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            connection.Ado.ExecuteCommand("DROP TRIGGER IF EXISTS update_modified_column ON public.spider_research_report");
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.spider_research_report
+                    FOR EACH ROW EXECUTE FUNCTION public.update_time_func()
+                """);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsureResearchReportDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     系统状态表的幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 , 写入见 SystemStatusDao )。
     ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
     /// </summary>

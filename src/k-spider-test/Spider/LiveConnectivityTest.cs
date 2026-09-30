@@ -3,6 +3,7 @@ using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Flash;
+using KSpider.Spider.News.Report.Eastmoney;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Web.Sina;
@@ -241,6 +242,46 @@ public class LiveConnectivityTest
 
         TestContext.WriteLine(
             $"金十文章 {spider.Columns.Count} 栏目共 {total} 条 , 样例 {newsItem.NewsTitle}");
+    }
+
+    [TestMethod]
+    public async Task DfReportLiveFetchListAndSummary()
+    {
+        var spider = new DfResearchReportSpider();
+        var endDate = DateTime.Today;
+        var beginDate = endDate.AddDays(-DfResearchReportResource.QueryWindowDays);
+
+        // 三类列表 : 同一接口只差 qType , 逐类验证能调通且字段完整
+        var stockPage = await FetchOrSkipAsync(() =>
+            spider.GetReportPage(ResearchReportKind.Stock, beginDate, endDate, 20, 1));
+        Assert.IsTrue(stockPage.Items.Count > 0, "东财个股研报列表未返回任何数据");
+        var first = stockPage.Items[0];
+        Assert.IsFalse(string.IsNullOrWhiteSpace(first.InfoCode), "infoCode 为空");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(first.Title), "title 为空");
+        Assert.IsTrue(first.StockCode != null && first.StockName != null, "个股研报应有标的信息");
+        Assert.IsTrue(first.PublishDate >= beginDate, "发布日期早于查询窗口 ( 时间解析可能已变更 )");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(first.RawContent), "原始条目 JSON 为空");
+
+        var industryPage = await FetchOrSkipAsync(() =>
+            spider.GetReportPage(ResearchReportKind.Industry, beginDate, endDate, 20, 1));
+        Assert.IsTrue(industryPage.Items.Count > 0, "东财行业研报列表未返回任何数据");
+        var macroPage = await FetchOrSkipAsync(() =>
+            spider.GetReportPage(ResearchReportKind.Macro, beginDate, endDate, 20, 1));
+        Assert.IsTrue(macroPage.Items.Count > 0, "东财宏观研报列表未返回任何数据");
+
+        // 摘要 : 三类详情页模板各验一篇 ( SSR HTML 的 ctx-content 区 )
+        var stockSummary = await FetchOrSkipAsync(() =>
+            spider.GetReportSummaryAsync(first.InfoCode, ResearchReportKind.Stock));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(stockSummary), "个股研报摘要解析为空");
+        var industrySummary = await FetchOrSkipAsync(() =>
+            spider.GetReportSummaryAsync(industryPage.Items[0].InfoCode, ResearchReportKind.Industry));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(industrySummary), "行业研报摘要解析为空");
+        var macroSummary = await FetchOrSkipAsync(() =>
+            spider.GetReportSummaryAsync(macroPage.Items[0].InfoCode, ResearchReportKind.Macro));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(macroSummary), "宏观研报摘要解析为空");
+
+        TestContext.WriteLine(
+            $"东财研报 : 个股 {stockPage.Items.Count} + 行业 {industryPage.Items.Count} + 宏观 {macroPage.Items.Count} 条 , 样例 {first.Title}");
     }
 
     /// <summary>

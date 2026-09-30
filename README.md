@@ -1,15 +1,16 @@
 # k-spider-dotnet
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯（当前接入东方财富 35 个栏目与财联社文章频道 13 个栏目、财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯，多源框架可扩展），存入 PostgreSQL，支持远端到本地的增量数据同步。
+7x24 小时金融数据爬虫：抓取财经新闻快讯（当前接入东方财富 35 个栏目与财联社文章频道 13 个栏目、财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯，多源框架可扩展）与研报（东财研报中心个股/行业/宏观三类），存入 PostgreSQL，支持远端到本地的增量数据同步。
 
 ## 功能
 
 - **网页新闻管线**（三段接力，状态机驱动，失败自动重试）：列表发现 → 原始内容下载 → 结构化解析（段落/图片/列表/表格），按 `news_url` 全局去重，当前接入东方财富 35 个栏目与财联社文章频道 13 个栏目。
 - **实时快讯管线**（15 秒一轮，独立于网页管线）：财联社电报、新浪财经 7x24、华尔街见闻 live、金十数据快讯——"列表即全文"型源，拉到即终态直写 `spider_flash_news`（含重要度/关联标的），发布到入库最坏延迟约 16 秒；`NewsCheckJob` 按源监控实时性滞后。
+- **研报管线**（5 分钟一轮，第三条管线）：东财研报中心个股/行业/宏观三类——列表接口即全部结构化元数据（评级/个股/机构/目标价/盈利预测），直写 `spider_research_report` 按 `info_code` 去重；摘要正文由详情页二段回填，失败计数控重试。
 - **反爬验证识别与通过**（`Spider/Verify/`）：所有抓取请求统一走 `VerifiedHttp`，被 JS 门禁 / Cloudflare 挑战 / 频率限制 / 载荷级风控拦住时自动识别并处理——JS 与 Cloudflare 类挑战用浏览器过掉并把 cookie 回放给 HTTP 链路，过不了的（滑块/图形/短信验证码、限流）明确告警而不是悄悄返回空数据。识别器与通过策略都是注册表扩展，新增验证方式只需加一个类加一行注册（见 [docs/anti-bot-verification.md](docs/anti-bot-verification.md)）。
-- **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计 + 反爬验证阻塞告警（每 5 分钟）。
+- **健康检查**：各源栏目接口可用性探测 + 分源流水线积压/失败统计 + 反爬验证阻塞告警 + 研报实时性监控（每 5 分钟）。
 - **Web 控制台**（独立进程 `k-spider-web`，React + TypeScript）：总览（任务状态/管线积压/快讯实时性/反爬告警）、新闻与快讯查询、数据分析（入库趋势/分布/关键词）、任务手动触发/暂停/恢复；爬虫运行状态与控制指令经 3 张系统表跨进程传递，与采集进程完全解耦、可分开部署。
-- **数据搬运**：独立进程 `k-spider-sync` 将远端库的 5 张新闻表（4 张网页新闻 + 快讯表）增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
+- **数据搬运**：独立进程 `k-spider-sync` 将远端库的 6 张表（4 张网页新闻 + 快讯表 + 研报表）增量同步到本地（新行按 Id 增量插入；已有行按 `update_time` 水位同步更新，使远端状态流转/内容修正传播到本地；水位持久化在本地 `sync_transfer_watermark` 表，SqlSugar，单表失败不阻断其余表）。
 
 ## 解决方案结构
 
@@ -72,7 +73,8 @@ dotnet run --project src/k-spider-dotnet
 | `NewsListJob` | 2 分钟 | 网页型源抓列表，批量 ON CONFLICT 写入，自适应翻页 | 启用 |
 | `NewsContentOriginJob` | 3 秒 | 按源分发下载原始内容（全源 FIFO，失败重试 ≤3 次） | 启用 |
 | `NewsContentJob` | 1 分钟 | 按源分发解析原始内容为结构化内容（失败重试 ≤3 次） | 启用 |
-| `NewsCheckJob` | 5 分钟 | 各源栏目接口探测 + 分源积压统计 + 反爬验证阻塞告警 + 节点快照上报 | 启用 |
+| `NewsCheckJob` | 5 分钟 | 各源栏目接口探测 + 分源积压统计 + 反爬验证阻塞告警 + 研报实时性 + 节点快照上报 | 启用 |
+| `ResearchReportJob` | 5 分钟 | 东财研报三类列表直写 `spider_research_report` + 摘要由详情页回填 | 启用 |
 | `NodeStateJob` | 3 秒 | 状态通道：任务调度态上报 + Web 控制台指令消费（不可暂停） | 启用 |
 | `TransferSpiderDataJob`（sync） | 2 分钟 | 远端 → 本地增量同步 | 启用 |
 
@@ -91,9 +93,17 @@ spider_news_content_origin
        │ NewsContentJob (3→1)
        ▼
 spider_news_content + spider_news_image_list
+
+研报 ( 东财研报中心 , 第三管线 )
+────────────────────────
+研报列表 API ──ResearchReportJob(5分钟)──▶ spider_research_report
+( 结构化元数据 : 评级/个股/机构/目标价/盈利预测 , info_code 去重 )
+       │ 摘要回填 ( 详情页 SSR , summary_fail_count<3 重试 )
+       ▼
+summary 填充 ( 拉到即终态 , 无状态机 )
 ```
 
-状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。快讯型源（列表即全文）在列表阶段就直接写成 `status=3`，不经过下载 Job。5 张表完整 DDL 见 [db/k_script_spider.sql](db/k_script_spider.sql)。
+状态机：`0 未下载 → 3 已下载原始 → 1 已解析详情`，失败态 `2 / 4` 在 `fail_count < 3` 时自动重试。两个下载/解析 Job 按行上的 `from_media` 分发到对应源实现（注册表 `NewsSpiderRegistry`）。快讯型源（列表即全文）在列表阶段就直接写成 `status=3`，不经过下载 Job。研报走独立管线与独立表，不入新闻三表。6 张数据表完整 DDL 见 [db/k_script_spider.sql](db/k_script_spider.sql)。
 
 ## 部署（Linux）
 

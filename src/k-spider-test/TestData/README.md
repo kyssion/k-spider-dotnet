@@ -27,6 +27,10 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 | `jin10_article_list_28.json` / `jin10_article_list_30.json` / `jin10_article_list_53.json` | `GET https://reference-api.jin10.com/reference?nav_bar_id=28/30/53&page=1&page_size=20`（带 `x-app-id: irINJPgCgrndSp0F` / `x-version: 1.0.1` 头） | 2026-09-29 18:10 (东八区) | 金十「市场参考」文章列表三栏目（综合/金十早餐/热点头条）各 20 条；综合页含 6 条付费专享条目（如 231298，锁定"vip 跳过"分支）；头条页首条《特朗普周二会见AI巨头，OpenAI同日开发者大会料推常驻AI智能体》（id=231303，display_datetime=2026-09-29 17:32:06） |
 | `jin10_article_detail.json` | `GET https://reference-api.jin10.com/reference/getOne?id=231303&type=news`（带 `x-app-id: arU9WZF7TC9m7nWn` 头，与列表是两套 app-id） | 2026-09-29 18:10 | 免费长文详情（content 为 HTML 片段，标签集 h2/img/p/strong，约 2800 字符） |
 | `jin10_article_detail_rich.json` | `GET https://reference-api.jin10.com/reference/getOne?id=231299&type=news` | 2026-09-29 18:10 | 纯 `figure` 图片文（期货热图），锁定"figure 图片提取"路径 |
+| `df_report_list_qtype0.json` / `df_report_list_qtype1.json` / `df_report_list_qtype2.json` | `GET https://reportapi.eastmoney.com/report/list?pageSize=100&beginTime=2026-09-28&endTime=2026-09-30&pageNo=1&qType=0/1/2`（无签名无专用头） | 2026-09-30 (东八区) | 东财研报三类列表各一页（个股 39 条/行业 100 条满页 TotalPage=2/宏观 74 条）；三类条目同构，差异只在填充：个股有 stock/目标价/预测，行业有 industryName，宏观大多为空 |
+| `df_report_detail_stock.html` | `GET https://data.eastmoney.com/report/zw_stock.jshtml?infocode=AP202609301830020241`（页面 HTML 原样保存） | 2026-09-30 | 个股研报详情页（SSR），摘要在 `div.ctx-content` 的 p 段落（首段带全角空格缩进与个股标识行），标题《首次覆盖：电子大宗气体龙头厂商，受益半导体景气周期及国产替代》 |
+| `df_report_detail_industry.html` | `GET https://data.eastmoney.com/report/zw_industry.jshtml?infocode=AP202609301830023938` | 2026-09-30 | 行业研报详情页（同模板结构，验证三类模板路径差异） |
+| `df_report_detail_macro.html` | `GET https://data.eastmoney.com/report/zw_macresearch.jshtml?infocode=AP202609301830024638` | 2026-09-30 | 宏观研报详情页（同上） |
 
 维护方式：接口改版或解析逻辑变更时重新抓一份覆盖同名文件，并同步用例里依赖夹具的固定值
 （财联社游标 `1789746672`、正文时间 `2026/09/19 01:09:08` 等）。

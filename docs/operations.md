@@ -83,7 +83,7 @@ dotnet publish src/k-spider-web/k-spider-web.csproj \
 
 ## 三、监控与巡检
 
-- **日志是主要的监控手段**：`NewsCheckJob` 每 5 分钟输出（a）逐源逐栏目接口探测结果，空数据记错误日志；（b）分源各状态数量与全库最老未处理新闻时间；（c）处于反爬验证冷却期的源（识别到验证但自动通过失败），有则逐条告警。另有 `VerificationPipeline` 在识别到验证、策略未通过、进入冷却时各记一条日志。
+- **日志是主要的监控手段**：`NewsCheckJob` 每 5 分钟输出（a）逐源逐栏目接口探测结果，空数据记错误日志（含研报列表接口）；（b）分源各状态数量与全库最老未处理新闻时间；（c）处于反爬验证冷却期的源（识别到验证但自动通过失败），有则逐条告警；（d）研报实时性（最新一篇发布日期距今，滞后超 3 天告警）。另有 `VerificationPipeline` 在识别到验证、策略未通过、进入冷却时各记一条日志。
 - **启动自检**：`Pg.EnsureSpiderNewsListDbObjects()` 除补齐列与索引外，还会检查批量 upsert 依赖的唯一约束是否齐全（`CheckBatchUpsertUniqueIndexes`）。缺约束时打印明确错误（表名 + 列名），因为这种缺失会让"列表即全文"型源整批写入失败、且不影响其它源，从数据现象上极难定位。
 - 目前**没有**指标上报与告警通道（飞书 SDK 保留在 `Lark/` 但无调用方）。判断系统是否健康靠以下 SQL 与日志：
 
@@ -115,6 +115,12 @@ WHERE fail_count >= 3 AND download_status_code IN (2, 4) GROUP BY 1, 2;
 
 -- 最老待处理新闻 ( 判断积压是否在推进 )
 SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
+
+-- 研报回填积压 ( summary 长期为空说明详情页模板改版 )
+SELECT count(*) FROM spider_research_report WHERE summary IS NULL AND summary_fail_count < 3;
+
+-- 研报实时性 ( 最新一篇距今天数 , 每日都有发布 , 超过 3 天为异常 )
+SELECT max(publish_date) FROM spider_research_report;
 ```
 
 ## 四、排障手册
@@ -135,7 +141,7 @@ SELECT min(news_time) FROM spider_news_list WHERE download_status_code = 0;
 
 ## 五、数据同步（`k-spider-sync`）
 
-每 2 分钟一轮，把远端库的 5 张新闻表（4 张网页新闻 + `spider_flash_news`）搬到本地库，`DisallowConcurrentExecution` + 优雅停机，与主爬虫互不影响。
+每 2 分钟一轮，把远端库的 6 张表（4 张网页新闻 + `spider_flash_news` + `spider_research_report`）搬到本地库，`DisallowConcurrentExecution` + 优雅停机，与主爬虫互不影响。本地库缺研报表时先执行主 DDL 的 `spider_research_report` 段（同步进程不做建表）。
 
 **两条同步通道**：
 

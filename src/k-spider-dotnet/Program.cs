@@ -3,6 +3,7 @@ using KSpider.Data;
 using KSpider.Job;
 using KSpider.Job.Check;
 using KSpider.Job.News.Flash;
+using KSpider.Job.News.Report;
 using KSpider.Job.News.Web;
 using KSpider.Job.Node;
 using KSpider.Spider.News.Web.Cls;
@@ -53,6 +54,8 @@ public static class Program
         host.Services.GetRequiredService<Pg>().EnsureSpiderNewsListDbObjects();
         // 实时快讯表幂等建表 ( 表 + 实时消费索引 + update_time 触发器 )
         host.Services.GetRequiredService<Pg>().EnsureFlashNewsDbObjects();
+        // 研报表幂等建表 ( 第三管线 : 表 + 唯一键 + 摘要回填部分索引 + update_time 触发器 )
+        host.Services.GetRequiredService<Pg>().EnsureResearchReportDbObjects();
         // 系统状态表幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 )
         host.Services.GetRequiredService<Pg>().EnsureSystemDbObjects();
         await host.RunAsync();
@@ -87,6 +90,11 @@ public static class Program
 
         quartz.AddJob<NewsCheckJob>(j => j.WithIdentity("NewsCheckJob").DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("NewsCheckJob.Trigger").ForJob("NewsCheckJob").StartNow()
+                .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()));
+
+        // 研报 : 5 分钟一轮 ( 发布集中在盘后/早间 , 列表即元数据直写 , 摘要由详情页回填 )
+        quartz.AddJob<ResearchReportJob>(j => j.WithIdentity("ResearchReportJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("ResearchReportJob.Trigger").ForJob("ResearchReportJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()));
 
         // 节点状态任务 : 3 秒刷新调度态上报 + 消费 Web 控制台指令 ( 状态通道 , 不允许暂停自己 )
