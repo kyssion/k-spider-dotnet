@@ -102,6 +102,7 @@ public interface INewsSpider
 | 金十快讯 | `Jin10Media = 5` | 1 个栏目「快讯」，`category = 401` | `max_time` 时间游标（含边界） | **快讯管线**：拉到即终态 | 必须带客户端标识头；约 20% 为 PLUS 专享（有 vip_title 的保留标题、无任何公开信息的跳过）；`important` → 重要度 2 |
 | 金十「市场参考」文章 | `Jin10Media = 5`（与快讯共用） | 5 个栏目（综合 402 / 金十早餐 403 / 精选分析 404 / 热点头条 405 / 财料 406） | `page` 页码翻页（零重叠、越界页空列表） | 详情接口 JSON（`origin_type = Json`），正文在其 `data.content`（HTML 片段） | 列表与详情是**两套 `x-app-id`**；`page_size` 上限 100（超限显式 400）；付费专享条目（vip 三标记）匿名拿不到正文、列表层直接跳过；VIP 专区/精英专区栏目未接 |
 | 同花顺 7x24 | `ThsMedia = 6` | 1 个栏目「7x24全量流」，`category = 501` | `page` 页码翻页（按 pagesize 裁页，短页即末页；实测页间零重叠） | **快讯管线**：拉到即终态 | 无鉴权无签名；`digest` 即完整全文（与 `short` 恒等）；`import` 两档（"3" 红标 → 重要度 2）；`tag` 逗号分隔入 keyword；`stock` 数组提取关联标的（约 44% 条目带）；`source` 恒为空回退"同花顺"；`tag` 参数留作栏目扩展 |
+| 每经文章 | `NbdMedia = 8` | 3 个栏目（每经头条 701 / 每经热评 702 / 重磅原创 703） | 栏目 SSR 页**整页即全量无翻页**（约 80 条，每轮重拉由去重吸收，新浪栏目页同款） | 详情页整页 HTML（`origin_type = Html`），正文在 `div.g-articl-text` 的 p 段落（**站方拼写如此**；u-editor 是页尾空壳不能用） | 文章链接自带完整日期（`/articles/{yyyy-MM-dd}/{id}.html`），列表时间取日期当日 00:00、详情解析精确到秒；`title` 标签为空用 h1；公告/专题精选栏目不接 |
 | 同花顺文章 | `ThsMedia = 6`（与快讯共用） | 10 个栏目（财经要闻 502 / 宏观经济 503 / 公司新闻 504 / 产经新闻 505 / 财经评论 506 / 金融市场 507 / 国际财经 508 / 区域经济 509 / 财经人物 510 / 房产 511） | 栏目 SSR 页 `index_{n}.shtml` 页码翻页（每页固定 25 条） | 详情页整页 HTML（`origin_type = Html`），正文在 `div.news-content-parsed` 纯 p 段落 | **列表页 GBK 编码**（响应头 charset=gbk，HttpClient 按 charset 解码依赖 CodePagesEncodingProvider，见 HttpClientTools 静态构造）；详情页 UTF-8；条目时间"MM月dd日 HH:mm"无年份从 URL 日期路径补全（新浪同款）；列表无来源回退"同花顺" |
 | 格隆汇 live | `GelonghuiMedia = 7` | 1 个栏目「live全量流」，`category = 601` | v4 接口 `liveId` 游标翻页（上一页最老 id，页间零重叠；**固定 15 条/页**，limit 不生效） | **快讯管线**：拉到即终态 | 无鉴权；**`timestamp` 毫秒参数必带**（缺省命中服务端缓存恒返回同一批，2026-09-30 实测）；`content` 全文自带"格隆汇x月x日｜"前缀保留原文；`title` 部分为空（正文截断兜底）；`level` 0/1 两档（1 红标 → 重要度 2）；`route` 自带规范详情页地址；`relatedStocks`/`pictures` 提取标的与图片；接口路径从前端 chunk 反查 |
 
@@ -123,6 +124,11 @@ public interface INewsSpider
 |---|---|---|
 | 富途资讯 | 接口**完全打通**：`GET news.futunn.com/news-site-api/main/get-flash-list?pageSize=50`（匿名无鉴权，路径从前端 chunk e5080a28.js 反查），`seqMark` 游标翻页（上一页返回值原样带回，实测零重叠，`page` 参数不生效），条目含 id/title/content 全文/detailUrl/level/relatedStocks/pic。**定位是聚合方**（财联社/智通/格隆汇快讯都在上面），与现有源重叠高 | 接入是半天工作量（照 `Spider/News/Flash/Ths/` 页码外的 seqMark 游标先例），作"补漏源"时有需求再接 |
 | 36氪快讯 | **整站"安全检测"JS 环境挑战**（自研，非 acw），门外只返回检测壳，接口无法定位；现有反爬模块无此识别方式 | 需先补识别器 + 浏览器通过策略（照 anti-bot-verification 扩展套路），再按 playbook 侦察 |
+| 每经 | **已接入**（`NbdMedia = 8`，头条/热评/重磅原创 3 栏目，SSR 整页即全量） | — |
+| 界面新闻 | 首页 SSR 可解析（`/article/{id}.html` 链接 74 条，无接口），泛新闻密度低一档 | 有需求时照每经先例接入（约半天） |
+| 澎湃新闻 | 首页 `__NEXT_DATA__` SSR（推荐流非时间流，9 条链接），数据接口未查 | 同上，P3 优先级 |
+| 第一财经 | 首页带 aliyunCaptcha 引用、news 页 395KB 无文章链接无接口（JS 渲染） | 需 chunk 反查或浏览器会话后再侦察 |
+| 证券时报网 | 首页 JS 渲染壳（10 chunk 无接口路径），文章链接未暴露 | 需 chunk 反查后再侦察 |
 >
 > **补栏目不是"加一行配置"那么轻**：这四个源目前把频道参数与 `category` 都写死在各自的 `*NewsResource` 常量里
 > （`GlobalChannel` / `AllChannel` / `ZhiboId` 与 `*CategoryNumber`），`column.ColumnId` 只用于日志定位、

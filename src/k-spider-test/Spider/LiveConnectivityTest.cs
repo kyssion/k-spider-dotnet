@@ -361,6 +361,34 @@ public class LiveConnectivityTest
         TestContext.WriteLine($"同花顺文章 {column.ColumnName} : {listPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
     }
 
+    [TestMethod]
+    public async Task NbdArticleLiveFetchListOriginAndParse()
+    {
+        var spider = new KSpider.Spider.News.Web.Nbd.NbdArticleSpider();
+        var column = spider.Columns[0];
+
+        var listPage = await FetchOrSkipAsync(() => spider.GetListPage(column, 20, null));
+        Assert.IsTrue(listPage.Items.Count > 0, "每经文章列表未返回任何数据");
+        Assert.IsNull(listPage.NextCursor, "栏目页整页即全量 , 不应有翻页游标");
+        // 栏目页混有置顶存档 , 不套鲜活窗口 : 最新一条应在近窗口内 ( 页面仍在更新 )
+        var rows = listPage.Items.Select(item => (item.NewsUrl, item.NewsTitle, item.NewsFrom,
+            item.NewsTime, item.FromMedia, item.Category)).ToList();
+        AssertNewsFieldsComplete(rows);
+        var newest = rows.Max(item => item.NewsTime!.Value);
+        Assert.IsTrue(newest >= DateTime.Now - RecentWindow,
+            $"栏目页最新一条距今超过 {RecentWindow.TotalDays} 天 , 页面可能停更 : {newest}");
+
+        // 详情 : 取最新一篇 ( 置顶存档可能过旧 )
+        var newsItem = listPage.Items.OrderByDescending(item => item.NewsTime).First();
+        var origin = await FetchOrSkipAsync(() => spider.GetContentOrigin(newsItem));
+        Assert.AreEqual(NewsContentOriginStatus.Success, origin.Status, $"原始内容下载失败 : {origin.Message}");
+        var parseResult = spider.ParseContent(origin.NewsOriginContent, newsItem.NewsUrl ?? "");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsTitle), "解析后标题为空");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(parseResult.Content.NewsContentText), "解析后正文为空");
+
+        TestContext.WriteLine($"每经文章 {column.ColumnName} : {listPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
+    }
+
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>

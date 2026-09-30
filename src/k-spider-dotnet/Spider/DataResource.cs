@@ -166,7 +166,10 @@ public enum FromTypeOfNews
     ThsMedia = 6,
 
     // 格隆汇 ( live 快讯 )
-    GelonghuiMedia = 7
+    GelonghuiMedia = 7,
+
+    // 每日经济新闻 ( 文章 )
+    NbdMedia = 8
 }
 
 /// <summary>

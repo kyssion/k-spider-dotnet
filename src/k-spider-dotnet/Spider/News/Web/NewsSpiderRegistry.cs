@@ -1,6 +1,7 @@
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Web.Jin10;
+using KSpider.Spider.News.Web.Nbd;
 using KSpider.Spider.News.Web.Sina;
 using KSpider.Spider.News.Web.Ths;
 using KSpider.Spider.News.Web.Wscn;
@@ -27,7 +28,8 @@ public static class NewsSpiderRegistry
         { FromTypeOfNews.SinaMedia, new SinaArticleSpider() },
         { FromTypeOfNews.WscnMedia, new WscnArticleSpider() },
         { FromTypeOfNews.Jin10Media, new Jin10ArticleSpider() },
-        { FromTypeOfNews.ThsMedia, new ThsArticleSpider() }
+        { FromTypeOfNews.ThsMedia, new ThsArticleSpider() },
+        { FromTypeOfNews.NbdMedia, new NbdArticleSpider() }
     };
 
     /// <summary>

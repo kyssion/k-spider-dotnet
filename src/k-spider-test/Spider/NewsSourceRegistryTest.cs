@@ -122,6 +122,10 @@ public class NewsSourceRegistryTest
         var thsWeb = NewsSpiderRegistry.Get((int)FromTypeOfNews.ThsMedia);
         Assert.IsNotNull(thsWeb, "同花顺文章源应在 NewsSpiderRegistry");
         Assert.IsInstanceOfType<KSpider.Spider.News.Web.Ths.ThsArticleSpider>(thsWeb);
+
+        var nbdWeb = NewsSpiderRegistry.Get((int)FromTypeOfNews.NbdMedia);
+        Assert.IsNotNull(nbdWeb, "每经文章源应在 NewsSpiderRegistry");
+        Assert.IsInstanceOfType<KSpider.Spider.News.Web.Nbd.NbdArticleSpider>(nbdWeb);
     }
 
     [TestMethod]
@@ -166,7 +170,8 @@ public class NewsSourceRegistryTest
             [FromTypeOfNews.WscnMedia] = (301, 399),
             [FromTypeOfNews.Jin10Media] = (401, 499),
             [FromTypeOfNews.ThsMedia] = (501, 599),
-            [FromTypeOfNews.GelonghuiMedia] = (601, 699)
+            [FromTypeOfNews.GelonghuiMedia] = (601, 699),
+            [FromTypeOfNews.NbdMedia] = (701, 799)
         };
 
         var sourceCategory = new Dictionary<FromTypeOfNews, int>
@@ -177,7 +182,8 @@ public class NewsSourceRegistryTest
             [FromTypeOfNews.Jin10Media] = Jin10NewsResource.FlashCategoryNumber,
             [FromTypeOfNews.ThsMedia] = KSpider.Spider.News.Flash.Ths.ThsNewsResource.FlashCategoryNumber,
             [FromTypeOfNews.GelonghuiMedia] =
-                KSpider.Spider.News.Flash.Gelonghui.GelonghuiNewsResource.FlashCategoryNumber
+                KSpider.Spider.News.Flash.Gelonghui.GelonghuiNewsResource.FlashCategoryNumber,
+            [FromTypeOfNews.NbdMedia] = KSpider.Spider.News.Web.Nbd.NbdArticleResource.HeadlineCategoryNumber
         };
         foreach (var (fromMedia, category) in sourceCategory)
         {
