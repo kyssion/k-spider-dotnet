@@ -1,6 +1,7 @@
 using KSpider.Config;
 using KSpider.Data;
 using KSpider.Job;
+using KSpider.Job.Announcement;
 using KSpider.Job.Check;
 using KSpider.Job.News.Flash;
 using KSpider.Job.News.Report;
@@ -56,6 +57,8 @@ public static class Program
         host.Services.GetRequiredService<Pg>().EnsureResearchReportDbObjects();
         // 盘面榜单表幂等建表 ( Ranking 管线 : 表 + 类型行键唯一索引 + 查询索引 + 触发器 )
         host.Services.GetRequiredService<Pg>().EnsureRankingDbObjects();
+        // 公告表幂等建表 ( Announcement 管线 : 表 + 唯一键 + 披露时间索引 + 触发器 )
+        host.Services.GetRequiredService<Pg>().EnsureAnnouncementDbObjects();
         // 系统状态表幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 )
         host.Services.GetRequiredService<Pg>().EnsureSystemDbObjects();
         await host.RunAsync();
@@ -74,6 +77,7 @@ public static class Program
         services.AddSingleton<SystemStatusDao>();
         services.AddSingleton<SpiderResearchReportDao>();
         services.AddSingleton<SpiderRankingDao>();
+        services.AddSingleton<SpiderAnnouncementDao>();
     }
 
     /// <summary>
@@ -116,6 +120,11 @@ public static class Program
         quartz.AddJob<RankingJob>(j => j.WithIdentity("RankingJob").DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("RankingJob.Trigger").ForJob("RankingJob").StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(30).RepeatForever()));
+
+        // 公告 : 10 分钟一轮 ( 法定披露时效最强 , 分类白名单直写 , DO NOTHING )
+        quartz.AddJob<AnnouncementJob>(j => j.WithIdentity("AnnouncementJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("AnnouncementJob.Trigger").ForJob("AnnouncementJob").StartNow()
+                .WithSimpleSchedule(x => x.WithIntervalInMinutes(10).RepeatForever()));
 
         // 节点状态任务 : 3 秒刷新调度态上报 + 消费 Web 控制台指令 ( 状态通道 , 不允许暂停自己 )
         quartz.AddJob<NodeStateJob>(j => j.WithIdentity(NodeStateJob.JobName).DisallowConcurrentExecution())

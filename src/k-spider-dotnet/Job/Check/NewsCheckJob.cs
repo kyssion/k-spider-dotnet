@@ -5,6 +5,7 @@ using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Report.Eastmoney;
+using KSpider.Spider.Announcement.Cninfo;
 using KSpider.Spider.Ranking.Eastmoney;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
@@ -38,6 +39,7 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
             var verifyBlocked = CheckVerificationBlocked();
             CheckReportLag();
             CheckRankingLag();
+            CheckAnnouncementLag();
             ReportNodeStatus(apiErrors, backlog, flashLag, verifyBlocked);
         });
     }
@@ -105,6 +107,19 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
         {
             errors.Add($"[{(int)FromTypeOfNews.DfMedia} 东财盘面榜单] column ranking : {e.Message}");
             logger.LogError("[NewsCheckJob CheckListApiAlive] ranking api err : {}", e);
+        }
+
+        // 公告 ( Announcement 管线 , 直连 CninfoAnnouncementSpider ) : 查询非空即存活
+        try
+        {
+            var page = await new CninfoAnnouncementSpider().GetAnnouncementPage(
+                DateTime.Today.AddDays(-3), DateTime.Today, 1);
+            if (page.Items.Count == 0) throw new Exception("接口未返回数据");
+        }
+        catch (Exception e)
+        {
+            errors.Add($"[{(int)FromTypeOfNews.CninfoMedia} 巨潮公告] column announcement : {e.Message}");
+            logger.LogError("[NewsCheckJob CheckListApiAlive] announcement api err : {}", e);
         }
 
         return errors;
@@ -246,6 +261,37 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
         catch (Exception e)
         {
             logger.LogError("[NewsCheckJob CheckRankingLag] err : {}", e);
+        }
+    }
+
+    /// <summary>
+    ///     公告实时性 : 最新披露时间距今多久。公告工作日高频披露 ,
+    ///     工作时段 ( 9~23 点 ) 超 1 天、节假日放宽 4 天告警。
+    ///     暂只记日志不入节点快照 payload ( 控制台公告页未建 )。
+    /// </summary>
+    private void CheckAnnouncementLag()
+    {
+        try
+        {
+            using var connection = pg.Connection();
+            var newest = connection.Queryable<SpiderAnnouncementModel>().Max(it => it.PublishTime);
+            if (newest == default)
+            {
+                logger.LogWarning("[NewsCheckJob CheckAnnouncementLag] no announcement data yet");
+                return;
+            }
+
+            var lagHours = (int)(DateTime.Now - newest).TotalHours;
+            var workday = newest.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
+            var threshold = workday ? 24 : 96;
+            var level = lagHours > threshold ? LogLevel.Warning : LogLevel.Information;
+            logger.Log(level,
+                "[NewsCheckJob CheckAnnouncementLag] newest : {Newest:yyyy-MM-dd HH:mm:ss} , lag : {Lag}h",
+                newest, lagHours);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[NewsCheckJob CheckAnnouncementLag] err : {}", e);
         }
     }
 

@@ -217,3 +217,21 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 **7. 测试基线**：三类夹具（龙虎榜/大宗/两融真实响应）+ 解析回归（行键组装 / 通用列映射 / 三类字段差异）+ `LiveConnectivityTest` 三类连通 + `JobDependencyTest` 覆盖新 Job 构造依赖。
 
 参照实现：`Spider/Ranking/Eastmoney/`（Resource/Model/Spider）+ `Job/Ranking/RankingJob.cs` + `Data/SpiderRankingDao.cs` + `spider_ranking`。
+
+### Announcement 公告型契约（第二个按清单立项的类型）
+
+**1. 数据形态定义**：交易所法定披露的**结构化文档元数据**——证券代码 + 公告标题 + 分类 + PDF 附件链接，与研报同为"列表即元数据"，但多了**证券维度与附件维度**、没有正文（PDF 不下载不解析，链接即交付物）。A 股时效最强信息源（业绩预告/重大事项/股权激励盘后集中披露）。来源一：巨潮资讯 `hisAnnouncement/query`（POST，沪深京全市场，`from_media = CninfoMedia`）；来源二：港交所披露易 `titleSearchServlet.do`（可行性已实测确认，繁体中文，接入时新增 `HkexMedia` 并加对应 Resource/Spider，属"加行"）。
+
+**2. 存储**：单表 `spider_announcement`，去重键 **`announcement_id`**（巨潮站内唯一标识）；`pdf_url` 存附件链接；热路径索引 `publish_date DESC`；幂等建表 `Pg.EnsureAnnouncementDbObjects()` 与 DDL 增量段双同步。
+
+**3. 节奏**：`AnnouncementJob` 每 10 分钟（公告时效最强）；**分类白名单配置化**（`CninfoAnnouncementResource.AnnouncementCategoryList`，10 个核心高价值分类——全市场全类型每日数千条噪声大，白名单约 500 条/日；加分类 = 数组加行）；**pageSize 钳 30**（实测 100/200 均被服务端钳回 30）；拉近 3 天窗口，每轮最多 40 页。
+
+**4. 写入语义**：`ON CONFLICT DO NOTHING`——公告披露即终态（与 Ranking 同款，巨潮偶发的补充更正公告本身就是新 announcementId 的新行）。
+
+**5. 监控**：`NewsCheckJob` 加巨潮探测（查询非空即存活）+ 滞后监控（最新 `publish_time` 距今：工作时段超 1 天、节假日放宽 4 天告警，只记日志——控制台公告页未建）；巡检 SQL 进 operations.md。
+
+**6. 生态挂接**：`k-spider-sync` 纳入（第 8 张数据表）；不进 Spider 注册表（直连）；Web 控制台公告页未建不进。
+
+**7. 测试基线**：夹具（巨潮真实响应）+ 解析回归（字段映射 / 分类解析 / 坏数据跳过）+ `LiveConnectivityTest` 连通 + `JobDependencyTest` 覆盖新 Job。
+
+参照实现：`Spider/Announcement/Cninfo/`（Resource/Model/Spider）+ `Job/Announcement/AnnouncementJob.cs` + `Data/SpiderAnnouncementDao.cs` + `spider_announcement`。

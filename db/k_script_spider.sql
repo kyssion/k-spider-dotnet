@@ -260,6 +260,36 @@ CREATE INDEX IF NOT EXISTS "idx_ranking_type_date"
 
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_ranking FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
+-- 公告 ( 2026-09 新增 : Announcement 管线 , 巨潮资讯沪深京法定披露 ,
+-- 结构化文档元数据 : 证券+标题+分类+PDF 链接 , 披露即终态 ; 契约见 docs/architecture.md )
+CREATE TABLE IF NOT EXISTS "public"."spider_announcement" (
+  "id" bigserial NOT NULL,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "announcement_id" varchar(64) NOT NULL,
+  "from_media" integer NOT NULL,
+  "sec_code" varchar(16),
+  "sec_name" varchar(64),
+  "category" varchar(200),
+  "title" varchar(500) NOT NULL,
+  "pdf_url" varchar(500),
+  "publish_time" timestamp without time zone NOT NULL,
+  "raw_content" text,
+  CONSTRAINT "spider_announcement_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "uk_announcement_id" UNIQUE ("announcement_id")
+);
+
+COMMENT ON TABLE "public"."spider_announcement" IS '公告 ( 巨潮资讯法定披露 , 文档元数据 , 披露即终态 )';
+COMMENT ON COLUMN "public"."spider_announcement"."announcement_id" IS '站内公告唯一标识 ( 巨潮 announcementId ) , 去重键';
+COMMENT ON COLUMN "public"."spider_announcement"."category" IS '公告分类 ( 巨潮 announcementType 代码串 , 对照巨潮分类表解读 )';
+COMMENT ON COLUMN "public"."spider_announcement"."pdf_url" IS 'PDF 附件完整地址 ( 链接即交付物 , 不下载 )';
+
+-- 按披露时间查询 ( 公告列表 )
+CREATE INDEX IF NOT EXISTS "idx_announcement_publish_time"
+  ON "public"."spider_announcement" ("publish_time" DESC);
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_announcement FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
 -- 新闻流水线轮询部分索引 ( 老库由启动时 Pg.EnsureSpiderNewsListDbObjects 幂等补齐 )
 CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")

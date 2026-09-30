@@ -83,7 +83,7 @@ dotnet publish src/k-spider-web/k-spider-web.csproj \
 
 ## 三、监控与巡检
 
-- **日志是主要的监控手段**：`NewsCheckJob` 每 5 分钟输出（a）逐源逐栏目接口探测结果，空数据记错误日志（含研报列表接口）；（b）分源各状态数量与全库最老未处理新闻时间；（c）处于反爬验证冷却期的源（识别到验证但自动通过失败），有则逐条告警；（d）研报实时性（最新一篇发布日期距今，滞后超 3 天告警）与盘面榜单实时性（最新交易日距今超 5 天告警）。另有 `VerificationPipeline` 在识别到验证、策略未通过、进入冷却时各记一条日志。
+- **日志是主要的监控手段**：`NewsCheckJob` 每 5 分钟输出（a）逐源逐栏目接口探测结果，空数据记错误日志（含研报列表接口）；（b）分源各状态数量与全库最老未处理新闻时间；（c）处于反爬验证冷却期的源（识别到验证但自动通过失败），有则逐条告警；（d）研报实时性（最新一篇发布日期距今，滞后超 3 天告警）、盘面榜单实时性（最新交易日距今超 5 天告警）与公告实时性（最新披露时间滞后超 1 天告警）。另有 `VerificationPipeline` 在识别到验证、策略未通过、进入冷却时各记一条日志。
 - **启动自检**：`Pg.EnsureSpiderNewsListDbObjects()` 除补齐列与索引外，还会检查批量 upsert 依赖的唯一约束是否齐全（`CheckBatchUpsertUniqueIndexes`）。缺约束时打印明确错误（表名 + 列名），因为这种缺失会让"列表即全文"型源整批写入失败、且不影响其它源，从数据现象上极难定位。
 - 目前**没有**指标上报与告警通道（飞书 SDK 保留在 `Lark/` 但无调用方）。判断系统是否健康靠以下 SQL 与日志：
 
@@ -125,6 +125,12 @@ SELECT max(publish_date) FROM spider_research_report;
 -- 盘面榜单实时性与各类型行数 ( 每日披露 , 超过 5 天为异常 ; 北向无每日披露属预期 )
 SELECT ranking_type, count(*), max(trade_date) FROM spider_ranking GROUP BY 1 ORDER BY 1;
 
+-- 公告实时性 ( 工作日高频披露 , 滞后超 1 天为异常 )
+SELECT count(*), max(publish_time) FROM spider_announcement;
+
+-- 公告样例 : 最新 10 条 ( 分类代码对照巨潮分类表 )
+SELECT sec_code, sec_name, title, pdf_url FROM spider_announcement ORDER BY publish_time DESC LIMIT 10;
+
 -- 盘面榜单样例 : 某日龙虎榜净买入前 10
 SELECT stock_code, stock_name, deal_amount, net_amount, detail->>'EXPLAIN' AS 席位解释
 FROM spider_ranking WHERE ranking_type = 1 AND trade_date = (SELECT max(trade_date) FROM spider_ranking)
@@ -149,7 +155,7 @@ ORDER BY net_amount DESC LIMIT 10;
 
 ## 五、数据同步（`k-spider-sync`）
 
-每 2 分钟一轮，把远端库的 7 张表（4 张网页新闻 + `spider_flash_news` + `spider_research_report` + `spider_ranking`）搬到本地库，`DisallowConcurrentExecution` + 优雅停机，与主爬虫互不影响。本地库缺表时先执行主 DDL 对应段（同步进程不做建表）。
+每 2 分钟一轮，把远端库的 8 张表（4 张网页新闻 + `spider_flash_news` + `spider_research_report` + `spider_ranking` + `spider_announcement`）搬到本地库，`DisallowConcurrentExecution` + 优雅停机，与主爬虫互不影响。本地库缺表时先执行主 DDL 对应段（同步进程不做建表）。
 
 **两条同步通道**：
 

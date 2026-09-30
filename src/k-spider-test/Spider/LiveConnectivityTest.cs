@@ -416,6 +416,22 @@ public class LiveConnectivityTest
         }
     }
 
+    [TestMethod]
+    public async Task CninfoAnnouncementLiveFetchList()
+    {
+        var spider = new KSpider.Spider.Announcement.Cninfo.CninfoAnnouncementSpider();
+        var page = await FetchOrSkipAsync(() =>
+            spider.GetAnnouncementPage(DateTime.Today.AddDays(-3), DateTime.Today, 1));
+        Assert.IsTrue(page.Items.Count > 0, "巨潮公告近三天窗口未返回任何数据");
+        Assert.IsTrue(page.Items.All(item => !string.IsNullOrWhiteSpace(item.AnnouncementId)), "存在空公告键");
+        Assert.IsTrue(page.Items.All(item => !string.IsNullOrWhiteSpace(item.Title)), "存在空标题");
+        Assert.IsTrue(page.Items.All(item =>
+            item.PdfUrl == null || item.PdfUrl.StartsWith("http://static.cninfo.com.cn/")), "PDF 地址拼接异常");
+        var newest = page.Items.Max(item => item.PublishTime);
+        Assert.IsTrue(newest >= DateTime.Now.AddDays(-4), $"最新公告距今天数异常 : {newest}");
+        TestContext.WriteLine($"巨潮公告 : {page.Items.Count} 条 , 最新 {newest:yyyy-MM-dd HH:mm:ss} , 样例 {page.Items[0].Title}");
+    }
+
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>

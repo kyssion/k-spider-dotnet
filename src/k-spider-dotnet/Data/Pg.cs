@@ -272,6 +272,55 @@ public class Pg
     }
 
     /// <summary>
+    ///     公告表的幂等建表 ( 表 + announcement_id 唯一约束 + 披露时间索引 + update_time 触发器 )。
+    ///     契约见 docs/architecture.md 的 Announcement 类型契约 ; 新环境由 DDL 建 ,
+    ///     这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsureAnnouncementDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TABLE IF NOT EXISTS public.spider_announcement
+                (
+                    id              bigserial    NOT NULL,
+                    create_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    announcement_id varchar(64)  NOT NULL,
+                    from_media      integer      NOT NULL,
+                    sec_code        varchar(16),
+                    sec_name        varchar(64),
+                    category        varchar(200),
+                    title           varchar(500) NOT NULL,
+                    pdf_url         varchar(500),
+                    publish_time    timestamp    NOT NULL,
+                    raw_content     text,
+                    CONSTRAINT spider_announcement_pkey PRIMARY KEY (id),
+                    CONSTRAINT uk_announcement_id UNIQUE (announcement_id)
+                )
+                """);
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_announcement_publish_time
+                    ON public.spider_announcement (publish_time DESC)
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            connection.Ado.ExecuteCommand("DROP TRIGGER IF EXISTS update_modified_column ON public.spider_announcement");
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.spider_announcement
+                    FOR EACH ROW EXECUTE FUNCTION public.update_time_func()
+                """);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsureAnnouncementDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     系统状态表的幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 , 写入见 SystemStatusDao )。
     ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
     /// </summary>

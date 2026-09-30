@@ -169,7 +169,10 @@ public enum FromTypeOfNews
     GelonghuiMedia = 7,
 
     // 每日经济新闻 ( 文章 )
-    NbdMedia = 8
+    NbdMedia = 8,
+
+    // 巨潮资讯 ( 公告 , 沪深京全市场法定披露 )
+    CninfoMedia = 9
 }
 
 /// <summary>

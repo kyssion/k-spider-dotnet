@@ -126,6 +126,8 @@ public interface INewsSpider
 | 36氪快讯 | **整站"安全检测"JS 环境挑战**（自研，非 acw），门外只返回检测壳，接口无法定位；现有反爬模块无此识别方式 | 需先补识别器 + 浏览器通过策略（照 anti-bot-verification 扩展套路），再按 playbook 侦察 |
 | 每经 | **已接入**（`NbdMedia = 8`，头条/热评/重磅原创 3 栏目，SSR 整页即全量） | — |
 | 东财盘面榜单 | **已接入**（Ranking 独立管线：龙虎榜/大宗/两融，`spider_ranking` 表，契约见 architecture.md） | 北向资金因交易所停止每日披露无数据源，类型枚举预留 |
+| 巨潮公告 | **已接入**（Announcement 独立管线：分类白名单 10 类直写 `spider_announcement`，契约见 architecture.md） | 全市场全类型每日数千条噪声大，白名单约 500 条/日；加分类 = Resource 数组加行 |
+| 港交所披露易 | **可行性实测确认**（`titleSearchServlet.do` 公开 JSON：NEWS_ID/SHORT_TEXT/STOCK_NAME，繁体中文，近期 1892 条） | 接入时新增 `HkexMedia` + 对应 Resource/Spider（契约预留的"加行"路径），视港股业务必要性 |
 | 界面新闻 | 首页 SSR 可解析（`/article/{id}.html` 链接 74 条，无接口），泛新闻密度低一档 | 有需求时照每经先例接入（约半天） |
 | 澎湃新闻 | 首页 `__NEXT_DATA__` SSR（推荐流非时间流，9 条链接），数据接口未查 | 同上，P3 优先级 |
 | 第一财经 | 首页带 aliyunCaptcha 引用、news 页 395KB 无文章链接无接口（JS 渲染） | 需 chunk 反查或浏览器会话后再侦察 |
