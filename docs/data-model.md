@@ -1,6 +1,6 @@
 # 数据模型
 
-库名 `k_script_spider`，9 张表（4 张网页新闻 + 1 张实时快讯 + 1 张研报 + 3 张系统运行状态）。完整 DDL（pg_dump 导出 + 增量演进段）在
+库名 `k_script_spider`，10 张表（4 张网页新闻 + 1 张实时快讯 + 1 张研报 + 4 张系统运行状态）。完整 DDL（pg_dump 导出 + 增量演进段）在
 [`db/k_script_spider.sql`](../db/k_script_spider.sql)，新环境用它初始化。
 
 ## 一、表清单
@@ -16,6 +16,7 @@
 | `spider_job_state` | 任务调度态（每节点×任务一行 upsert 不膨胀：下次触发/是否暂停 + 最近执行结果/连续失败） | `(node_id, job_name)` | 主程序（`JobRuntimeListener` 写执行列，`NodeStateJob` 刷调度列） |
 | `spider_job_command` | 任务指令（Web 控制台写 `pending`，爬虫节点 3 秒轮询消费后置 `done`/`rejected`；`action`：trigger/pause/resume） | `id` | `k-spider-web` 写 / 主程序消费 |
 | `spider_node_status` | 节点状态快照（NewsCheckJob 每 5 分钟 upsert：`payload` JSON 文本，含接口探测失败/管线积压/快讯滞后/验证冷却） | `node_id` | 主程序（`NewsCheckJob`） |
+| `spider_replay_log` | 数据重放工具的作业记录（filter/状态/总数/成败计数，服务+API+页面见 `k-spider-web/Replay/`） | `id` | `k-spider-web`（重放作业） |
 
 另有 `sync_transfer_watermark`（**只存在于本地同步库**，由 `k-spider-sync` 启动时幂等创建，不在主库 DDL 里）：记录每张表已同步到的 `(update_time, id)` 水位。
 

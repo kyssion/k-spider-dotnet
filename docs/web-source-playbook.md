@@ -33,6 +33,7 @@
 | 列表数据接口 | 优先找 XHR 接口而不是解析页面 HTML；SPA 站点从 `__NEXT_DATA__` / 页面 chunk 里反查 |
 | 栏目/频道参数全集 | 每个栏目的标识与名称；频道配置有时本身就是接口（财联社 `common_config` 的 `column_bar`） |
 | 翻页模型 | 页码 / 时间游标 / 接口自带 cursor；**边界语义必须实测**（含边界还是严格小于、游标是否单调、短页能否判末页） |
+| 整页即全量的拼装流 | 编辑策展型页面（财联社品见）参数不动返回：`rn`/`last_time` 均不影响响应、一次请求即全量、**无翻页可挖**；响应里常混伪条目（专题卡 ctype=1 无 ctime），只有明确"真实内容"标记的条目才入库。先实测参数敏感性，别对着拼装流硬造游标 |
 | 单页上限与越界行为 | 上限会被静默钳制（财联社电报 `rn>50` 返回空数组）还是根本不生效（文章频道不按 `rn` 裁页）——两种都要靠实测发现 |
 | 每条的字段与时间格式 | 时间格式**强绑定**解析，格式错了会 `FormatException` 计入重试 |
 | 鉴权 / 签名 | 是否需要 sign / cookie / 特殊请求头；签名算法从前端 bundle 逆向，并用一组实测向量锁进单测 |
@@ -74,6 +75,7 @@
 2. `<源>SpiderModel.cs`（与 Resource / Spider 同目录直下，不再建 Model/ 子目录；接口响应模型 + `To*Model()` 映射，时间转换在这里做，可空字段写兜底）；
 3. `<源>Spider.cs` 实现 `INewsSpider` 三段；列表与解析方法抽成 `public static` 供离线测试；**不得用可变实例字段存请求状态**（Job 按源并行）；HTTP 调用走 `VerifiedHttp`（需要自定义请求头时传请求工厂，`HttpRequestMessage` 不能重发）；
 4. `FromTypeOfNews` 加枚举值 + `NewsSpiderRegistry` 注册一行；
+   - **同站第二列表族例外**（品见先例）：详情管线可完全复用（文章 id 同空间、详情页同形态）时，不新加枚举不新注册，把第二列表族作为**伪栏目**挂进同一 Spider 的 `Columns`（ColumnId 用非数字串如 `pinjian` 与数字频道 id 区分），`GetListPage` 按 ColumnId 分发到对应列表 API；category 接在本站段内下一可用号（115）。判据：详情段/解析段是否零分支复用——要复用才挂同一 Spider，否则按新源走。
 5. 夹具入库 + 离线解析回归（`ClsArticleSpiderTest` 是最新范例：字段映射 / 过滤分支 / 游标语义 / 详情解析 / 坏数据抛错六个用例）；
 6. `LiveConnectivityTest` 加一条"列表 → 原始 → 解析 → 游标续拉"全链路用例；
 7. 文档同步：`news-pipeline.md` 源明细表 + 源小节 + 源成熟度表，已知坑写进 AGENTS.md。
