@@ -220,7 +220,7 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 
 ### Announcement 公告型契约（第二个按清单立项的类型）
 
-**1. 数据形态定义**：交易所法定披露的**结构化文档元数据**——证券代码 + 公告标题 + 分类 + PDF 附件链接，与研报同为"列表即元数据"，但多了**证券维度与附件维度**、没有正文（PDF 不下载不解析，链接即交付物）。A 股时效最强信息源（业绩预告/重大事项/股权激励盘后集中披露）。来源一：巨潮资讯 `hisAnnouncement/query`（POST，沪深京全市场，`from_media = CninfoMedia`）；来源二：港交所披露易 `titleSearchServlet.do`（可行性已实测确认，繁体中文，接入时新增 `HkexMedia` 并加对应 Resource/Spider，属"加行"）。
+**1. 数据形态定义**：交易所法定披露的**结构化文档元数据**——证券代码 + 公告标题 + 分类 + PDF 附件链接，与研报同为"列表即元数据"，但多了**证券维度与附件维度**、没有正文（PDF 不下载不解析，链接即交付物）。A 股时效最强信息源（业绩预告/重大事项/股权激励盘后集中披露）。数据源为巨潮资讯 `hisAnnouncement/query`（POST，沪深京全市场，`from_media = CninfoMedia`）。
 
 **2. 存储**：单表 `spider_announcement`，去重键 **`announcement_id`**（巨潮站内唯一标识）；`pdf_url` 存附件链接；热路径索引 `publish_date DESC`；幂等建表 `Pg.EnsureAnnouncementDbObjects()` 与 DDL 增量段双同步。
 

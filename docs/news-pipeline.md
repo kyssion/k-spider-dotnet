@@ -94,7 +94,7 @@ public interface INewsSpider
 |---|---|---|---|---|---|
 | 东方财富 | `DfMedia = 1` | 35 个栏目，映射到 22 个分类号 | `page_index` 页码翻页 | 详情接口 `newsinfo.eastmoney.com/kuaixun/v2/api/article/{id}` | 时间格式强绑定（见下） |
 | 财联社电报 | `ClsMedia = 2` | 1 个栏目「电报」，`category = 101` | `last_time` 时间游标（严格小于） | **快讯管线**：拉到即终态 | 需要签名，单页上限 50；重要度 A/B/C → 3/2/1；带关联标的 |
-| 财联社文章频道 | `ClsMedia = 2`（与电报共用） | 13 个 depth 频道（头条 102 / A股 103 / 港股 104 / 环球 105 / 公司 106 / 券商 107 / 基金ETF 108 / 地产 109 / 金融 110 / 汽车 111 / 科创 112 / 期货 113 / 投教 114）+ 品见拼装流（115） | depth：`last_time` 时间游标（**不保证单调**，见下）；品见：整页即全量无翻页 | 详情页 SSR `__NEXT_DATA__`（两类共用） | 同一签名算法；列表自带 `is_ad`；品见是同站第二列表族（专用接口 `/v5/web/pinjian/assembled2`，文章 id 同空间）；招财号未接入 |
+| 财联社文章频道 | `ClsMedia = 2`（与电报共用） | 13 个 depth 频道（头条 102 / A股 103 / 港股 104 / 环球 105 / 公司 106 / 券商 107 / 基金ETF 108 / 地产 109 / 金融 110 / 汽车 111 / 科创 112 / 期货 113 / 投教 114）+ 品见拼装流（115） | depth：`last_time` 时间游标（**不保证单调**，见下）；品见：整页即全量无翻页 | 详情页 SSR `__NEXT_DATA__`（两类共用） | 同一签名算法；列表自带 `is_ad`；品见是同站第二列表族（专用接口 `/v5/web/pinjian/assembled2`，文章 id 同空间） |
 | 新浪财经 7x24 | `SinaMedia = 3` | 1 个栏目「7x24」，`category = 201` | `page` 页码翻页 | **快讯管线**：拉到即终态 | 无鉴权，正文以【标题】开头；`ext.stocks` 提取关联标的 |
 | 新浪财经文章 | `SinaMedia = 3`（与 7x24 共用） | 22 个栏目（财经滚动 202 / 经济要闻 203 / 大盘评述 204 / 宏观研究 205 / 市场研究 206 / 机构观点 207 / 上市公司 208 / 主力动向 209 / 港股×3 210-212 / 基金 213 / 外汇 214 / 期货×2 215-216 / 黄金 217 / 银行×3 218-220 / 保险×3 221-223） | 双体系：滚动接口页码翻页（2516/2515）；栏目滚动页**整页即全量、无翻页** | 详情页整页 HTML（`origin_type = Html`），正文在 `div#artibody` | 无鉴权；`num>50` 静默钳制；列表两套来源（JSON 接口 + SSR 栏目页） |
 | 华尔街见闻 live | `WscnMedia = 4` | 7 个频道（全球宏观 301 / A股 312 / 美股 313 / 港股 314 / 外汇 315 / 商品 316 / 债券 317，`ColumnId` 直接用频道 slug） | 接口自带 `next_cursor` | **快讯管线**：拉到即终态 | 无鉴权，约 1/3 条目无标题；`score=2` → 重要度 2；频道间有实质增量（美股/商品与全球宏观仅约 7% 重叠，2026-09-30 实测） |
@@ -107,40 +107,20 @@ public interface INewsSpider
 | 格隆汇 live | `GelonghuiMedia = 7` | 1 个栏目「live全量流」，`category = 601` | v4 接口 `liveId` 游标翻页（上一页最老 id，页间零重叠；**固定 15 条/页**，limit 不生效） | **快讯管线**：拉到即终态 | 无鉴权；**`timestamp` 毫秒参数必带**（缺省命中服务端缓存恒返回同一批，2026-09-30 实测）；`content` 全文自带"格隆汇x月x日｜"前缀保留原文；`title` 部分为空（正文截断兜底）；`level` 0/1 两档（1 红标 → 重要度 2）；`route` 自带规范详情页地址；`relatedStocks`/`pictures` 提取标的与图片；接口路径从前端 chunk 反查 |
 
 > **「当前栏目」是开发进度，不是源的能力上限**。各源里只有东财把 35 个栏目接全；财联社/新浪/金十的**快讯管线**各只接了 1 个栏目，
-> 但它们都能扩展出更多栏目：
+> 但它们的频道维度实测结论如下（见闻已扩至 7 频道，见源明细表）：
 >
-> | 源 | 可扩展的栏目 | 依据 |
+> | 源 | 频道维度实测结论 | 依据 |
 > |---|---|---|
-> | 华尔街见闻 | ~~`global-channel` 等 7 频道~~ **已接入**（全球宏观 301 + A股/美股/港股/外汇/商品/债券 312-317，见源明细表） | 2026-09-30 实测 7 频道全部可用且增量实质（美股/商品与全球宏观仅约 7% 重叠） |
 > | 金十 | **不可服务端分频道**：`get_flash_list` 的 `channel` 参数被服务端忽略（实测 -8200 与乱猜的 -8210 返回完全相同的 21 条 id）；条目自带的频道分类在 `raw_content` 里可下游解析；**官网无独立文章体系**（jin10.com 无文章频道入口，文章体系就是已接的 reference-api，其余 nav 多为付费专区且栏目间约九成重叠） | 2026-09-30 实测 |
 > | 财联社 | 电报之外的文章频道已接入（见上表，共用 `ClsMedia`）；电报 roll 接口本身未验证分频道取数 | 2026-09 实测 |
 > | 新浪 | 直播接口支持 `zhibo_id` / `tag_id` 切换不同直播与标签；**tag_id 枚举未获取**（`getTags` 接口拒绝、7x24 页面无线索），且文章源 22 栏目已覆盖广，扩展价值边际小 | 2026-09-30 实测 |
 > | 格隆汇 | `all/lives/v4` 即全频道聚合流（`category` 参数可试分频道值，未枚举），15 条/页不可调 | 2026-09-30 实测 |
-> | 智通财经 | **整站 JS cookie 门禁**（阿里云盾 acw 类），所有路径（含接口）门外只返回挑战壳，无法在门外定位接口；现有反爬模块已具备 acw_sc__v2 识别能力，接入需先过浏览器会话再按 playbook 侦察 | 2026-09-30 实测 |
 
-**候选新站侦察记录（未接入，按需启用）**：
-
-| 候选源 | 侦察结论（2026-09-30） | 接入可行性 |
-|---|---|---|
-| 富途资讯 | 接口**完全打通**：`GET news.futunn.com/news-site-api/main/get-flash-list?pageSize=50`（匿名无鉴权，路径从前端 chunk e5080a28.js 反查），`seqMark` 游标翻页（上一页返回值原样带回，实测零重叠，`page` 参数不生效），条目含 id/title/content 全文/detailUrl/level/relatedStocks/pic。**定位是聚合方**（财联社/智通/格隆汇快讯都在上面），与现有源重叠高 | 接入是半天工作量（照 `Spider/News/Flash/Ths/` 页码外的 seqMark 游标先例），作"补漏源"时有需求再接 |
-| 36氪快讯 | **整站"安全检测"JS 环境挑战**（自研，非 acw），门外只返回检测壳，接口无法定位；现有反爬模块无此识别方式 | 需先补识别器 + 浏览器通过策略（照 anti-bot-verification 扩展套路），再按 playbook 侦察 |
-| 每经 | **已接入**（`NbdMedia = 8`，头条/热评/重磅原创 3 栏目，SSR 整页即全量） | — |
-| 东财盘面榜单 | **已接入**（Ranking 独立管线：龙虎榜/大宗/两融，`spider_ranking` 表，契约见 architecture.md） | 北向资金因交易所停止每日披露无数据源，类型枚举预留 |
-| 巨潮公告 | **已接入**（Announcement 独立管线：分类白名单 10 类直写 `spider_announcement`，契约见 architecture.md） | 全市场全类型每日数千条噪声大，白名单约 500 条/日；加分类 = Resource 数组加行 |
-| 港交所披露易 | **可行性实测确认**（`titleSearchServlet.do` 公开 JSON：NEWS_ID/SHORT_TEXT/STOCK_NAME，繁体中文，近期 1892 条） | 接入时新增 `HkexMedia` + 对应 Resource/Spider（契约预留的"加行"路径），视港股业务必要性 |
-| 金十财经日历 | **暂接不上（架构边界）**：网页端数据走 **socket.io 推送**（与快讯同一长连接通道，bundle 实测 getCalendarEconomicData 依赖 Jin10FlashInstance），无干净的 HTTP 轮询接口；CDN 静态路径 `cdn-rili.jin10.com/web_data/` 已下线（DNS NXDOMAIN）；日历专用 `x-app-id: sKKYe29sFuJaeOCJ` 已从 bundle 提取但未发现配对的 HTTP 端点（datacenter-api 全部 502） | 要接需引入 socket.io 客户端（长连接管理 + 与 Quartz 轮询架构融合，约 2-3 天）或等金十开放 HTTP 接口；HTTP-only 管线架构下暂缓 |
-| 东财财经日历 | cjrl 页面为传统 SSR，XHR 接口未暴露在首屏 HTML；盲猜 reportName（RPT_ECONOMIC_CALENDAR）不存在 | 需浏览器抓包定位 XHR 后再评估（datacenter api 族概率高） |
-| 界面新闻 | 首页 SSR 可解析（`/article/{id}.html` 链接 74 条，无接口），泛新闻密度低一档 | 有需求时照每经先例接入（约半天） |
-| 澎湃新闻 | 首页 `__NEXT_DATA__` SSR（推荐流非时间流，9 条链接），数据接口未查 | 同上，P3 优先级 |
-| 第一财经 | 首页带 aliyunCaptcha 引用、news 页 395KB 无文章链接无接口（JS 渲染） | 需 chunk 反查或浏览器会话后再侦察 |
-| 证券时报网 | 首页 JS 渲染壳（10 chunk 无接口路径），文章链接未暴露 | 需 chunk 反查后再侦察 |
->
-> **补栏目不是"加一行配置"那么轻**：这四个源目前把频道参数与 `category` 都写死在各自的 `*NewsResource` 常量里
-> （`GlobalChannel` / `AllChannel` / `ZhiboId` 与 `*CategoryNumber`），`column.ColumnId` 只用于日志定位、
-> 不参与取数。所以补一个栏目需要：把频道参数改为按 `NewsColumn` 传入（`ColumnId` 与接口参数值不保证一致，
-> 见闻就是 `"global"` vs `"global-channel"`，需要各自定义映射）、让 `ToSpiderNewListModel` / `ParseContent`
-> 接收该栏目的 `category`（否则多栏目会写成同一个分类号）、并在 `Columns` 里注册。
-> 这是把一个源"从壳子做成完整源"的工作，见下"源成熟度"。
+> **补栏目不是"加一行配置"那么轻**：除见闻（7 频道已按 `NewsColumn` 遍历改造，是多栏目先例）外，
+> 其余快讯源仍把频道参数与 `category` 写在各自的 `*NewsResource` 常量里，`column.ColumnId` 只用于日志定位、
+> 不参与取数。补一个栏目需要：把频道参数改为按 `NewsColumn` 传入、让解析接收该栏目的 `category`
+> （否则多栏目会写成同一个分类号）、并在 `Columns` 里注册——见闻 live 的改造（`ChannelResourceMap` 反查）
+> 是可照抄的先例。这是把一个源"从壳子做成完整源"的工作，见下"源成熟度"。
 
 ### 东方财富（`Spider/News/Web/Eastmoney/`）
 
@@ -167,7 +147,7 @@ public interface INewsSpider
 - **详情**：`https://www.cls.cn/detail/{id}` 为服务端渲染，正文 HTML 内嵌在页面 `__NEXT_DATA__` 的 `articleDetail.content`；origin 存提取出的 `__NEXT_DATA__` JSON（`origin_type = Json`），解析按纯 JSON 重跑。
 - **详情格式（2026-09 批量实测 30+ 篇，走生产代码路径 12/12 通过）**：页面形态单一，`articleDetail` 必在（抽样 `isFree` 全为 true、`status=1`、正文 428~5653 字符无空文）；正文**顶层**标签分布 `p / strong / img / a / h1-h3 / blockquote`——`blockquote` 与顶层 `a` 取内联文本进正文（引用是内容的一部分，不能按未知标签丢弃，真实夹具 `cls_article_detail_rich.html` 锁定）；`/detail/{id}` 路由电报与文章共用（电报正文是纯文本），解析只处理 depth 列表产出的文章 id，互不影响。
 - 字段映射：`source` 是记者/编辑名（投稿/转载条目可能为空，回退"财联社"平台名）；`visibleTags[].name` 拼关键字；详情 `images` 为封面图数组（不在正文时补进图片列表）；`is_ad=1` 与 `external_link` 非空（站外跳转，无 /detail/{id}）的条目在列表阶段跳过。
-- 品见已接入（2026-09-30，`ClsArticleSpider` 第二列表族：`/v5/web/pinjian/assembled2` 拼装流固定返回 4 个真实专题 × 6 篇 + 置顶专题卡，整页即全量无翻页，ctype=1 专题卡跳过，文章 id 与财联社全局 id 同空间复用 `/detail/{id}` 详情流程，category=115）；招财号是机构入驻 UGC 平台（App 内入口为主），未接入（见已知限制）。
+- 品见已接入（2026-09-30，`ClsArticleSpider` 第二列表族：`/v5/web/pinjian/assembled2` 拼装流固定返回 4 个真实专题 × 6 篇 + 置顶专题卡，整页即全量无翻页，ctype=1 专题卡跳过，文章 id 与财联社全局 id 同空间复用 `/detail/{id}` 详情流程，category=115）。
 - 接入方法论与验收标准见 [web-source-playbook.md](web-source-playbook.md)。
 
 ### 新浪财经 7x24（`Spider/News/Flash/Sina/`）
@@ -234,7 +214,7 @@ public interface INewsSpider
 | 源 | 成熟度 | 说明 |
 |---|---|---|
 | 东方财富 | **完整** | 35 个栏目全部接入，详情接口 + HTML 结构化解析（段落/图片/表格/列表）、Playwright 兜底、时间格式强绑定 |
-| 财联社 | **电报最小可用 + 文章频道已接入 + 品见已接入** | 电报只接「电报」1 个栏目；签名算法已逆向并有实测向量锁定；文章频道 2026-09 接入 13 个 depth 栏目（共用 `ClsMedia`）；品见 2026-09-30 接入拼装流（第二列表族，category 115）；招财号未接入 |
+| 财联社 | **电报最小可用 + 文章频道已接入 + 品见已接入** | 电报只接「电报」1 个栏目；签名算法已逆向并有实测向量锁定；文章频道 2026-09 接入 13 个 depth 栏目（共用 `ClsMedia`）；品见 2026-09-30 接入拼装流（第二列表族，category 115） |
 | 新浪 | **7x24 最小可用 + 文章源已接入** | 7x24 只接 1 个栏目；文章源 2026-09 接入 22 个栏目（滚动接口 2 + 栏目滚动页 20，共用 `SinaMedia`），详情整页 HTML 落 origin |
 | 华尔街见闻 | **live 7 频道 + 文章源已接入** | live 2026-09-30 扩至 7 频道（全球宏观 301 + A股/美股/港股/外汇/商品/债券 312-317）；文章源 2026-09 接入全量流（单栏目 + 分类号逐条推断，共用 `WscnMedia`），三段全 API 化，带 symbols/作者/付费属性 |
 | 金十 | **快讯最小可用 + 文章源已接入** | 快讯只接「快讯」1 个栏目；文章源 2026-09 接入「市场参考」5 个栏目（共用 `Jin10Media`），三段全 API 化，付费专享条目按"匿名无正文"口径跳过、VIP 两栏目未接 |
@@ -308,7 +288,6 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 新浪快讯图片未解析 | 图片在 `multimedia` 字段，实测 100 条仅 1 条非空 | 出现高频图片时补该字段解析 |
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
 | 跨源 URL 碰撞风险收窄但未根除 | 快讯源已独立写 `spider_flash_news`（唯一键含 `from_media`，源间天然隔离）；剩余风险在网页型三表——`ON CONFLICT (news_url)` 跨源全局去重，若未来新增的网页型源产出与东财相同的 URL，后写的会覆盖先写的原始内容（当前仅东财一个网页型源，实测各源域名互不重叠） | 真出现碰撞时给三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
-| 招财号未接入 | 机构入驻 UGC 平台（App 内入口为主，网页侧无确认可用的匿名列表接口），内容为各机构自媒体、质量参差 | 有明确需求（如只订阅某些机构号）时按 [web-source-playbook.md](web-source-playbook.md) 流程侦察接入 |
 | 品见拼装流覆盖有限 | 固定返回 4 个真实专题 × 各 6 篇 + 置顶专题卡（`rn`/`last_time` 均不影响），且专题流为编辑策展、条目时间跨度可达数月，更新节奏慢 | 无翻页可挖（接口即整页），扩覆盖需改走专题维度的其它接口（暂未发现） |
 | 研报不入新闻管线（设计使然，非缺陷） | 东财研报（个股/行业/宏观）是"列表即结构化元数据"形态，走第三条管线直写 `spider_research_report`（独立表 + 独立 Job），评级/盈利预测等以结构化列存储而非文章正文；新闻三表与快讯表不含研报 | 需要按研报做下游分析时直接查 `spider_research_report`；接入更多研报源时照 `Spider/News/Report/Eastmoney/` 套路并届时再抽注册表 |
 | 财联社文章频道无重要度 | depth 列表条目 `level` 为空字符串，与电报的 A/B/C 重要度体系不同，落库统一为普通（1） | 若源侧开始下发重要度，在 `ClsArticleListItem` 补映射 |
