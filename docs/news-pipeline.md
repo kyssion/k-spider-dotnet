@@ -115,6 +115,13 @@ public interface INewsSpider
 > | 新浪 | 直播接口支持 `zhibo_id` / `tag_id` 切换不同直播与标签；**tag_id 枚举未获取**（`getTags` 接口拒绝、7x24 页面无线索），且文章源 22 栏目已覆盖广，扩展价值边际小 | 2026-09-30 实测 |
 > | 格隆汇 | `all/lives/v4` 即全频道聚合流（`category` 参数可试分频道值，未枚举），15 条/页不可调 | 2026-09-30 实测 |
 > | 智通财经 | **整站 JS cookie 门禁**（阿里云盾 acw 类），所有路径（含接口）门外只返回挑战壳，无法在门外定位接口；现有反爬模块已具备 acw_sc__v2 识别能力，接入需先过浏览器会话再按 playbook 侦察 | 2026-09-30 实测 |
+
+**候选新站侦察记录（未接入，按需启用）**：
+
+| 候选源 | 侦察结论（2026-09-30） | 接入可行性 |
+|---|---|---|
+| 富途资讯 | 接口**完全打通**：`GET news.futunn.com/news-site-api/main/get-flash-list?pageSize=50`（匿名无鉴权，路径从前端 chunk e5080a28.js 反查），`seqMark` 游标翻页（上一页返回值原样带回，实测零重叠，`page` 参数不生效），条目含 id/title/content 全文/detailUrl/level/relatedStocks/pic。**定位是聚合方**（财联社/智通/格隆汇快讯都在上面），与现有源重叠高 | 接入是半天工作量（照 `Spider/News/Flash/Ths/` 页码外的 seqMark 游标先例），作"补漏源"时有需求再接 |
+| 36氪快讯 | **整站"安全检测"JS 环境挑战**（自研，非 acw），门外只返回检测壳，接口无法定位；现有反爬模块无此识别方式 | 需先补识别器 + 浏览器通过策略（照 anti-bot-verification 扩展套路），再按 playbook 侦察 |
 >
 > **补栏目不是"加一行配置"那么轻**：这四个源目前把频道参数与 `category` 都写死在各自的 `*NewsResource` 常量里
 > （`GlobalChannel` / `AllChannel` / `ZhiboId` 与 `*CategoryNumber`），`column.ColumnId` 只用于日志定位、
