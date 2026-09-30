@@ -217,6 +217,61 @@ public class Pg
     }
 
     /// <summary>
+    ///     盘面榜单表的幂等建表 ( 表 + 类型行键唯一索引 + 查询索引 + update_time 触发器 )。
+    ///     契约见 docs/architecture.md 的 Ranking 类型契约 ; 新环境由 DDL 建 ,
+    ///     这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsureRankingDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TABLE IF NOT EXISTS public.spider_ranking
+                (
+                    id           bigserial     NOT NULL,
+                    create_time  timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time  timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    ranking_type smallint      NOT NULL,
+                    trade_date   date          NOT NULL,
+                    row_key      varchar(180)  NOT NULL,
+                    from_media   integer       NOT NULL,
+                    stock_code   varchar(16),
+                    stock_name   varchar(64),
+                    market       varchar(40),
+                    close_price  numeric(12,3),
+                    change_rate  numeric(10,4),
+                    deal_amount  numeric(20,2),
+                    net_amount   numeric(20,2),
+                    buy_amount   numeric(20,2),
+                    sell_amount  numeric(20,2),
+                    detail       jsonb,
+                    raw_content  text,
+                    CONSTRAINT spider_ranking_pkey PRIMARY KEY (id),
+                    CONSTRAINT uk_ranking_type_date_row UNIQUE (ranking_type, trade_date, row_key)
+                )
+                """);
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_ranking_type_date
+                    ON public.spider_ranking (ranking_type, trade_date DESC)
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            connection.Ado.ExecuteCommand("DROP TRIGGER IF EXISTS update_modified_column ON public.spider_ranking");
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.spider_ranking
+                    FOR EACH ROW EXECUTE FUNCTION public.update_time_func()
+                """);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsureRankingDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     系统状态表的幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 , 写入见 SystemStatusDao )。
     ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
     /// </summary>

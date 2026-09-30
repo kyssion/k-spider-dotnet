@@ -199,3 +199,21 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 7. **测试基线**：夹具回归 + `LiveConnectivityTest` 连通性 + DAO 手拼 SQL 形态锁 + `JobDependencyTest` 覆盖新 Job 构造依赖。
 
 完整参照实现：Report 型全链路（`Spider/News/Report/Eastmoney/` + `ResearchReportJob` + `SpiderResearchReportDao` + `spider_research_report`）。契约立好后，同类型的每个新源只是"往里加行"：新 Resource/Spider 模块 + 直连或注册一行，不再重复决策。
+
+### Ranking 盘面榜单型契约（第一个按上述清单立项的类型）
+
+**1. 数据形态定义**：交易所/数据商按交易日披露的**周期性数值快照**（龙虎榜席位、大宗交易逐笔、两融余额），与新闻的"事件叙述"、研报的"分析文章"都不同——行即数值，无正文。数据源为东财数据中心 `datacenter-web.eastmoney.com/api/data/v1/get` 的 **reportName 接口族**（同站同伪装，`from_media` 恒 `DfMedia`），**同接口族加一类 = 加一个 reportName 配置行**。北向资金因 2024-08 起交易所停止每日披露，暂无数据源，类型枚举预留。
+
+**2. 存储**：单表 `spider_ranking`（通用宽表 + JSONB 长尾），`Model/SpiderRankingModel.cs`；去重键 **`(ranking_type, trade_date, row_key)`**——`row_key` 是类型内自然键，**每类型必须定义组装规则**（龙虎榜=代码+上榜原因、大宗=代码+买卖营业部+成交价、两融=代码，契约变更即数据语义变更）；热路径索引 `(ranking_type, trade_date DESC)`；幂等建表 `Pg.EnsureRankingDbObjects()` 与 `db/k_script_spider.sql` 增量段双同步。
+
+**3. 节奏**：`RankingJob` 每 30 分钟（数据在盘中/盘后陆续披露，30 分钟足够新鲜）；每轮拉近 4 个自然日窗口（覆盖 T+1 披露与周末），pageSize=500 按分页拉全。
+
+**4. 写入语义**：`ON CONFLICT DO NOTHING`——盘面快照**发布即终态**（实测未见源侧修正，与快讯的"发布后修正"相反）；拉取失败记日志下一轮自然重试，`KDbException` 不消耗计数（无回填段，整条语义比 Report 型简单）。
+
+**5. 监控**：`NewsCheckJob` 加 datacenter 探测（龙虎榜最新页非空即存活）+ 滞后监控（`max(trade_date)` 距今超 5 天告警，只记日志不入节点快照——控制台榜单页未建）；巡检 SQL 进 operations.md。
+
+**6. 生态挂接**：`k-spider-sync` 纳入（第 7 张数据表）；不进任何 Spider 注册表（单源 reportName 族直连，与 Report 同理）；Web 控制台榜单页未建不进。
+
+**7. 测试基线**：三类夹具（龙虎榜/大宗/两融真实响应）+ 解析回归（行键组装 / 通用列映射 / 三类字段差异）+ `LiveConnectivityTest` 三类连通 + `JobDependencyTest` 覆盖新 Job 构造依赖。
+
+参照实现：`Spider/Ranking/Eastmoney/`（Resource/Model/Spider）+ `Job/Ranking/RankingJob.cs` + `Data/SpiderRankingDao.cs` + `spider_ranking`。

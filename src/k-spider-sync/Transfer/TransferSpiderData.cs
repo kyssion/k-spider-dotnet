@@ -8,7 +8,7 @@ using SqlSugar;
 namespace KSpider.Sync.Transfer;
 
 /// <summary>
-///     数据搬运核心 : 把远端 PG 的 6 张表 ( 4 张网页新闻 + 快讯 + 研报 ) 同步到本地 ,
+///     数据搬运核心 : 把远端 PG 的 7 张表 ( 4 张网页新闻 + 快讯 + 研报 + 盘面榜单 ) 同步到本地 ,
 ///     新行按自增 Id 增量插入 , 已有行按 (update_time, id) 双键水位更新 ,
 ///     水位进度持久化在本地 sync_transfer_watermark 表
 /// </summary>
@@ -32,6 +32,7 @@ public static class TransferSpiderData
         await SyncTableSafely<SpiderNewsImageListModel>(remote, local, "spider_news_image_list");
         await SyncTableSafely<SpiderFlashNewsModel>(remote, local, "spider_flash_news");
         await SyncTableSafely<SpiderResearchReportModel>(remote, local, "spider_research_report");
+        await SyncTableSafely<SpiderRankingModel>(remote, local, "spider_ranking");
         Logger.LogInformation("[DoTransfer] transfer success");
     }
 

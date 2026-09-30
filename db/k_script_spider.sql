@@ -223,6 +223,43 @@ CREATE INDEX IF NOT EXISTS "idx_research_report_pending_summary"
 
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_research_report FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
+-- 盘面榜单 ( 2026-09 新增 : Ranking 管线 , 东财数据中心 reportName 接口族 ,
+-- 龙虎榜/大宗交易/两融三类 , 行即数值发布即终态 ; 契约见 docs/architecture.md )
+CREATE TABLE IF NOT EXISTS "public"."spider_ranking" (
+  "id" bigserial NOT NULL,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "ranking_type" smallint NOT NULL,
+  "trade_date" date NOT NULL,
+  "row_key" varchar(180) NOT NULL,
+  "from_media" integer NOT NULL,
+  "stock_code" varchar(16),
+  "stock_name" varchar(64),
+  "market" varchar(40),
+  "close_price" numeric(12,3),
+  "change_rate" numeric(10,4),
+  "deal_amount" numeric(20,2),
+  "net_amount" numeric(20,2),
+  "buy_amount" numeric(20,2),
+  "sell_amount" numeric(20,2),
+  "detail" jsonb,
+  "raw_content" text,
+  CONSTRAINT "spider_ranking_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "uk_ranking_type_date_row" UNIQUE ("ranking_type", "trade_date", "row_key")
+);
+
+COMMENT ON TABLE "public"."spider_ranking" IS '盘面榜单 ( 龙虎榜/大宗/两融 , 行即数值发布即终态 )';
+COMMENT ON COLUMN "public"."spider_ranking"."ranking_type" IS '榜单类型 : 1 龙虎榜 / 2 大宗交易 / 3 两融 / 4 北向 ( 预留 )';
+COMMENT ON COLUMN "public"."spider_ranking"."row_key" IS '类型内自然键 ( 龙虎榜=代码+上榜原因 / 大宗=代码+买卖营业部+价格 / 两融=代码 )';
+COMMENT ON COLUMN "public"."spider_ranking"."trade_date" IS '交易日 ( 数据所属日期 , 非披露日 )';
+COMMENT ON COLUMN "public"."spider_ranking"."detail" IS '类型特有长尾字段 ( JSONB : 龙虎榜后市表现/大宗买卖营业部/两融余额等 )';
+
+-- 按类型与交易日查询 ( 榜单列表 )
+CREATE INDEX IF NOT EXISTS "idx_ranking_type_date"
+  ON "public"."spider_ranking" ("ranking_type", "trade_date" DESC);
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_ranking FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
 -- 新闻流水线轮询部分索引 ( 老库由启动时 Pg.EnsureSpiderNewsListDbObjects 幂等补齐 )
 CREATE INDEX IF NOT EXISTS "idx_news_list_download_status"
   ON "public"."spider_news_list" ("download_status_code", "id")

@@ -5,6 +5,7 @@ using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
 using KSpider.Spider.News.Report.Eastmoney;
+using KSpider.Spider.Ranking.Eastmoney;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Spider.Verify.Model;
@@ -36,6 +37,7 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
             var flashLag = CheckFlashNewsLag();
             var verifyBlocked = CheckVerificationBlocked();
             CheckReportLag();
+            CheckRankingLag();
             ReportNodeStatus(apiErrors, backlog, flashLag, verifyBlocked);
         });
     }
@@ -88,6 +90,21 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
         {
             errors.Add($"[{(int)FromTypeOfNews.DfMedia} 东财研报] column report : {e.Message}");
             logger.LogError("[NewsCheckJob CheckListApiAlive] report api err : {}", e);
+        }
+
+        // 盘面榜单 ( Ranking 管线 , 直连 DfRankingSpider ) :
+        // datacenter 接口族共用同一通道 , 探测龙虎榜即可代表接口存活
+        try
+        {
+            var config = DfRankingResource.Reports[0];
+            var page = await new DfRankingSpider().GetReportPage(config,
+                DateTime.Today.AddDays(-4), DateTime.Today, 10, 1);
+            if (page.Items.Count == 0) throw new Exception("接口未返回数据");
+        }
+        catch (Exception e)
+        {
+            errors.Add($"[{(int)FromTypeOfNews.DfMedia} 东财盘面榜单] column ranking : {e.Message}");
+            logger.LogError("[NewsCheckJob CheckListApiAlive] ranking api err : {}", e);
         }
 
         return errors;
@@ -201,6 +218,34 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
         catch (Exception e)
         {
             logger.LogError("[NewsCheckJob CheckReportLag] err : {}", e);
+        }
+    }
+
+    /// <summary>
+    ///     盘面榜单实时性 : 最新交易日距今多久。龙虎榜/大宗每日披露、两融 T+1 ,
+    ///     覆盖节假日窗口取 5 天 ; RankingJob 每 30 分钟拉取 , 滞后超窗说明接口异常或披露规则变化。
+    ///     暂只记日志不入节点快照 payload ( 控制台榜单页未建 )。
+    /// </summary>
+    private void CheckRankingLag()
+    {
+        try
+        {
+            using var connection = pg.Connection();
+            var newest = connection.Queryable<SpiderRankingModel>().Max(it => it.TradeDate);
+            if (newest == default)
+            {
+                logger.LogWarning("[NewsCheckJob CheckRankingLag] no ranking data yet");
+                return;
+            }
+
+            var lagDays = (int)(DateTime.Today - newest.Date).TotalDays;
+            var level = lagDays > 5 ? LogLevel.Warning : LogLevel.Information;
+            logger.Log(level,
+                "[NewsCheckJob CheckRankingLag] newest : {Newest:yyyy-MM-dd} , lag : {Lag}d", newest, lagDays);
+        }
+        catch (Exception e)
+        {
+            logger.LogError("[NewsCheckJob CheckRankingLag] err : {}", e);
         }
     }
 

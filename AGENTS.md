@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流、金十「市场参考」5 个栏目、同花顺文章 10 个栏目与每经文章 3 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live（7 频道）/ 金十快讯 / 同花顺 7x24 / 格隆汇 live；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+7x24 小时金融数据爬虫：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流、金十「市场参考」5 个栏目、同花顺文章 10 个栏目与每经文章 3 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live（7 频道）/ 金十快讯 / 同花顺 7x24 / 格隆汇 live；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类；盘面榜单 Ranking 管线 30 分钟轮询接入东财数据中心龙虎榜/大宗/两融），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -77,6 +77,7 @@ src/k-spider-dotnet/
 │   ├── News/Web/              #   网页型三段 : NewsListJob / NewsContentOriginJob / NewsContentJob
 │   ├── News/Flash/            #   快讯型 : FlashNewsJob ( 15 秒 )
 │   ├── News/Report/           #   研报 : ResearchReportJob ( 5 分钟 , 第三管线 )
+│   ├── Ranking/               #   盘面榜单 : RankingJob ( 30 分钟 , 第四管线 )
 │   ├── Check/                 #   NewsCheckJob ( 含节点快照上报 )
 │   ├── Node/                  #   NodeStateJob + NodeIdentity ( 调度态上报 + 指令消费 , 3 秒 )
 │   └── JobRuntimeListener.cs  #   IJobListener : 每次执行完把结果/耗时/RunSummary 写 spider_job_state
@@ -212,7 +213,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 ( 含�
 ## 数据库
 
 - 库名 `k_script_spider`，10 张表的完整 DDL 在 `db/k_script_spider.sql`（DBX 导出 + 增量演进段），新环境用它初始化。
-- 唯一键约定：新闻三表以 `news_url` 去重，图片表以 `image_resource_url`，快讯表以 `(from_media, news_url)`，研报表以 `info_code`。
+- 唯一键约定：新闻三表以 `news_url` 去重，图片表以 `image_resource_url`，快讯表以 `(from_media, news_url)`，榜单表以 `(ranking_type, trade_date, row_key)`，研报表以 `info_code`。
 - 表**不是** CodeFirst 管理；`Data/Devtools/PgDevelop.cs` 可从库反向重新生成 SqlSugar 实体（DbFirst）。
 - 所有表有 `update_time_func()` 触发器自动刷新 `update_time`，upsert 时 ignore 这三列即可。
 - 轮询热路径依赖部分索引 `idx_news_list_download_status`（启动时自动创建）。

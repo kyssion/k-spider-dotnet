@@ -389,6 +389,33 @@ public class LiveConnectivityTest
         TestContext.WriteLine($"每经文章 {column.ColumnName} : {listPage.Items.Count} 条 , 样例 {newsItem.NewsTitle}");
     }
 
+    [TestMethod]
+    public async Task DfRankingLiveFetchThreeReports()
+    {
+        var spider = new KSpider.Spider.Ranking.Eastmoney.DfRankingSpider();
+        var endDate = DateTime.Today;
+        var beginDate = endDate.AddDays(-4);
+
+        foreach (var config in KSpider.Spider.Ranking.Eastmoney.DfRankingResource.Reports)
+        {
+            // 逐日探测 ( 接口 filter 单日语义 ) , 近几天窗口内任一天有数据即连通
+            KSpider.Spider.Ranking.Eastmoney.DfRankingPage? hit = null;
+            for (var day = endDate; day >= beginDate && hit == null; day = day.AddDays(-1))
+            {
+                var page = await FetchOrSkipAsync(() => spider.GetReportPage(config, day, day, 10, 1));
+                if (page.Items.Count > 0) hit = page;
+            }
+
+            Assert.IsTrue(hit != null, $"{config.Type} 近几天窗口未返回任何数据 ( 披露规则可能已变更 )");
+            var row = hit!.Items[0];
+            Assert.IsFalse(string.IsNullOrWhiteSpace(row.StockCode), $"{config.Type} 行缺代码");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(row.RowKey), $"{config.Type} 行缺自然键");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(row.Detail), $"{config.Type} 行缺类型长尾");
+            Assert.AreEqual((short)config.Type, row.RankingType);
+            TestContext.WriteLine($"{config.Type} : {hit.Items.Count} 条样例 , {row.StockCode} {row.StockName}");
+        }
+    }
+
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>

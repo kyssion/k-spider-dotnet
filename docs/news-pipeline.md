@@ -125,6 +125,7 @@ public interface INewsSpider
 | 富途资讯 | 接口**完全打通**：`GET news.futunn.com/news-site-api/main/get-flash-list?pageSize=50`（匿名无鉴权，路径从前端 chunk e5080a28.js 反查），`seqMark` 游标翻页（上一页返回值原样带回，实测零重叠，`page` 参数不生效），条目含 id/title/content 全文/detailUrl/level/relatedStocks/pic。**定位是聚合方**（财联社/智通/格隆汇快讯都在上面），与现有源重叠高 | 接入是半天工作量（照 `Spider/News/Flash/Ths/` 页码外的 seqMark 游标先例），作"补漏源"时有需求再接 |
 | 36氪快讯 | **整站"安全检测"JS 环境挑战**（自研，非 acw），门外只返回检测壳，接口无法定位；现有反爬模块无此识别方式 | 需先补识别器 + 浏览器通过策略（照 anti-bot-verification 扩展套路），再按 playbook 侦察 |
 | 每经 | **已接入**（`NbdMedia = 8`，头条/热评/重磅原创 3 栏目，SSR 整页即全量） | — |
+| 东财盘面榜单 | **已接入**（Ranking 独立管线：龙虎榜/大宗/两融，`spider_ranking` 表，契约见 architecture.md） | 北向资金因交易所停止每日披露无数据源，类型枚举预留 |
 | 界面新闻 | 首页 SSR 可解析（`/article/{id}.html` 链接 74 条，无接口），泛新闻密度低一档 | 有需求时照每经先例接入（约半天） |
 | 澎湃新闻 | 首页 `__NEXT_DATA__` SSR（推荐流非时间流，9 条链接），数据接口未查 | 同上，P3 优先级 |
 | 第一财经 | 首页带 aliyunCaptcha 引用、news 页 395KB 无文章链接无接口（JS 渲染） | 需 chunk 反查或浏览器会话后再侦察 |
