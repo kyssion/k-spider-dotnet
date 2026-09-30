@@ -36,10 +36,7 @@ public static class Program
 
         builder.Services.Configure<DatabaseOptions>(
             builder.Configuration.GetSection(DatabaseOptions.SectionName));
-        builder.Services.AddSingleton<Pg>();
-        builder.Services.AddSingleton<SpiderNewsDao>();
-        builder.Services.AddSingleton<SpiderNewsBatchDao>();
-        builder.Services.AddSingleton<SystemStatusDao>();
+        AddSpiderData(builder.Services);
         builder.Services.AddQuartz(AddSpiderJobs);
         // 优雅停机 : 收到退出信号后等待在跑任务完成
         builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
@@ -59,6 +56,20 @@ public static class Program
         // 系统状态表幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 )
         host.Services.GetRequiredService<Pg>().EnsureSystemDbObjects();
         await host.RunAsync();
+    }
+
+    /// <summary>
+    ///     数据层 DI 注册 ( 各 Job 的构造依赖 ) : 单独成方法 , 供测试校验
+    ///     "全部 SpiderJob 的构造参数都可从容器解析" —— DI 缺注册构建期不报错 ,
+    ///     只有运行时任务实例化才炸 ( 2026-09-30 研报 DAO 漏注册实测踩过 )。
+    /// </summary>
+    public static void AddSpiderData(IServiceCollection services)
+    {
+        services.AddSingleton<Pg>();
+        services.AddSingleton<SpiderNewsDao>();
+        services.AddSingleton<SpiderNewsBatchDao>();
+        services.AddSingleton<SystemStatusDao>();
+        services.AddSingleton<SpiderResearchReportDao>();
     }
 
     /// <summary>
