@@ -1,7 +1,6 @@
 using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -19,10 +18,10 @@ public class ThsNewsSpider : IFlashNewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.ThsMedia;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } =
-        [new NewsColumn("all", "7x24全量流")];
+    public IReadOnlyList<SourceColumn> Columns { get; } =
+        [new SourceColumn("all", "7x24全量流")];
 
-    public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor)
     {
         var requestSize = Math.Min(pageSize, ThsNewsResource.MaxPageSize);
         // 页码游标 : 首页从 1 起

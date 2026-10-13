@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -18,9 +17,9 @@ public class ClsNewsSpider : IFlashNewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.ClsMedia;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = [ClsNewsResource.TelegraphColumn];
+    public IReadOnlyList<SourceColumn> Columns { get; } = [ClsNewsResource.TelegraphColumn];
 
-    public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor)
     {
         // 单页上限 50 , 超过会被静默返回空数组
         var requestSize = Math.Min(pageSize, ClsNewsResource.MaxPageSize);

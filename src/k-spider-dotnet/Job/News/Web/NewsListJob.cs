@@ -1,7 +1,6 @@
 using KSpider.Data;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.News;
 using KSpider.Spider.News.Web;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -63,7 +62,7 @@ public class NewsListJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<N
     /// <summary>
     ///     抓取单个栏目 : 按游标翻页 , 每页一条批量 upsert ( 单条语句自带原子性 , 不需要显式事务 )
     /// </summary>
-    private async Task<int> RunColumnAsync(SqlSugarClient connection, INewsSpider spider, NewsColumn column)
+    private async Task<int> RunColumnAsync(SqlSugarClient connection, INewsSpider spider, SourceColumn column)
     {
         var insertNumber = 0;
         string? cursor = null;

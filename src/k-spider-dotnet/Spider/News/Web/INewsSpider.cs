@@ -17,13 +17,13 @@ public interface INewsSpider
     /// <summary>
     ///     本源的全部栏目 , 供列表任务遍历与健康检查
     /// </summary>
-    IReadOnlyList<NewsColumn> Columns { get; }
+    IReadOnlyList<SourceColumn> Columns { get; }
 
     /// <summary>
     ///     抓取指定栏目的一页列表 , 返回归一化后的列表实体 ( 不落库 )
     ///     cursor 为上一页返回的 NextCursor , 首页传 null ; 页码翻页与时间游标翻页的源都走这一个入口
     /// </summary>
-    Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor);
+    Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor);
 
     /// <summary>
     ///     解析器标识 , 随 origin 行落库 ( spider_news_content_origin.parser_code ) :

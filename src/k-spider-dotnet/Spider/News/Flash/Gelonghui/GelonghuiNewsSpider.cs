@@ -1,7 +1,6 @@
 using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -19,10 +18,10 @@ public class GelonghuiNewsSpider : IFlashNewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.GelonghuiMedia;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } =
-        [new NewsColumn("all", "live全量流")];
+    public IReadOnlyList<SourceColumn> Columns { get; } =
+        [new SourceColumn("all", "live全量流")];
 
-    public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor)
     {
         // liveId 游标 : 首页传空 ; timestamp 毫秒防缓存
         var liveId = cursor ?? "";

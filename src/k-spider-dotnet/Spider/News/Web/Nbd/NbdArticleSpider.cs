@@ -31,11 +31,11 @@ public class NbdArticleSpider : INewsSpider
     /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
     public string ParserCode => NbdArticleResource.ParserCode;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = NbdArticleResource.ArticleColumnResourceList
-        .Select(item => new NewsColumn(item.ColumnId, item.ColumnName))
+    public IReadOnlyList<SourceColumn> Columns { get; } = NbdArticleResource.ArticleColumnResourceList
+        .Select(item => new SourceColumn(item.ColumnId, item.ColumnName))
         .ToList();
 
-    public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor)
     {
         // 整页即全量 : cursor 恒为 null , 传了也忽略
         var url = string.Format(NbdArticleResource.ListUrlTemplate, column.ColumnId);

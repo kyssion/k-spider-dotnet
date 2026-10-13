@@ -1,4 +1,3 @@
-using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Flash.Sina;
 
@@ -36,5 +35,5 @@ public static class SinaNewsResource
     /// <summary>
     ///     v1 只接 "7x24 直播" 一个栏目
     /// </summary>
-    public static readonly NewsColumn LiveColumn = new("7x24", "7x24");
+    public static readonly SourceColumn LiveColumn = new("7x24", "7x24");
 }

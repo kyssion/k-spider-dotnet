@@ -8,7 +8,7 @@ using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
 
-namespace KSpider.Spider.News.Report.Eastmoney;
+namespace KSpider.Spider.Report.Eastmoney;
 
 /// <summary>
 ///     东财研报源 : 列表接口即全部结构化元数据 ( reportapi ) , 摘要正文由详情页 ( SSR HTML ) 二段补齐。

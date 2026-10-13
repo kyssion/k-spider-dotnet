@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -22,11 +21,11 @@ public class WscnNewsSpider : IFlashNewsSpider
     private static readonly Dictionary<string, WscnNewsResource.LiveChannelResource> ChannelResourceMap =
         WscnNewsResource.LiveChannelResourceList.ToDictionary(item => item.ChannelSlug);
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = WscnNewsResource.LiveChannelResourceList
-        .Select(item => new NewsColumn(item.ChannelSlug, item.ChannelName))
+    public IReadOnlyList<SourceColumn> Columns { get; } = WscnNewsResource.LiveChannelResourceList
+        .Select(item => new SourceColumn(item.ChannelSlug, item.ChannelName))
         .ToList();
 
-    public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor)
     {
         var channel = ChannelResourceMap[column.ColumnId];
         var requestSize = Math.Min(pageSize, WscnNewsResource.MaxPageSize);

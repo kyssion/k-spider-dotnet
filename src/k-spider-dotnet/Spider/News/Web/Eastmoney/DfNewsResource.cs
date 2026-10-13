@@ -241,7 +241,7 @@ public static class DfNewsResource
         public string Url { get; set; }
 
         /// <summary>
-        ///     列表接口 column 参数号 , 同时作为 NewsColumn 的 ColumnId
+        ///     列表接口 column 参数号 , 同时作为 SourceColumn 的 ColumnId
         /// </summary>
         public int ListResourceNumber { get; set; }
     }

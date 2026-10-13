@@ -1,6 +1,4 @@
 using KSpider.Model;
-using KSpider.Spider.News;
-using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.Policy;
 
@@ -22,14 +20,14 @@ public interface IPolicySpider
     string Institution { get; }
 
     /// <summary>本源的全部栏目 ( 官方站按栏目披露 , 加栏目 = 加行 )</summary>
-    IReadOnlyList<NewsColumn> Columns { get; }
+    IReadOnlyList<SourceColumn> Columns { get; }
 
     /// <summary>
     ///     拉一页文档存根列表 ( 页码翻页 , 列表从新到旧 ) ;
     ///     存根含 docId / 标题 / 正文页地址 / 日期级时间 , 完整内容由
     ///     <see cref="GetDocumentAsync" /> 二段补齐
     /// </summary>
-    Task<PolicyDocumentPage> GetDocumentPage(NewsColumn column, int pageNo);
+    Task<PolicyDocumentPage> GetDocumentPage(SourceColumn column, int pageNo);
 
     /// <summary>
     ///     下载并解析单篇详情 , 组装完整文档行 ( 正文纯文本 / 附件 / 文号 / 精确时间 )

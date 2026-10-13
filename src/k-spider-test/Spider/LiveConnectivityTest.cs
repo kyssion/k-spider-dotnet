@@ -1,11 +1,9 @@
 using System.Net.Sockets;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.News;
 using KSpider.Spider.News.Web.Eastmoney;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Report.Eastmoney;
-using KSpider.Spider.News.Web;
+using KSpider.Spider.Report.Eastmoney;
 using KSpider.Spider.News.Web.Cls;
 using KSpider.Spider.News.Web.Sina;
 using KSpider.Spider.News.Web.Jin10;
@@ -478,7 +476,7 @@ public class LiveConnectivityTest
     /// <summary>
     ///     快讯源的通用连通性检查 : 拉一页完整记录 → 字段完整性 → 用游标再拉一页并确保更早
     /// </summary>
-    private async Task CheckFlashSourceLiveAsync(IFlashNewsSpider spider, NewsColumn column, string sourceName)
+    private async Task CheckFlashSourceLiveAsync(IFlashNewsSpider spider, SourceColumn column, string sourceName)
     {
         var page = await FetchOrSkipAsync(() => spider.GetFlashPage(column, 20, null));
         Assert.IsTrue(page.Items.Count > 0, $"{sourceName} 接口未返回任何数据");
@@ -529,6 +527,25 @@ public class LiveConnectivityTest
         Assert.IsTrue(rows.All(item => item.Time.HasValue), "存在未解析出时间的新闻");
         Assert.IsTrue(rows.All(item => item.FromMedia is > 0), "存在未设置 from_media 的新闻");
         Assert.IsTrue(rows.All(item => item.Category > 0), "存在未设置 category 的新闻");
+    }
+
+    [TestMethod]
+    public async Task LootDropDatasetLiveFetchParseAndCount()
+    {
+        var spider = new KSpider.Spider.Dataset.LootDrop.LootDropDatasetSpider();
+
+        // 对账通道 : 远端总数 ( Content-Range ) + 首页小批量行集
+        var remoteCount = await FetchOrSkipAsync(spider.GetRemoteCountAsync);
+        Assert.IsTrue(remoteCount > 0, "REST 未返回数据集行数");
+
+        var rows = await FetchOrSkipAsync(() => spider.GetStartupsPageAsync(0, 5));
+        Assert.IsTrue(rows.Count > 0, "REST 未返回任何数据行");
+        var sample = rows[0];
+        Assert.IsFalse(string.IsNullOrWhiteSpace(sample.Name), "行名称为空");
+        Assert.AreEqual(64, sample.ContentHash.Length, "内容指纹长度异常");
+        Assert.IsTrue(rows.Count <= remoteCount, "首页行数不应超过远端总数");
+
+        TestContext.WriteLine($"LootDrop 数据集 : 远端 {remoteCount} 行 , 首页 {rows.Count} 行 , 样例 {sample.Name}");
     }
 
     /// <summary>

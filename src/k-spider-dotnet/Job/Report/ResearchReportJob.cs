@@ -1,12 +1,12 @@
 using KSpider.Data;
 using KSpider.Exceptions;
 using KSpider.Model;
-using KSpider.Spider.News.Report.Eastmoney;
+using KSpider.Spider.Report.Eastmoney;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SqlSugar;
 
-namespace KSpider.Job.News.Report;
+namespace KSpider.Job.Report;
 
 /// <summary>
 ///     研报任务 : 东财研报中心三类研报 ( 个股/行业/宏观 ) , 列表即结构化元数据 ,

@@ -423,3 +423,332 @@ CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_job_state FOR EACH
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_job_command FOR EACH ROW EXECUTE FUNCTION update_time_func();
 
 CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_node_status FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
+-- 数据集 ( 2026-10 新增第七管线 : loot-drop.io 倒闭创业公司案例库 , Supabase REST 全量拉取 ,
+-- 行会修订 —— content_hash 变更检测 upsert ) ; 数据集型管线首源 , 每源一表 ( spider_<源>_<实体> )
+CREATE TABLE IF NOT EXISTS "public"."spider_lootdrop_startup" (
+  "id" bigint NOT NULL,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "from_media" integer NOT NULL,
+  "name" varchar(300) NOT NULL,
+  "description" text,
+  "sector" varchar(100),
+  "country" varchar(100),
+  "founders" text,
+  "investors" text,
+  "start_year" integer,
+  "end_year" integer,
+  "total_funding" bigint,
+  "difficulty" smallint,
+  "difficulty_reason" text,
+  "scalability" smallint,
+  "scalability_reason" text,
+  "market_potential" varchar(16),
+  "market_potential_reason" text,
+  "cause_of_death" text,
+  "the_loot" text,
+  "market_analysis" text,
+  "pivot_idea" text,
+  "source_created_at" timestamp without time zone,
+  "status" varchar(32),
+  "primary_cause_of_death" varchar(100),
+  "product_type" varchar(100),
+  "views" integer,
+  "condensed_value_prop" text,
+  "condensed_cause_of_death" text,
+  "content_hash" varchar(64) NOT NULL,
+  "raw_content" text,
+  CONSTRAINT "spider_lootdrop_startup_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "public"."spider_lootdrop_startup" IS '数据集 ( loot-drop.io 案例库 , 有界集合行可修订 , content_hash 变更检测 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."id" IS '源侧主键 ( API startups.id , 直接沿用非自增 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."total_funding" IS '累计融资额 ( 美元 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."founders" IS '创始人 JSON 数组文本';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."investors" IS '投资机构 JSON 数组文本';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."the_loot" IS '失败教训清单 JSON 数组文本';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."pivot_idea" IS '重建构想 JSON 对象文本';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."source_created_at" IS '源侧创建时间 ( UTC 去时区 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."content_hash" IS '全部业务字段 SHA256 指纹 ( upsert 变更检测依据 , 哈希没变的行不 UPDATE )';
+
+CREATE INDEX IF NOT EXISTS "idx_lootdrop_startup_sector"
+  ON "public"."spider_lootdrop_startup" ("sector");
+
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_lootdrop_startup FOR EACH ROW EXECUTE FUNCTION update_time_func();
+
+-- ============================================================
+-- >>> 全量表与字段注释补齐 ( 2026-10 ) : COMMENT 幂等可重复执行 ,
+-- 补齐全部表与字段描述 , 并覆写少量过时注释 ( news_list 状态机旧值 / 旧表名描述 )
+-- ============================================================
+
+-- ── spider_news_list : 网页抓取型新闻列表行 ( 三段状态机入口 , news_url 全局去重 ) ──
+COMMENT ON TABLE "public"."spider_news_list" IS '网页新闻列表行 ( 网页抓取型管线 , 三段状态机入口 , news_url 全局去重 )';
+COMMENT ON COLUMN "public"."spider_news_list"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_news_list"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_news_list"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_news_list"."from_media" IS '来源媒体 ( 见 FromTypeOfNews : 1 东财 / 2 财联社 / 3 新浪 / 4 见闻 / 5 金十 / 6 同花顺 / 8 每经 )';
+COMMENT ON COLUMN "public"."spider_news_list"."news_url" IS '新闻唯一地址 ( 全局去重键 )';
+COMMENT ON COLUMN "public"."spider_news_list"."news_title" IS '新闻标题';
+COMMENT ON COLUMN "public"."spider_news_list"."news_summary" IS '摘要 ( 列表接口侧 )';
+COMMENT ON COLUMN "public"."spider_news_list"."news_from" IS '来源名 ( 媒体名或作者 )';
+COMMENT ON COLUMN "public"."spider_news_list"."news_time" IS '发布时间';
+COMMENT ON COLUMN "public"."spider_news_list"."news_download_time" IS '抓取入库时间';
+COMMENT ON COLUMN "public"."spider_news_list"."category" IS '栏目分类号 ( 各源独立编号段 , 映射见 docs/news-pipeline.md )';
+COMMENT ON COLUMN "public"."spider_news_list"."download_status_code" IS '状态机 : 0 未下载 → 3 已下载原始 → 1 已解析详情 ; 失败态 2 解析失败 / 4 下载失败';
+COMMENT ON COLUMN "public"."spider_news_list"."fail_count" IS '失败重试计数 ( 达上限 3 停用 ; 库异常 KDbException 不消耗计数 )';
+COMMENT ON COLUMN "public"."spider_news_list"."is_paid" IS '是否付费/会员专享内容 ( 列表接口侧标记 )';
+
+-- ── spider_news_content_origin : 原始内容中间态 ( 解析前 ) ──
+COMMENT ON TABLE "public"."spider_news_content_origin" IS '新闻原始内容 ( 详情接口/页面原文整篇保存 , 解析前的中间态 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."news_url" IS '新闻唯一地址 ( 与列表行同键 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."news_origin_content" IS '原始响应全文 ( JSON 或 HTML , 按来源形态原样保存 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."news_origin_type" IS '原始内容形态 ( 见 NewsContentOriginType : JSON / HTML 等 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."status" IS '下载状态 : 3 成功 / 4 失败 ( 失败随列表行 fail_count 重试 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."message" IS '失败信息摘要 ( 成功为空 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."from_media" IS '媒体标识 ( 下载时冗余自列表行 , origin 自包含路由用 )';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."parser_code" IS '解析器标识 ( 如 wscn-article-v1 ) , 空则回退按 from_media 路由';
+COMMENT ON COLUMN "public"."spider_news_content_origin"."is_paid" IS '原始内容是否来自付费文章 ( 详情侧标记 )';
+
+-- ── spider_news_content : 解析详情 ( 结构化正文 ) ──
+COMMENT ON TABLE "public"."spider_news_content" IS '新闻解析详情 ( origin 解析产物 : 结构化正文 + 纯文本 )';
+COMMENT ON COLUMN "public"."spider_news_content"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_news_content"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_news_content"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_url" IS '新闻唯一地址 ( 与列表行同键 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_title" IS '新闻标题 ( 详情侧 , 可能与列表侧不同 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_summary" IS '摘要 ( 详情侧 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_from" IS '来源名 ( 详情侧 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_time" IS '发布时间 ( 详情侧精确时间 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_keyword" IS '关键词 ( 源侧提供 , 多为空 )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_content_json" IS '正文结构化 JSON ( 段落片段数组 : TEXT/IMG/TABLE/UL , 见 NewsContentSegment )';
+COMMENT ON COLUMN "public"."spider_news_content"."news_content_text" IS '正文纯文本 ( 拼接自 json 段落 , 全文检索/分析用 )';
+
+-- ── spider_news_image_list : 正文图片清单 ──
+COMMENT ON TABLE "public"."spider_news_image_list" IS '正文图片清单 ( 解析阶段提取 , 只增不删 )';
+COMMENT ON COLUMN "public"."spider_news_image_list"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_news_image_list"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_news_image_list"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_news_image_list"."news_url" IS '所属新闻地址';
+COMMENT ON COLUMN "public"."spider_news_image_list"."image_resource_url" IS '图片资源地址 ( 唯一去重键 )';
+COMMENT ON COLUMN "public"."spider_news_image_list"."image_name" IS '图片文件名';
+
+-- ── spider_flash_news : 实时快讯 ──
+COMMENT ON COLUMN "public"."spider_flash_news"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_flash_news"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_flash_news"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."from_media" IS '快讯来源 ( 2 财联社电报 / 3 新浪7x24 / 4 见闻live / 5 金十 / 6 同花顺 / 7 格隆汇 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."category" IS '栏目分类号 ( 各源独立编号段 , 映射见 docs/news-pipeline.md )';
+COMMENT ON COLUMN "public"."spider_flash_news"."news_url" IS '快讯唯一地址 ( 与 from_media 联合去重 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."news_time" IS '发布时间';
+COMMENT ON COLUMN "public"."spider_flash_news"."title" IS '标题 ( 快讯首行/导语 , 可空 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."content" IS '快讯全文 ( 拉到即终态 , 源侧修正随下一轮回填 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."keyword" IS '关联标签 ( 源侧 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."stock_list" IS '关联标的 JSON 数组 ( 纯数据字段 , 与已移除的股票管线无关 )';
+COMMENT ON COLUMN "public"."spider_flash_news"."image_urls" IS '封面图地址 JSON 数组';
+COMMENT ON COLUMN "public"."spider_flash_news"."raw_content" IS '原始条目 JSON ( 保留长尾字段与重放能力 )';
+
+-- ── spider_research_report : 研报 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_research_report"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_research_report"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_research_report"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_research_report"."from_media" IS '来源 ( 当前固定 1 东财 , 预留多源 )';
+COMMENT ON COLUMN "public"."spider_research_report"."title" IS '报告标题';
+COMMENT ON COLUMN "public"."spider_research_report"."stock_code" IS '个股代码 ( 仅个股研报 , 如 688548 )';
+COMMENT ON COLUMN "public"."spider_research_report"."stock_name" IS '个股名称';
+COMMENT ON COLUMN "public"."spider_research_report"."org_name" IS '研究机构简称 ( 如 万联证券 )';
+COMMENT ON COLUMN "public"."spider_research_report"."rating_name" IS '评级名 ( 增持/买入/中性… , 宏观研报为空 )';
+COMMENT ON COLUMN "public"."spider_research_report"."industry_name" IS '行业名 ( 个股=细分行业 / 行业=所属行业 / 宏观为空 )';
+COMMENT ON COLUMN "public"."spider_research_report"."aim_price_high" IS '目标价上限 ( 空 = 未给 )';
+COMMENT ON COLUMN "public"."spider_research_report"."aim_price_low" IS '目标价下限 ( 空 = 未给 )';
+COMMENT ON COLUMN "public"."spider_research_report"."eps_this_year" IS '预测当年 EPS';
+COMMENT ON COLUMN "public"."spider_research_report"."pe_this_year" IS '预测当年 PE';
+COMMENT ON COLUMN "public"."spider_research_report"."eps_next_year" IS '预测明年 EPS';
+COMMENT ON COLUMN "public"."spider_research_report"."pe_next_year" IS '预测明年 PE';
+COMMENT ON COLUMN "public"."spider_research_report"."researcher" IS '分析师 ( 逗号分隔 )';
+COMMENT ON COLUMN "public"."spider_research_report"."raw_content" IS '原始条目 JSON ( 保留长尾字段与解析重跑能力 )';
+
+-- ── spider_ranking : 盘面榜单 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_ranking"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_ranking"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_ranking"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_ranking"."from_media" IS '来源 ( 当前固定 1 东财数据中心 )';
+COMMENT ON COLUMN "public"."spider_ranking"."stock_code" IS '证券代码';
+COMMENT ON COLUMN "public"."spider_ranking"."stock_name" IS '证券名称';
+COMMENT ON COLUMN "public"."spider_ranking"."market" IS '市场 ( 沪/深/京… , 龙虎榜 )';
+COMMENT ON COLUMN "public"."spider_ranking"."close_price" IS '收盘价 ( 龙虎榜当日 )';
+COMMENT ON COLUMN "public"."spider_ranking"."change_rate" IS '涨跌幅 ( 龙虎榜当日 )';
+COMMENT ON COLUMN "public"."spider_ranking"."deal_amount" IS '成交金额 ( 龙虎榜=榜内成交额 / 大宗=单笔成交额 )';
+COMMENT ON COLUMN "public"."spider_ranking"."net_amount" IS '净买入额 ( 龙虎榜 )';
+COMMENT ON COLUMN "public"."spider_ranking"."buy_amount" IS '买入金额 ( 龙虎榜/大宗 )';
+COMMENT ON COLUMN "public"."spider_ranking"."sell_amount" IS '卖出金额 ( 龙虎榜/大宗 )';
+COMMENT ON COLUMN "public"."spider_ranking"."raw_content" IS '原始条目 JSON ( 保留长尾字段与解析重跑能力 )';
+
+-- ── spider_announcement : 公告 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_announcement"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_announcement"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_announcement"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_announcement"."from_media" IS '来源 ( 当前固定 9 巨潮资讯 )';
+COMMENT ON COLUMN "public"."spider_announcement"."sec_code" IS '证券代码';
+COMMENT ON COLUMN "public"."spider_announcement"."sec_name" IS '证券名称';
+COMMENT ON COLUMN "public"."spider_announcement"."title" IS '公告标题';
+COMMENT ON COLUMN "public"."spider_announcement"."publish_time" IS '披露时间';
+COMMENT ON COLUMN "public"."spider_announcement"."raw_content" IS '原始条目 JSON ( 保留长尾字段与解析重跑能力 )';
+
+-- ── spider_policy_document : 官方文件 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_policy_document"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_policy_document"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_policy_document"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_policy_document"."title" IS '文件标题';
+COMMENT ON COLUMN "public"."spider_policy_document"."url" IS '原文页面地址';
+COMMENT ON COLUMN "public"."spider_policy_document"."raw_content" IS '原始响应存档';
+
+-- ── spider_replay_log : 数据重放任务 ──
+COMMENT ON COLUMN "public"."spider_replay_log"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_replay_log"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_replay_log"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_replay_log"."filter" IS '重放筛选条件 ( JSON 文本 : 来源/时间窗等 )';
+COMMENT ON COLUMN "public"."spider_replay_log"."status" IS '任务状态 : running / done / failed';
+COMMENT ON COLUMN "public"."spider_replay_log"."total" IS '命中的 origin 行总数';
+COMMENT ON COLUMN "public"."spider_replay_log"."success_count" IS '重放成功数';
+COMMENT ON COLUMN "public"."spider_replay_log"."fail_count" IS '重放失败数';
+COMMENT ON COLUMN "public"."spider_replay_log"."message" IS '结果信息 ( 失败原因 / 完成摘要 )';
+COMMENT ON COLUMN "public"."spider_replay_log"."finish_time" IS '完成时间';
+
+-- ── spider_job_state : 任务调度态 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_job_state"."node_id" IS '节点标识 ( 主机名 , 主键之一 )';
+COMMENT ON COLUMN "public"."spider_job_state"."job_name" IS '任务名 ( 主键之一 )';
+COMMENT ON COLUMN "public"."spider_job_state"."next_fire_time" IS '下次触发时间 ( NodeStateJob 每 3 秒刷新 )';
+COMMENT ON COLUMN "public"."spider_job_state"."is_paused" IS '是否暂停';
+COMMENT ON COLUMN "public"."spider_job_state"."last_fired_at" IS '上次触发时间';
+COMMENT ON COLUMN "public"."spider_job_state"."last_duration_ms" IS '上次执行耗时 ( 毫秒 )';
+COMMENT ON COLUMN "public"."spider_job_state"."last_success" IS '上次执行是否成功';
+COMMENT ON COLUMN "public"."spider_job_state"."consecutive_failures" IS '连续失败次数';
+COMMENT ON COLUMN "public"."spider_job_state"."last_error" IS '上次失败报错 ( 成功为空 )';
+COMMENT ON COLUMN "public"."spider_job_state"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_job_state"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+
+-- ── spider_job_command : 任务指令 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_job_command"."id" IS '自增主键';
+COMMENT ON COLUMN "public"."spider_job_command"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_job_command"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_job_command"."job_name" IS '目标任务名 ( NodeStateJob 自身不可暂停 )';
+COMMENT ON COLUMN "public"."spider_job_command"."action" IS '指令动作 : trigger 立即执行 / pause 暂停 / resume 恢复';
+COMMENT ON COLUMN "public"."spider_job_command"."status" IS '指令状态 : pending 待消费 / done 已受理 / rejected 拒绝';
+COMMENT ON COLUMN "public"."spider_job_command"."result" IS '受理结果 ( 消费方回写 )';
+COMMENT ON COLUMN "public"."spider_job_command"."consumed_at" IS '消费时间';
+
+-- ── spider_node_status : 节点状态快照 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_node_status"."node_id" IS '节点标识 ( 主机名 , 主键 )';
+COMMENT ON COLUMN "public"."spider_node_status"."report_time" IS '上报时间 ( NewsCheckJob 每 5 分钟刷 , 距今过远即节点失联 )';
+COMMENT ON COLUMN "public"."spider_node_status"."payload" IS '快照 JSON 文本 ( 接口探测 / 管线积压 / 快讯滞后 / 验证冷却 )';
+COMMENT ON COLUMN "public"."spider_node_status"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_node_status"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+
+-- ── spider_lootdrop_startup : 数据集 ( 补缺 ) ──
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 , 仅 content_hash 变化时才刷新 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."from_media" IS '来源 ( 当前固定 12 Loot Drop )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."name" IS '公司名';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."description" IS '案例导语 ( 完整段落 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."sector" IS '行业板块 ( 如 Materials / Health Care )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."country" IS '国家';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."start_year" IS '成立年份';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."end_year" IS '倒闭年份';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."difficulty" IS '重建难度评分 1-5';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."difficulty_reason" IS '难度评分理由';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."scalability" IS '可扩展性评分 1-5';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."scalability_reason" IS '可扩展性评分理由';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."market_potential" IS '市场潜力档位 ( low / medium / high )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."market_potential_reason" IS '市场潜力档位理由';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."cause_of_death" IS '死因分析 ( 完整段落 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."market_analysis" IS '市场分析 ( 完整段落 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."status" IS '生命周期状态 ( closed )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."primary_cause_of_death" IS '主要死因枚举 ( Unit Economics / Competition / Ran Out of Cash… )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."product_type" IS '产品类型 ( Marketplace / AI / Mobile App… )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."views" IS '源站浏览数 ( 持续增长 , 行修订的典型来源 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."condensed_value_prop" IS '价值主张一句话';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."condensed_cause_of_death" IS '死因一句话概括';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup"."raw_content" IS '原始条目 JSON ( 保留长尾字段与解析重跑能力 )';
+COMMENT ON COLUMN "public"."spider_policy_document"."publish_time" IS '发布时间 ( 原文页面标注的发布时间 )';
+
+-- loot-drop 案例库中文翻译快照 ( 2026-10 新增 , 非管线表 ) :
+-- 由 spider_lootdrop_startup 导出的 CSV 经机器翻译后入库的静态分析表 ,
+-- 与英文主表无外键约束 , 以 id 一一对应 ; 内容列均为中文译文 ,
+-- founders/investors/techStack 等专有名词保留英文 ; 英文行变更后需重新导出翻译并重灌本表
+CREATE TABLE IF NOT EXISTS "public"."spider_lootdrop_startup_zh" (
+  "id" bigint NOT NULL,
+  "create_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "update_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "from_media" integer NOT NULL,
+  "name" varchar(300) NOT NULL,
+  "description" text,
+  "sector" varchar(100),
+  "country" varchar(100),
+  "founders" text,
+  "investors" text,
+  "start_year" integer,
+  "end_year" integer,
+  "total_funding" bigint,
+  "difficulty" smallint,
+  "difficulty_reason" text,
+  "scalability" smallint,
+  "scalability_reason" text,
+  "market_potential" varchar(16),
+  "market_potential_reason" text,
+  "cause_of_death" text,
+  "the_loot" text,
+  "market_analysis" text,
+  "pivot_idea" text,
+  "source_created_at" timestamp without time zone,
+  "status" varchar(32),
+  "primary_cause_of_death" varchar(100),
+  "product_type" varchar(100),
+  "views" integer,
+  "condensed_value_prop" text,
+  "condensed_cause_of_death" text,
+  "content_hash" varchar(64) NOT NULL,
+  CONSTRAINT "spider_lootdrop_startup_zh_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON TABLE "public"."spider_lootdrop_startup_zh" IS 'loot-drop 案例库中文快照 ( 静态分析表 , 译自 spider_lootdrop_startup , 非管线表 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."id" IS '源侧主键 ( 与 spider_lootdrop_startup.id 一一对应 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."update_time" IS '最后修改时间 ( update_time_func 触发器自动刷新 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."from_media" IS '来源 ( 固定 12 Loot Drop )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."name" IS '公司名 ( 专有名词保留原文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."description" IS '案例导语 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."sector" IS '行业板块 ( 中文 : 消费/金融/医疗健康… )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."country" IS '国家 ( 中文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."founders" IS '创始人 JSON 数组 ( 专有名词保留原文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."investors" IS '投资机构 JSON 数组 ( 专有名词保留原文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."start_year" IS '成立年份';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."end_year" IS '倒闭年份';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."total_funding" IS '累计融资额 ( 美元 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."difficulty" IS '重建难度评分 1-5';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."difficulty_reason" IS '难度评分理由 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."scalability" IS '可扩展性评分 1-5';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."scalability_reason" IS '可扩展性评分理由 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."market_potential" IS '市场潜力档位 ( 高/中/低 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."market_potential_reason" IS '市场潜力档位理由 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."cause_of_death" IS '死因分析 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."the_loot" IS '失败教训清单 JSON 数组 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."market_analysis" IS '市场分析 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."pivot_idea" IS '重建构想 JSON 对象 ( concept/mvpSteps/monetization 为中文 , name/techStack 保留原文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."source_created_at" IS '源侧创建时间 ( UTC 去时区 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."status" IS '生命周期状态 ( 中文 : 已关闭 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."primary_cause_of_death" IS '主要死因枚举 ( 中文 : 竞争/资金耗尽… )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."product_type" IS '产品类型 ( 中文 : 市场平台/教育科技… )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."views" IS '源站浏览数 ( 导出时点快照 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."condensed_value_prop" IS '价值主张一句话 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."condensed_cause_of_death" IS '死因一句话概括 ( 中文译文 )';
+COMMENT ON COLUMN "public"."spider_lootdrop_startup_zh"."content_hash" IS '源侧英文行 SHA256 指纹 ( 翻译所对应英文版本的追踪依据 , 重灌前据此对齐 )';
+
+CREATE INDEX IF NOT EXISTS "idx_lootdrop_startup_zh_sector"
+  ON "public"."spider_lootdrop_startup_zh" ("sector");
+
+DROP TRIGGER IF EXISTS update_modified_column ON spider_lootdrop_startup_zh;
+CREATE TRIGGER update_modified_column BEFORE UPDATE ON spider_lootdrop_startup_zh FOR EACH ROW EXECUTE FUNCTION update_time_func();

@@ -66,3 +66,10 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 
 维护方式：识别器特征变更时同步更新对应样本与用例；样本只保留判定所需的最小结构，不要往里加无关内容
 （无关内容会掩盖"这个特征是否真的必要"）。
+
+## 数据集型管线（第七管线）
+
+| 文件 | 来源接口 | 抓取时间 | 内容 |
+|---|---|---|---|
+| `lootdrop_startups_page1.json` | `GET https://lentxykytbylpxytluic.supabase.co/rest/v1/startups?select=*&order=id.asc&limit=3`（带 `apikey` 发布密钥，站点公开面无需鉴权） | 2026-10-12 (东八区) | loot-drop.io 案例库 startups 表前 3 行全字段（99dresses/Ahalife/Airy Labs），锁定数组列 JSON 序列化与整数字段映射 |
+| `lootdrop_startup_edge.json` | 同上，`?select=*&id=eq.1126` | 2026-10-12 (东八区) | 边界行：`status` 值带脏尾巴 `"closed\r\n"`（锁定 Trim 清洗），founders 多元素数组 |

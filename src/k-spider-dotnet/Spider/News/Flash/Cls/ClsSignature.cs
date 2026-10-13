@@ -6,7 +6,9 @@ namespace KSpider.Spider.News.Flash.Cls;
 /// <summary>
 ///     财联社接口签名 : sign = MD5( SHA1( 参数按 key 升序拼接的 query ) )
 ///     算法取自前端 bundle ( 取值不做 URL 编码 , 空值参数丢弃 ) ;
-///     单测里锁了一组实测向量 , 改动这里必须同步那条用例
+///     单测里锁了一组实测向量 , 改动这里必须同步那条用例。
+///     这是**财联社站级共享** ( 电报与文章两条管线同一套签名 ) : 物理放在先出现的电报管线目录 ,
+///     文章管线 ( Spider/News/Web/Cls ) 显式 using 借用——同站跨管线共享的预期模式 , 只有这一处
 /// </summary>
 public static class ClsSignature
 {

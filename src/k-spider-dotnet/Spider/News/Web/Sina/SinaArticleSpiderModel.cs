@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using HtmlAgilityPack;
 using KSpider.Model;
-using KSpider.Spider.News.Flash.Sina;
 using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Web.Sina;
@@ -85,7 +84,7 @@ public class SinaRollListItem
     private static string ReadMediaName(JsonNode node)
     {
         var mediaName = node["media_name"]?.ToString() ?? "";
-        return string.IsNullOrEmpty(mediaName) ? SinaNewsResource.NewsFromName : mediaName;
+        return string.IsNullOrEmpty(mediaName) ? SinaArticleResource.NewsFromName : mediaName;
     }
 
     private static string Truncate(string value, int maxLength)
@@ -153,7 +152,7 @@ public partial class SinaColumnPageItem
             NewsUrl = url,
             NewsTitle = title,
             NewsSummary = "",
-            NewsFrom = SinaNewsResource.NewsFromName,
+            NewsFrom = SinaArticleResource.NewsFromName,
             NewsTime = timeValid ? newsTime : DateTime.MinValue,
             NewsDownloadTime = DateTime.Now,
             FromMedia = FromTypeOfNews.SinaMedia,
@@ -251,7 +250,7 @@ public class SinaArticleDetailInfo
             NewsUrl = newsUrl,
             NewsTitle = Title,
             NewsSummary = Brief,
-            NewsFrom = string.IsNullOrEmpty(MediaName) ? SinaNewsResource.NewsFromName : MediaName,
+            NewsFrom = string.IsNullOrEmpty(MediaName) ? SinaArticleResource.NewsFromName : MediaName,
             NewsTime = NewsTime,
             NewsKeyword = string.IsNullOrEmpty(Keywords) ? null : Keywords,
             NewsContentJson = contentJson,

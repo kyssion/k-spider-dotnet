@@ -67,8 +67,8 @@
 public interface INewsSpider
 {
     FromTypeOfNews FromMedia { get; }                  // 源标识 , 对应 spider_news_list.from_media
-    IReadOnlyList<NewsColumn> Columns { get; }         // 本源栏目清单
-    Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor);
+    IReadOnlyList<SourceColumn> Columns { get; }         // 本源栏目清单
+    Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor);
     Task<NewsContentOrigin> GetContentOrigin(SpiderNewsListModel newsItem);
     NewsContentParseResult ParseContent(string originContent, string newsUrl);
 }
@@ -116,9 +116,9 @@ public interface INewsSpider
 > | 新浪 | 直播接口支持 `zhibo_id` / `tag_id` 切换不同直播与标签；**tag_id 枚举未获取**（`getTags` 接口拒绝、7x24 页面无线索），且文章源 22 栏目已覆盖广，扩展价值边际小 | 2026-09-30 实测 |
 > | 格隆汇 | `all/lives/v4` 即全频道聚合流（`category` 参数可试分频道值，未枚举），15 条/页不可调 | 2026-09-30 实测 |
 
-> **补栏目不是"加一行配置"那么轻**：除见闻（7 频道已按 `NewsColumn` 遍历改造，是多栏目先例）外，
+> **补栏目不是"加一行配置"那么轻**：除见闻（7 频道已按 `SourceColumn` 遍历改造，是多栏目先例）外，
 > 其余快讯源仍把频道参数与 `category` 写在各自的 `*NewsResource` 常量里，`column.ColumnId` 只用于日志定位、
-> 不参与取数。补一个栏目需要：把频道参数改为按 `NewsColumn` 传入、让解析接收该栏目的 `category`
+> 不参与取数。补一个栏目需要：把频道参数改为按 `SourceColumn` 传入、让解析接收该栏目的 `category`
 > （否则多栏目会写成同一个分类号）、并在 `Columns` 里注册——见闻 live 的改造（`ChannelResourceMap` 反查）
 > 是可照抄的先例。这是把一个源"从壳子做成完整源"的工作，见下"源成熟度"。
 
@@ -224,7 +224,7 @@ public interface INewsSpider
 1. **栏目数少**：每源 1 个，而各源实际有多个频道（见上方源明细表的可扩展栏目）。
 2. **频道参数写死**：`GetListPage` 用的是 `WscnNewsResource.GlobalChannel` / `Jin10NewsResource.AllChannel` /
    `SinaNewsResource.ZhiboId` / `ClsNewsResource.TelegraphColumn` 这类常量，`column.ColumnId` 只进日志。
-   多栏目需要先让频道参数按 `NewsColumn` 传入。
+   多栏目需要先让频道参数按 `SourceColumn` 传入。
 3. **category 写死**：`ToSpiderNewListModel()` / `ParseContent()` 里直接写 `*CategoryNumber` 常量，
    多栏目时会全部落成同一个分类号，需要把该栏目的 category 传下去（东财的做法可参考：
    `DfListInfo.Category` 由栏目资源带下来）。
@@ -289,7 +289,7 @@ dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory=Live"
 | 跨源同题材重复 | 同一事件常被多源报道（如"德国政府缓解油价"同时出现在财联社 / 见闻 / 金十），当前只按 `news_url` 去重，不做内容级合并 | 需要时按标题 / 正文指纹做跨源归并 |
 | 跨源 URL 碰撞风险收窄但未根除 | 快讯源已独立写 `spider_flash_news`（唯一键含 `from_media`，源间天然隔离）；剩余风险在网页型三表——`ON CONFLICT (news_url)` 跨源全局去重，若未来新增的网页型源产出与东财相同的 URL，后写的会覆盖先写的原始内容（当前仅东财一个网页型源，实测各源域名互不重叠） | 真出现碰撞时给三张表加 `from_media` 并在 `ON CONFLICT` 里带上，而不是改唯一键语义（`UNIQUE(news_url)` 是全局去重的保障，改成 media+url 反而允许重复落库） |
 | 品见拼装流覆盖有限 | 固定返回 4 个真实专题 × 各 6 篇 + 置顶专题卡（`rn`/`last_time` 均不影响），且专题流为编辑策展、条目时间跨度可达数月，更新节奏慢 | 无翻页可挖（接口即整页），扩覆盖需改走专题维度的其它接口（暂未发现） |
-| 研报不入新闻管线（设计使然，非缺陷） | 东财研报（个股/行业/宏观）是"列表即结构化元数据"形态，走第三条管线直写 `spider_research_report`（独立表 + 独立 Job），评级/盈利预测等以结构化列存储而非文章正文；新闻三表与快讯表不含研报 | 需要按研报做下游分析时直接查 `spider_research_report`；接入更多研报源时照 `Spider/News/Report/Eastmoney/` 套路并届时再抽注册表 |
+| 研报不入新闻管线（设计使然，非缺陷） | 东财研报（个股/行业/宏观）是"列表即结构化元数据"形态，走第三条管线直写 `spider_research_report`（独立表 + 独立 Job），评级/盈利预测等以结构化列存储而非文章正文；新闻三表与快讯表不含研报 | 需要按研报做下游分析时直接查 `spider_research_report`；接入更多研报源时照 `Spider/Report/Eastmoney/` 套路并届时再抽注册表 |
 | 财联社文章频道无重要度 | depth 列表条目 `level` 为空字符串，与电报的 A/B/C 重要度体系不同，落库统一为普通（1） | 若源侧开始下发重要度，在 `ClsArticleListItem` 补映射 |
 | 图片只记 URL 不下载 | `spider_news_image_list` 存的是资源地址与文件名，`DfContentSpider` 里下载逻辑是注释状态 | 需要离线留存时再启用 |
 | 原文与图片表只增不删 | `spider_news_content_origin` 与快讯表 `raw_content` 存原始响应，长期运行需要归档 | 定期清理（暂无自动策略） |

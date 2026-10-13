@@ -1,6 +1,6 @@
 using KSpider.Data;
 using KSpider.Exceptions;
-using KSpider.Spider.News;
+using KSpider.Spider;
 using KSpider.Spider.Policy;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -60,7 +60,7 @@ public class PolicyJob(SpiderPolicyDao policyDao, Pg pg, ILogger<PolicyJob> logg
         return inserted;
     }
 
-    private async Task<int> RunColumnAsync(SqlSugarClient connection, IPolicySpider spider, NewsColumn column)
+    private async Task<int> RunColumnAsync(SqlSugarClient connection, IPolicySpider spider, SourceColumn column)
     {
         var inserted = 0;
         for (var pageNo = 1; pageNo <= MaxPageNumber; pageNo++)

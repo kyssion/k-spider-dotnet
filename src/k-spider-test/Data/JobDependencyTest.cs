@@ -1,6 +1,6 @@
 using KSpider.Config;
 using KSpider.Job;
-using KSpider.Spider.News.Report.Eastmoney;
+using KSpider.Spider.Report.Eastmoney;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Quartz;

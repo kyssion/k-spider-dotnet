@@ -371,6 +371,74 @@ public class Pg
     }
 
     /// <summary>
+    ///     数据集表 ( 第七管线 ) 的幂等建表 ( 表 + 源侧主键 + update_time 触发器 )。
+    ///     主键直接用源侧 id ( 非自增 ) , content_hash 是变更检测依据 ( 见数据集型契约 ) ;
+    ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
+    /// </summary>
+    public void EnsureLootDropStartupDbObjects()
+    {
+        try
+        {
+            using var connection = Connection();
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TABLE IF NOT EXISTS public.spider_lootdrop_startup
+                (
+                    id                        bigint      NOT NULL,
+                    create_time               timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    update_time               timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    from_media                integer     NOT NULL,
+                    name                      varchar(300) NOT NULL,
+                    description               text,
+                    sector                    varchar(100),
+                    country                   varchar(100),
+                    founders                  text,
+                    investors                 text,
+                    start_year                integer,
+                    end_year                  integer,
+                    total_funding             bigint,
+                    difficulty                smallint,
+                    difficulty_reason         text,
+                    scalability               smallint,
+                    scalability_reason        text,
+                    market_potential          varchar(16),
+                    market_potential_reason   text,
+                    cause_of_death            text,
+                    the_loot                  text,
+                    market_analysis           text,
+                    pivot_idea                text,
+                    source_created_at         timestamp,
+                    status                    varchar(32),
+                    primary_cause_of_death    varchar(100),
+                    product_type              varchar(100),
+                    views                     integer,
+                    condensed_value_prop      text,
+                    condensed_cause_of_death  text,
+                    content_hash              varchar(64) NOT NULL,
+                    raw_content               text,
+                    CONSTRAINT spider_lootdrop_startup_pkey PRIMARY KEY (id)
+                )
+                """);
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE INDEX IF NOT EXISTS idx_lootdrop_startup_sector
+                    ON public.spider_lootdrop_startup (sector)
+                """);
+            // PG 的 CREATE TRIGGER 不支持 IF NOT EXISTS , 先删后建保证幂等
+            connection.Ado.ExecuteCommand("DROP TRIGGER IF EXISTS update_modified_column ON public.spider_lootdrop_startup");
+            connection.Ado.ExecuteCommand(
+                """
+                CREATE TRIGGER update_modified_column BEFORE UPDATE ON public.spider_lootdrop_startup
+                    FOR EACH ROW EXECUTE FUNCTION public.update_time_func()
+                """);
+        }
+        catch (Exception e)
+        {
+            Log.LogError("[EnsureLootDropStartupDbObjects] err : {}", e);
+        }
+    }
+
+    /// <summary>
     ///     系统状态表的幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 , 写入见 SystemStatusDao )。
     ///     新环境由 DDL 建 , 这里保证存量环境升级后启动即可用。
     /// </summary>

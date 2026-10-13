@@ -13,6 +13,10 @@ public static class ThsArticleResource
     /// <summary>解析器标识 : 同花顺文章 SSR HTML → 结构化片段 ( origin 行路由用 )</summary>
     public const string ParserCode = "ths-article-v1";
 
+    /// <summary>来源兜底名 ( 与快讯侧取值一致 , 文章管线自带一份、不跨管线借用 )</summary>
+    public const string NewsFromName = "同花顺";
+
+
     /// <summary>
     ///     栏目列表页模板 , {0} 为栏目代码 ( today_list 等 ) ; {1} 为页码后缀 ( 首页空串 , 翻页 index_{n} )
     /// </summary>
@@ -44,7 +48,7 @@ public static class ThsArticleResource
 
     public struct ThsArticleColumnResource
     {
-        /// <summary>栏目代码 ( 列表页 URL 的 {code}_list 部分 , 同时作为 NewsColumn 的 ColumnId )</summary>
+        /// <summary>栏目代码 ( 列表页 URL 的 {code}_list 部分 , 同时作为 SourceColumn 的 ColumnId )</summary>
         public string ColumnCode { get; set; }
 
         public string ColumnName { get; set; }

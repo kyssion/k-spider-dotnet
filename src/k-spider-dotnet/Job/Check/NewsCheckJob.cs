@@ -4,10 +4,11 @@ using KSpider.Job.Node;
 using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Report.Eastmoney;
+using KSpider.Spider.Report.Eastmoney;
 using KSpider.Spider.Announcement.Cninfo;
 using KSpider.Spider.Policy;
 using KSpider.Spider.Ranking.Eastmoney;
+using KSpider.Spider.Dataset.LootDrop;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Spider.Verify.Model;
@@ -25,7 +26,8 @@ namespace KSpider.Job.Check;
 ///     4. 反爬验证阻塞告警 ( 识别到验证但自动通过失败 )
 ///     5. 节点状态快照上报 : 以上统计汇总 upsert 到 spider_node_status , 供 Web 控制台展示
 /// </summary>
-public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCheckJob> logger) : SpiderJob
+public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, SpiderLootDropStartupDao datasetDao,
+    ILogger<NewsCheckJob> logger) : SpiderJob
 {
     /// <summary>快照 payload 的序列化风格 ( camelCase , 与 Web 端解析约定一致 )</summary>
     private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.Web);
@@ -136,6 +138,26 @@ public class NewsCheckJob(Pg pg, SystemStatusDao systemStatusDao, ILogger<NewsCh
                 errors.Add($"[{(int)spider.FromMedia} {spider.Institution}] column policy : {e.Message}");
                 logger.LogError("[NewsCheckJob CheckListApiAlive] policy api err : {} , source : {}", e, spider.FromMedia);
             }
+
+        // 数据集 ( Dataset 管线 , 直连 LootDropDatasetSpider ) :
+        // REST 取单行非空即存活 ; 顺带做远端/本地行数对账 , 差值超阈值告警
+        // ( 全量拉取即对账 , 这里是两轮任务之间的滞后哨兵 , 只记日志不入节点快照 —— 控制台数据集页未建 )
+        try
+        {
+            var remoteCount = await new LootDropDatasetSpider().GetRemoteCountAsync();
+            if (remoteCount <= 0) throw new Exception("接口未返回数据集行数");
+            using var connection = pg.Connection();
+            var localCount = datasetDao.GetStartupCount(connection);
+            if (remoteCount - localCount > 100)
+                logger.LogWarning(
+                    "[NewsCheckJob CheckListApiAlive] dataset 对账滞后 : 远端 {} 行 vs 本地 {} 行 , 超 100 差值 ( 任务停摆或拉取失败 ? )",
+                    remoteCount, localCount);
+        }
+        catch (Exception e)
+        {
+            errors.Add($"[{(int)FromTypeOfNews.LootDropMedia} LootDrop数据集] column dataset : {e.Message}");
+            logger.LogError("[NewsCheckJob CheckListApiAlive] dataset api err : {}", e);
+        }
 
         return errors;
     }

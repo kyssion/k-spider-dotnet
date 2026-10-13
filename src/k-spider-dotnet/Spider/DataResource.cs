@@ -178,7 +178,10 @@ public enum FromTypeOfNews
     StatsMedia = 10,
 
     // 中国证监会 ( 官方文件 , 要闻与监管信息 )
-    CsrcMedia = 11
+    CsrcMedia = 11,
+
+    // Loot Drop ( 数据集型管线 , 倒闭创业公司案例库 ; 通用爬虫路线首个非财经域源 )
+    LootDropMedia = 12
 }
 
 /// <summary>

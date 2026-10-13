@@ -41,12 +41,12 @@ public partial class ClsArticleSpider : INewsSpider
     /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
     public string ParserCode => ClsArticleResource.ParserCode;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = ClsArticleResource.ArticleChannelResourceList
-        .Select(item => new NewsColumn(item.ChannelId.ToString(), item.ChannelName))
-        .Append(new NewsColumn(ClsArticleResource.PinjianColumnId, ClsArticleResource.PinjianChannelName))
+    public IReadOnlyList<SourceColumn> Columns { get; } = ClsArticleResource.ArticleChannelResourceList
+        .Select(item => new SourceColumn(item.ChannelId.ToString(), item.ChannelName))
+        .Append(new SourceColumn(ClsArticleResource.PinjianColumnId, ClsArticleResource.PinjianChannelName))
         .ToList();
 
-    public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor)
     {
         // 同站第二列表族 : 品见走专用拼装流接口 ( 整页即全量无游标 ) , depth 频道走时间游标翻页
         if (column.ColumnId == ClsArticleResource.PinjianColumnId)
@@ -81,7 +81,7 @@ public partial class ClsArticleSpider : INewsSpider
     ///     拉取品见拼装流 : 参数只带 app/os/sv/rn ( 实测其余分页参数无效 ) ,
     ///     一次请求即完整列表 , 每轮重拉由入库去重吸收
     /// </summary>
-    private async Task<NewsListPage> GetPinjianPageAsync(NewsColumn column)
+    private async Task<NewsListPage> GetPinjianPageAsync(SourceColumn column)
     {
         var parameters = new Dictionary<string, string>
         {

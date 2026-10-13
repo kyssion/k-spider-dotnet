@@ -37,10 +37,10 @@ public partial class WscnArticleSpider : INewsSpider
     public string ParserCode => WscnArticleResource.ParserCode;
 
     // 单栏目全量流 : 见 WscnArticleResource.ColumnId 注释 ( 不按类别建多栏目 , 分类号逐条推断 )
-    public IReadOnlyList<NewsColumn> Columns { get; } =
+    public IReadOnlyList<SourceColumn> Columns { get; } =
         [new(WscnArticleResource.ColumnId, WscnArticleResource.ColumnName)];
 
-    public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor)
     {
         try
         {

@@ -28,7 +28,7 @@ public static class ClsArticleResource
     public const string PinjianAssembledUrl = "https://www.cls.cn/v5/web/pinjian/assembled2";
 
     /// <summary>
-    ///     品见伪栏目号 ( NewsColumn.ColumnId ) : depth 频道用数字 id , 品见用它区分列表族
+    ///     品见伪栏目号 ( SourceColumn.ColumnId ) : depth 频道用数字 id , 品见用它区分列表族
     /// </summary>
     public const string PinjianColumnId = "pinjian";
 
@@ -73,7 +73,7 @@ public static class ClsArticleResource
 
     public struct ArticleChannelResource
     {
-        /// <summary>频道 id ( /v3/depth/list/{id} 的路径参数 , 同时作为 NewsColumn 的 ColumnId )</summary>
+        /// <summary>频道 id ( /v3/depth/list/{id} 的路径参数 , 同时作为 SourceColumn 的 ColumnId )</summary>
         public int ChannelId { get; set; }
 
         public string ChannelName { get; set; }

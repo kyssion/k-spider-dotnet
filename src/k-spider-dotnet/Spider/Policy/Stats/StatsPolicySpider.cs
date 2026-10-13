@@ -4,8 +4,6 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using KSpider.Exceptions;
 using KSpider.Model;
-using KSpider.Spider.News;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -30,9 +28,9 @@ public class StatsPolicySpider : IPolicySpider
 
     public string Institution => "国家统计局";
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = [new NewsColumn("zxfb", "最新发布")];
+    public IReadOnlyList<SourceColumn> Columns { get; } = [new SourceColumn("zxfb", "最新发布")];
 
-    public async Task<PolicyDocumentPage> GetDocumentPage(NewsColumn column, int pageNo)
+    public async Task<PolicyDocumentPage> GetDocumentPage(SourceColumn column, int pageNo)
     {
         // 单页即全量 ( 实测无分页链接 ) , page>1 返回空页
         if (pageNo > 1) return new PolicyDocumentPage([], false);

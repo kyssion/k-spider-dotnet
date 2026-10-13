@@ -1,4 +1,3 @@
-using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Flash.Wscn;
 
@@ -48,7 +47,7 @@ public static class WscnNewsResource
 
     public struct LiveChannelResource
     {
-        /// <summary>接口 channel 参数 , 同时作为 NewsColumn 的 ColumnId</summary>
+        /// <summary>接口 channel 参数 , 同时作为 SourceColumn 的 ColumnId</summary>
         public string ChannelSlug { get; set; }
 
         public string ChannelName { get; set; }

@@ -41,11 +41,11 @@ public partial class Jin10ArticleSpider : INewsSpider
     /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
     public string ParserCode => Jin10ArticleResource.ParserCode;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = Jin10ArticleResource.ArticleColumnList
-        .Select(item => new NewsColumn(item.ColumnId, item.ColumnName))
+    public IReadOnlyList<SourceColumn> Columns { get; } = Jin10ArticleResource.ArticleColumnList
+        .Select(item => new SourceColumn(item.ColumnId, item.ColumnName))
         .ToList();
 
-    public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor)
     {
         var categoryNumber = ColumnCategoryMap[column.ColumnId];
         try

@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 using KSpider.Model;
 using KSpider.Spider;
 
-namespace KSpider.Spider.News.Report.Eastmoney;
+namespace KSpider.Spider.Report.Eastmoney;
 
 /// <summary>
 ///     研报类型 : 对应列表接口 qType ( 枚举值 = qType + 1 , 使 0 不作为有效值 )

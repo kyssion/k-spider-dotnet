@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -18,9 +17,9 @@ public class SinaNewsSpider : IFlashNewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.SinaMedia;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = [SinaNewsResource.LiveColumn];
+    public IReadOnlyList<SourceColumn> Columns { get; } = [SinaNewsResource.LiveColumn];
 
-    public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor)
     {
         var requestSize = Math.Min(pageSize, SinaNewsResource.MaxPageSize);
         // 新浪按页码翻页 , 游标即页码字符串

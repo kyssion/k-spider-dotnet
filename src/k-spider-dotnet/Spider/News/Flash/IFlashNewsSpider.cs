@@ -1,5 +1,4 @@
 using KSpider.Model;
-using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Flash;
 
@@ -19,12 +18,12 @@ public interface IFlashNewsSpider
     /// <summary>
     ///     本源的全部栏目 , 供快讯任务遍历与健康检查
     /// </summary>
-    IReadOnlyList<NewsColumn> Columns { get; }
+    IReadOnlyList<SourceColumn> Columns { get; }
 
     /// <summary>
     ///     拉取一页快讯 , 返回可直接入库的完整记录 ( 不落库 )。
     ///     cursor 为上一页返回的 NextCursor , 首页传 null ;
     ///     页码翻页与时间游标翻页的源都走这一个入口。
     /// </summary>
-    Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor);
+    Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor);
 }

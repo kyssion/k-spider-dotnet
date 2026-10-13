@@ -12,3 +12,9 @@ output.log
 # Web 控制台前端产物 ( 由 scripts/build-web.sh 生成 , 不入库 )
 src/k-spider-web/wwwroot/*
 !src/k-spider-web/wwwroot/.gitkeep
+
+# ZCode 会话工作目录 ( 本地工具产物 , 不入库 )
+.zcode/
+
+# loot-drop 中文翻译数据产物 ( 14.5MB 数据导出 , 按需手动加回 )
+spider_lootdrop_startup_zh.csv

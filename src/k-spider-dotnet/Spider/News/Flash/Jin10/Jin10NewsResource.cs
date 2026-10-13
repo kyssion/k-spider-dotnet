@@ -1,4 +1,3 @@
-using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Flash.Jin10;
 
@@ -38,5 +37,5 @@ public static class Jin10NewsResource
     /// <summary>
     ///     v1 只接 "全部快讯" 一个栏目
     /// </summary>
-    public static readonly NewsColumn FlashColumn = new("flash", "快讯");
+    public static readonly SourceColumn FlashColumn = new("flash", "快讯");
 }

@@ -2,7 +2,6 @@ using KSpider.Data;
 using KSpider.Model;
 using KSpider.Spider;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using SqlSugar;
@@ -66,7 +65,7 @@ public class FlashNewsJob(SpiderNewsBatchDao spiderNewsBatchDao, Pg pg, ILogger<
     ///     拉取单个栏目 : 按游标翻页 , 每页一条批量 upsert。
     ///     DO UPDATE 让首页重复拉回的条目带上源侧的修正 / 补充 ( 快讯常在发布后数分钟内更新 )。
     /// </summary>
-    private async Task<int> RunColumnAsync(SqlSugarClient connection, IFlashNewsSpider spider, NewsColumn column)
+    private async Task<int> RunColumnAsync(SqlSugarClient connection, IFlashNewsSpider spider, SourceColumn column)
     {
         var insertNumber = 0;
         string? cursor = null;

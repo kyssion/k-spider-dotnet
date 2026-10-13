@@ -1,4 +1,4 @@
-namespace KSpider.Spider.News.Report.Eastmoney;
+namespace KSpider.Spider.Report.Eastmoney;
 
 /// <summary>
 ///     东财研报源常量 ( 研报中心 reportapi , 与新闻管线的 np-listapi 不是同一套接口 )。

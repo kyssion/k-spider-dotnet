@@ -20,11 +20,11 @@ public class DfNewsSpider : INewsSpider
     /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
     public string ParserCode => DfNewsResource.ParserCode;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = DfNewsResource.DfListUrlResourceList
-        .Select(item => new NewsColumn(item.ListResourceNumber.ToString(), item.CategoryInfo.CategoryName))
+    public IReadOnlyList<SourceColumn> Columns { get; } = DfNewsResource.DfListUrlResourceList
+        .Select(item => new SourceColumn(item.ListResourceNumber.ToString(), item.CategoryInfo.CategoryName))
         .ToList();
 
-    public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor)
     {
         // 东财按页码翻页 , 游标即页码字符串
         var pageNumber = cursor == null ? 1 : int.Parse(cursor);

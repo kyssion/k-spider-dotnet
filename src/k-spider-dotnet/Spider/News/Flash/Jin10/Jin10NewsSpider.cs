@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider.News.Flash;
-using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
 using Microsoft.Extensions.Logging;
@@ -18,9 +17,9 @@ public class Jin10NewsSpider : IFlashNewsSpider
 
     public FromTypeOfNews FromMedia => FromTypeOfNews.Jin10Media;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = [Jin10NewsResource.FlashColumn];
+    public IReadOnlyList<SourceColumn> Columns { get; } = [Jin10NewsResource.FlashColumn];
 
-    public async Task<FlashNewsPage> GetFlashPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<FlashNewsPage> GetFlashPage(SourceColumn column, int pageSize, string? cursor)
     {
         // 接口不接受页长参数 , 固定返回约 20 条 , pageSize 仅作翻到末页的判断基准
         var maxTimeParam = string.IsNullOrEmpty(cursor) ? "" : $"&max_time={Uri.EscapeDataString(cursor)}";

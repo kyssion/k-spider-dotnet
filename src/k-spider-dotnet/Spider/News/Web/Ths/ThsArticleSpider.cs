@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using KSpider.Exceptions;
 using KSpider.Model;
-using KSpider.Spider.News.Flash.Ths;
 using KSpider.Spider.News.Web;
 using KSpider.Spider.Verify;
 using KSpider.Common;
@@ -35,11 +34,11 @@ public class ThsArticleSpider : INewsSpider
     /// <summary>解析器标识 , 随 origin 行落库 , 重放作业按行路由 ( 见 INewsSpider.ParserCode )</summary>
     public string ParserCode => ThsArticleResource.ParserCode;
 
-    public IReadOnlyList<NewsColumn> Columns { get; } = ThsArticleResource.ArticleColumnResourceList
-        .Select(item => new NewsColumn(item.ColumnCode, item.ColumnName))
+    public IReadOnlyList<SourceColumn> Columns { get; } = ThsArticleResource.ArticleColumnResourceList
+        .Select(item => new SourceColumn(item.ColumnCode, item.ColumnName))
         .ToList();
 
-    public async Task<NewsListPage> GetListPage(NewsColumn column, int pageSize, string? cursor)
+    public async Task<NewsListPage> GetListPage(SourceColumn column, int pageSize, string? cursor)
     {
         var channel = ColumnResourceMap[column.ColumnId];
         // 页码游标 : 首页为栏目根路径 , 第 n 页为 index_{n}.shtml
@@ -196,7 +195,7 @@ public class ThsArticleSpider : INewsSpider
                 {
                     NewsUrl = newsUrl,
                     NewsTitle = title,
-                    NewsFrom = ThsNewsResource.NewsFromName,
+                    NewsFrom = ThsArticleResource.NewsFromName,
                     NewsTime = newsTime,
                     NewsContentJson = JsonTools.GetJson(segments),
                     NewsContentText = current.ToString()

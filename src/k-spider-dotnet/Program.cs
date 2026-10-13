@@ -3,8 +3,9 @@ using KSpider.Data;
 using KSpider.Job;
 using KSpider.Job.Announcement;
 using KSpider.Job.Check;
+using KSpider.Job.Dataset;
 using KSpider.Job.News.Flash;
-using KSpider.Job.News.Report;
+using KSpider.Job.Report;
 using KSpider.Job.News.Web;
 using KSpider.Job.Node;
 using KSpider.Job.Policy;
@@ -62,6 +63,8 @@ public static class Program
         host.Services.GetRequiredService<Pg>().EnsureAnnouncementDbObjects();
         // 官方文件表幂等建表 ( Policy 管线 : 表 + 唯一键 + 发布时间索引 + 触发器 )
         host.Services.GetRequiredService<Pg>().EnsurePolicyDbObjects();
+        // 数据集表幂等建表 ( Dataset 管线 : 表 + 源侧主键 + 触发器 )
+        host.Services.GetRequiredService<Pg>().EnsureLootDropStartupDbObjects();
         // 系统状态表幂等建表 ( Web 控制台通道 : 任务调度态 / 任务指令 / 节点快照 )
         host.Services.GetRequiredService<Pg>().EnsureSystemDbObjects();
         await host.RunAsync();
@@ -82,6 +85,7 @@ public static class Program
         services.AddSingleton<SpiderRankingDao>();
         services.AddSingleton<SpiderAnnouncementDao>();
         services.AddSingleton<SpiderPolicyDao>();
+        services.AddSingleton<SpiderLootDropStartupDao>();
     }
 
     /// <summary>
@@ -136,6 +140,9 @@ public static class Program
                 .WithSimpleSchedule(x => x.WithIntervalInMinutes(60).RepeatForever()));
 
         // 节点状态任务 : 3 秒刷新调度态上报 + 消费 Web 控制台指令 ( 状态通道 , 不允许暂停自己 )
+        quartz.AddJob<LootDropDatasetJob>(j => j.WithIdentity("LootDropDatasetJob").DisallowConcurrentExecution())
+            .AddTrigger(t => t.WithIdentity("LootDropDatasetJob.Trigger").ForJob("LootDropDatasetJob").StartNow()
+                .WithSimpleSchedule(x => x.WithIntervalInHours(24).RepeatForever()));
         quartz.AddJob<NodeStateJob>(j => j.WithIdentity(NodeStateJob.JobName).DisallowConcurrentExecution())
             .AddTrigger(t => t.WithIdentity("NodeStateJob.Trigger").ForJob(NodeStateJob.JobName).StartNow()
                 .WithSimpleSchedule(x => x.WithIntervalInSeconds(3).RepeatForever()));

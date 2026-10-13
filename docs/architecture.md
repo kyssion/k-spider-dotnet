@@ -70,6 +70,10 @@ k-spider-test ─┘
 | `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
 | `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 + 反爬验证阻塞告警 + 节点快照上报（`spider_node_status`） |
 | `ResearchReportJob` | 5 分钟 | 三类各最多 4 页 × 100 条 + 摘要回填 20 条 | 东财研报中心三类（个股/行业/宏观）列表即元数据直写 `spider_research_report`（`ON CONFLICT DO NOTHING`），摘要由详情页二段回填（`summary_fail_count < 3` 重试）；独立于两个新闻注册表，直连 `DfResearchReportSpider` |
+| `RankingJob` | 30 分钟 | 三类各拉近 4 日窗口分页拉全 | 东财数据中心龙虎榜/大宗/两融快照直写 `spider_ranking`（`ON CONFLICT DO NOTHING` , 发布即终态） |
+| `AnnouncementJob` | 10 分钟 | 分类白名单拉近 3 天窗口 , 最多 40 页 | 巨潮资讯沪深京法定披露直写 `spider_announcement`（`ON CONFLICT DO NOTHING`） |
+| `PolicyJob` | 60 分钟 | 逐源列表 + 逐篇详情 | 统计局/证监会官方文件直写 `spider_policy_document`（正文全文入库） |
+| `LootDropDatasetJob` | 24 小时 | 全量拉取（约 1800 行 , 1000/页） | **数据集型第七管线（首个非财经源）**：loot-drop.io Supabase REST 全量拉取直写 `spider_lootdrop_startup`，`ON CONFLICT DO UPDATE WHERE content_hash` 变更检测（行会修订） |
 | `NodeStateJob` | 3 秒 | — | **状态通道**：刷新各任务调度态（下次触发/暂停）到 `spider_job_state` + 轮询消费 `spider_job_command` 指令；不许被暂停（它停了没人消费恢复指令） |
 | `TransferSpiderDataJob`（sync 进程） | 2 分钟 | 2000 行 / 批 | 远端 → 本地增量同步 |
 
@@ -99,7 +103,7 @@ k-spider-test ─┘
 > （整轮耗时始终等于**最慢那个媒体**，而不是各源之和）。
 >
 > 但**补栏目不是加配置**：快讯源目前把频道参数与 `category` 写在各自 Resource 常量里，
-> 多栏目按 `NewsColumn` 遍历（见闻 live 的 7 频道是先例：`ColumnId` 反查频道资源取接口参数与分类号）。
+> 多栏目按 `SourceColumn` 遍历（见闻 live 的 7 频道是先例：`ColumnId` 反查频道资源取接口参数与分类号）。
 >
 > 评估调度改动时另注意：东财列表接口的网络耗时波动很大（实测单轮 7~26 秒），不要用单次测量下结论。
 
@@ -115,16 +119,22 @@ src/k-spider-dotnet/
 ├── Job/              # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
 │   ├── News/Web/     #   网页型三段任务
 │   ├── News/Flash/   #   FlashNewsJob ( 15 秒 )
-│   ├── News/Report/  #   ResearchReportJob ( 5 分钟 , 研报第三管线 )
+│   ├── Report/       #   ResearchReportJob ( 5 分钟 , 研报第三管线 )
+│   ├── Dataset/      #   LootDropDatasetJob ( 24 小时 , 数据集第七管线 )
 │   ├── Check/        #   NewsCheckJob ( 含节点快照上报 )
 │   └── Node/         #   NodeStateJob + NodeIdentity ( 调度态上报与指令消费 )
-├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组
+├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组 ; 每条管线一个顶级域
 │   ├── DataResource.cs   # 中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
-│   ├── News/             # ── 新闻域 ──
-│   │   ├── NewsSharedModel.cs  # 跨管线共享 : NewsColumn / NewsContentSegment
+│   ├── SourceColumn.cs   # 根级共享词汇 : 源栏目 ( 新闻网页型/快讯型/官方文件管线共用 )
+│   ├── News/             # ── 新闻域 ( 两条子管线 ) ──
+│   │   ├── NewsSharedModel.cs  # 域内共享 : NewsContentSegment ( 正文片段 )
 │   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
-│   │   ├── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
-│   │   └── Report/        # 研报 ( 第三管线 ) : DfResearchReportSpider 直连 , 无注册表 ( 单源 , 第二源出现再抽 )
+│   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
+│   ├── Report/            # ── 研报域 ( 第三管线 ) : Eastmoney/ ( DfResearchReportSpider 直连 , 无注册表 , 单源 , 第二源出现再抽 )
+│   ├── Ranking/           # ── 盘面榜单域 ( 第四管线 ) : Eastmoney/ ( 龙虎榜/大宗/两融 )
+│   ├── Announcement/      # ── 公告域 ( 第五管线 ) : Cninfo/ ( 巨潮资讯沪深京 )
+│   ├── Policy/            # ── 官方文件域 ( 第六管线 ) : Stats/ + Csrc/ + IPolicySpider/PolicySpiderRegistry
+│   ├── Dataset/           # ── 数据集域 ( 第七管线 , 通用爬虫首个非财经域 ) : LootDrop/ ( Supabase REST 有界集合 )
 │   └── Verify/           # 反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
 │       ├── Model/         #   共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
 │       ├── Pipeline/      #   编排与运行时状态 : VerificationPipeline + VerificationSessionStore
@@ -186,9 +196,9 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 
 ### 管线类型契约（新立类型时先定契约再写代码）
 
-管线类型由**数据形态**决定（形态决定轮询节奏、表结构、写入与重试语义），而不是由网站决定——同一网站可以挂多种类型（财联社 = Flash 电报 + Web 文章）。当前已有三种：Web 网页抓取型（三段 + 状态机）、Flash 实时快讯型（单段直写）、Report 研报型（列表即结构化元数据 + 摘要回填）。
+管线类型由**数据形态**决定（形态决定轮询节奏、表结构、写入与重试语义），而不是由网站决定——同一网站可以挂多种类型（财联社 = Flash 电报 + Web 文章）。当前已有七种：Web 网页抓取型（三段 + 状态机）、Flash 实时快讯型（单段直写）、Report 研报型（列表即结构化元数据 + 摘要回填）、Ranking 盘面榜单型（周期性数值快照）、Announcement 公告型（文档元数据 + 附件链接）、Policy 官方文件型（文件元数据 + 正文全文）、Dataset 数据集型（API 有界集合 + 行可修订）——各自契约见下。
 
-引入第四种类型（如：Calendar 事件日历——带未来时间戳且事件值会修正；Announcement 公告——结构化文档 + 证券维度 + 附件；Ranking 盘面榜单——周期性数值快照）之前，**必须先把下列契约定进本文档**，参照 Report 型的先例逐项落定：
+引入新类型之前，**必须先把下列契约定进本文档**，参照已有类型的先例逐项落定：
 
 1. **数据形态定义**：什么特征的数据归此类型，与现有类型如何判别；
 2. **存储**：表结构、去重键、热路径索引（含部分索引）、`Pg.Ensure*DbObjects()` 幂等建表方法与 `db/k_script_spider.sql` 增量段双同步；
@@ -198,7 +208,7 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 6. **生态挂接**：`k-spider-sync` 纳入同步、`NewsCheckJob` 探测、是否进 Web 控制台（无消费方不进）；
 7. **测试基线**：夹具回归 + `LiveConnectivityTest` 连通性 + DAO 手拼 SQL 形态锁 + `JobDependencyTest` 覆盖新 Job 构造依赖。
 
-完整参照实现：Report 型全链路（`Spider/News/Report/Eastmoney/` + `ResearchReportJob` + `SpiderResearchReportDao` + `spider_research_report`）。契约立好后，同类型的每个新源只是"往里加行"：新 Resource/Spider 模块 + 直连或注册一行，不再重复决策。
+完整参照实现：Report 型全链路（`Spider/Report/Eastmoney/` + `ResearchReportJob` + `SpiderResearchReportDao` + `spider_research_report`）。契约立好后，同类型的每个新源只是"往里加行"：新 Resource/Spider 模块 + 直连或注册一行，不再重复决策。
 
 ### Ranking 盘面榜单型契约（第一个按上述清单立项的类型）
 
@@ -255,3 +265,21 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 参照实现：`Spider/Policy/Stats/` + `Spider/Policy/Csrc/`（`IPolicySpider` 两步取数：列表存根→详情组装）+ `Job/Policy/PolicyJob.cs` + `Data/SpiderPolicyDao.cs` + `spider_policy_document`。
 
 **已知边界**：① 证监会列表被阿里云 CDN 会话机制拦截（首次 302 + `acw_tc` cookie + https→http 降级 Location，.NET 拒绝降级跟随）——解析器已由夹具验证，运行时打通需 VerifiedHttp 支持降级跟随或会话预热；② gov.cn 政策文件库（中央聚合库，杠杆最大）为 SPA 动态加载，接口需浏览器抓包定位；③ 中国人民银行为 JS 加密反爬，需 Playwright 路线。三者的侦察结论见 news-pipeline.md。
+
+### Dataset 数据集型契约（第四个按清单立项的类型 , 首个非财经域管线）
+
+**1. 数据形态定义**：**API 直连的有界数据集**——源侧是一张可全量枚举的表（BaaS/开放数据接口，如 Supabase PostgREST），行是结构化记录（无 HTML 解析环节），**行会修订**（内容编辑、计数增长），集合有界（万行级）。与现有类型的判别：快讯型是"无界追加流、拉到即终态"，数据集型是"有界集合、行可变更"；研报型虽也是结构化列表，但那是"时间窗口流"（只拉近几天）而非"全量集合"。首个源 loot-drop.io（倒闭创业公司案例库，约 1800 行，Supabase REST 匿名可读，`from_media = LootDropMedia`）——本管线同时是**通用爬虫路线的第一个非财经域管线**，验证"形态轴 × 任意领域源"的扩展路径：领域内容只活在源实现里，机制（表范式 / 写入语义 / 监控）全部领域无关。
+
+**2. 存储**：**每源一表**（`spider_<源>_<实体>`，首源 `spider_lootdrop_startup`），主键直接用源侧 id（非自增，`INSERT` 必须带 id）；每表带 **`content_hash` 列**（全部业务字段的 SHA256，行内容指纹，变更检测依据）；JSON 数组/对象列存 JSON 文本（text，不用 jsonb——规避 Npgsql 参数类型坑，与 raw_content 同款处理）；`raw_content` 保留条目原始 JSON（解析重跑能力）；幂等建表 `Pg.EnsureLootDropStartupDbObjects()` 与 `db/k_script_spider.sql` 增量段双同步。
+
+**3. 节奏**：`LootDropDatasetJob` 每 24 小时（数据集日更个位数行，天级足够）；**每轮全量拉取**（万行级以下全量即对账，实测 2 个请求拉完；涨到十万行级再引入水位增量优化，届时修订本契约）；分页 1000/页按 id 升序 offset 翻页，`MaxRows` 上限 100000 防翻页失控。
+
+**4. 写入语义**：`ON CONFLICT (id) DO UPDATE SET … WHERE spider_lootdrop_startup.content_hash IS DISTINCT FROM EXCLUDED.content_hash`——**本管线与所有现有类型的本质差异**：行会修订，但用内容哈希做变更检测，只有内容真变的行才被 UPDATE（`update_time` 触发器只在真变更时刷新，保住"最后修改时间"语义，下游按 `update_time` 的水位同步不被全量重拉污染）；插入新行与更新变更行是同一条语句；`from_media` 是源身份，冲突时不更新。拉取失败记日志下一轮自然重试；无状态机无计数，`KDbException` 语义天然满足（失败即本轮无写入）。
+
+**5. 监控**：`NewsCheckJob` 加数据集探测（REST 取单行非空即存活）+ 对账滞后监控（远端 `Content-Range` 总数与本地行数差值超 100 告警，只记日志——控制台数据集页未建）；每轮 `RunSummary` 上报"全量 N / 写入 x"，行数与写入曲线经 `spider_job_state` 天然可查。
+
+**6. 生态挂接**：不进任何 Spider 注册表（Job 直连源类，与 Report 同理）；`k-spider-sync` 暂不纳入（首源为本地研究数据集，无远端镜像需求；纳入时 `update_time` 水位天然兼容）；Web 控制台数据集页未建不进。
+
+**7. 测试基线**：夹具（REST 真实响应两份：常规页 + 边界行——脏空白字符串/空值/JSON 数组列）+ 解析回归（字段映射 / JSON 列序列化 / content_hash 稳定性与敏感性 / 脏数据清洗）+ `LiveConnectivityTest` 连通（网络不可达报告跳过）+ `JobDependencyTest` 覆盖新 Job 构造依赖。
+
+参照实现：`Spider/Dataset/LootDrop/`（Resource/SpiderModel/Spider）+ `Job/Dataset/LootDropDatasetJob.cs` + `Data/SpiderLootDropStartupDao.cs` + `spider_lootdrop_startup`。

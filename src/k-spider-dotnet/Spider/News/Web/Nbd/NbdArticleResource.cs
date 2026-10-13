@@ -35,7 +35,7 @@ public static class NbdArticleResource
 
     public struct NbdArticleColumnResource
     {
-        /// <summary>栏目 id ( 列表页 URL 的 columns/{id} 部分 , 同时作为 NewsColumn 的 ColumnId )</summary>
+        /// <summary>栏目 id ( 列表页 URL 的 columns/{id} 部分 , 同时作为 SourceColumn 的 ColumnId )</summary>
         public string ColumnId { get; set; }
 
         public string ColumnName { get; set; }

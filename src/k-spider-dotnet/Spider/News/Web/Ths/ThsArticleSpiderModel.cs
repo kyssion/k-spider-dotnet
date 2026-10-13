@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using KSpider.Model;
-using KSpider.Spider.News.Flash.Ths;
 using KSpider.Spider.News.Web;
 using KSpider.Common;
 
@@ -64,7 +63,7 @@ public class ThsArticleListItem
         {
             NewsUrl = valid ? $"https://news.10jqka.com.cn/{dateMatch.Groups[1].Value}/c{seqMatch.Groups[1].Value}.shtml" : "",
             NewsTitle = title.Trim(),
-            NewsFrom = ThsNewsResource.NewsFromName,
+            NewsFrom = ThsArticleResource.NewsFromName,
             NewsTime = time,
             NewsDownloadTime = DateTime.Now,
             FromMedia = FromTypeOfNews.ThsMedia,

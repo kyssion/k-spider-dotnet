@@ -1,4 +1,3 @@
-using KSpider.Spider.News.Web;
 
 namespace KSpider.Spider.News.Flash.Cls;
 
@@ -39,5 +38,5 @@ public static class ClsNewsResource
     /// <summary>
     ///     v1 只接 "全部电报" 一个栏目
     /// </summary>
-    public static readonly NewsColumn TelegraphColumn = new("telegraph", "电报");
+    public static readonly SourceColumn TelegraphColumn = new("telegraph", "电报");
 }

@@ -26,7 +26,18 @@ public static class VerifiedHttp
     ///     需要自定义请求头 ( 如金十的 x-app-id ) 时用这个重载 : 传的是请求工厂而不是请求实例 ——
     ///     HttpRequestMessage 不能重复发送 , 过完验证重放时必须造一个新的。
     /// </summary>
-    public static async Task<string> SendStringAsync(string host, Func<HttpRequestMessage> requestFactory,
+    public static Task<string> SendStringAsync(string host, Func<HttpRequestMessage> requestFactory,
+        CancellationToken cancellationToken = default)
+    {
+        return SendAsync(host, requestFactory, (_, body, _) => Task.FromResult(body), cancellationToken);
+    }
+
+    /// <summary>
+    ///     需要读响应头 ( 如 PostgREST 的 Content-Range 总数 ) 时用这个泛型重载 :
+    ///     处理器拿到原始响应与已读文本 , 过验证/重放/状态码语义与字符串版完全一致。
+    /// </summary>
+    public static async Task<T> SendAsync<T>(string host, Func<HttpRequestMessage> requestFactory,
+        Func<HttpResponseMessage, string, CancellationToken, Task<T>> responseHandler,
         CancellationToken cancellationToken = default)
     {
         var policy = VerificationRegistry.PolicyFor(host);
@@ -51,7 +62,7 @@ public static class VerifiedHttp
                 if (!response.IsSuccessStatusCode)
                     throw new DownloadHttpRequestException(url,
                         $"[VerifiedHttp] 接口返回状态码 {(int)response.StatusCode}");
-                return body;
+                return await responseHandler(response, body, cancellationToken);
             }
 
             var outcome = await VerificationRegistry.Pipeline.HandleAsync(probe, cancellationToken);

@@ -1,7 +1,7 @@
 using KSpider.Exceptions;
 using KSpider.Model;
 using KSpider.Spider;
-using KSpider.Spider.News.Report.Eastmoney;
+using KSpider.Spider.Report.Eastmoney;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSpider.Test.Spider;
