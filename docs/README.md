@@ -1,6 +1,6 @@
 # docs — 系统设计文档
 
-本目录面向**维护者**，记录这套爬虫系统的设计原则、架构、现状与运维手册。
+本目录面向**维护者**，记录这套数据抓取 + 分析平台（抓取基座 + 分析层）的设计原则、架构、现状与运维手册。
 
 ## 与其他文档的分工
 
@@ -17,7 +17,7 @@
 | 文档 | 内容 |
 |---|---|
 | [principles.md](principles.md) | 设计原则与工程约定：分层、数据访问、错误处理与重试、测试分层、命名 |
-| [architecture.md](architecture.md) | 系统架构：项目分层、运行时模型、模块职责、关键设计决策、扩展点 |
+| [architecture.md](architecture.md) | 系统架构：项目分层、运行时模型、模块职责、分析层、关键设计决策、扩展点 |
 | [news-pipeline.md](news-pipeline.md) | 新闻管线：状态机、多源抽象、已接入源明细、落库与去重、已知限制 |
 | [anti-bot-verification.md](anti-bot-verification.md) | 反爬验证：识别与通过的契约、内置识别器/策略、扩展套路、误判防线与已知限制 |
 | [web-source-playbook.md](web-source-playbook.md) | 网页型源接入规范：侦察清单与方法、接入步骤、验收标准（固化快照，遇新情况按需调整） |
@@ -34,6 +34,7 @@
 | 新增 / 修改反爬验证识别器或通过策略（`Spider/Verify/`） | [anti-bot-verification.md](anti-bot-verification.md) 的识别器/策略表与扩展套路；AGENTS.md 的验证模块套路；测试夹具登记到 `src/k-spider-test/TestData/README.md` |
 | 抓取层 HTTP 调用方式变更（`Common/Http/`、`Spider/Verify/VerifiedHttp`） | [anti-bot-verification.md](anti-bot-verification.md)、AGENTS.md 的验证模块套路 |
 | Web 控制台 API / 查询变更（`src/k-spider-web/Api|Query/`） | [architecture.md](architecture.md) 的 Web 控制台小节与扩展点表；AGENTS.md 的 Web 控制台套路；DTO 改字段时同步 `web/tests/fixtures/` 夹具与 `web/src/api/types.ts` |
+| **分析层新增分析维度**（`Query/` 聚合方法 + `Api/` 端点 + 前端图表） | [architecture.md](architecture.md) 的"分析层"章节（覆盖面底册同步更新）；前端夹具 `web/tests/fixtures/` |
 | 前端页面 / 依赖变更（`web/`） | [architecture.md](architecture.md) 的前端栈说明；`web/pnpm-lock.yaml` 随源提交；新页面补 `web/tests/` 对应 E2E 用例 |
 | 系统表（`spider_job_state` / `spider_job_command` / `spider_node_status`）结构变更 | [data-model.md](data-model.md)、`db/k_script_spider.sql`、`Pg.EnsureSystemDbObjects` 三处同步 |
 | 新增 / 修改定时任务（`Job/`、`Program.AddSpiderJobs`） | [architecture.md](architecture.md) 任务表、[operations.md](operations.md) 任务清单、README 任务表 |

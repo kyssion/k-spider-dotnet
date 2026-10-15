@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-通用网络爬虫（当前内容域为财经 , 正按"数据形态管线 × 任意领域源"的架构向全网通用演进）：抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流、金十「市场参考」5 个栏目、同花顺文章 10 个栏目与每经文章 3 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live（7 频道）/ 金十快讯 / 同花顺 7x24 / 格隆汇 live；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类；盘面榜单 Ranking 管线 30 分钟轮询接入东财数据中心龙虎榜/大宗/两融；公告 Announcement 管线 10 分钟轮询接入巨潮资讯沪深京法定披露（分类白名单）；官方文件 Policy 管线每小时轮询接入统计局/证监会（正文全文入库）；数据集 Dataset 管线每日轮询接入 loot-drop.io 倒闭创业公司案例库（首个非财经域源 , 全量对账 + content_hash 变更检测）），存入 PostgreSQL；独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）提供运行状态总览、数据查询、分析与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
+数据抓取 + 分析平台（**抓取是基座，分析是数据挖掘层**：基座按"数据形态管线 × 任意领域源"的架构向全网通用演进，当前内容域以财经为主；分析层基于入库数据做只读聚合与挖掘，随数据域扩展持续生长，分层契约见 [docs/architecture.md](docs/architecture.md) 的"分析层"章节）：基座侧抓取财经新闻快讯与实时快讯（多源框架，网页抓取型接入东方财富 35 个栏目、财联社文章频道 13 个栏目与品见拼装流、新浪财经文章 22 个栏目、华尔街见闻文章全量流、金十「市场参考」5 个栏目、同花顺文章 10 个栏目与每经文章 3 个栏目；实时快讯型 15 秒轮询接入财联社电报 / 新浪 7x24 / 华尔街见闻 live（7 频道）/ 金十快讯 / 同花顺 7x24 / 格隆汇 live；研报独立管线 5 分钟轮询接入东财研报中心个股/行业/宏观三类；盘面榜单 Ranking 管线 30 分钟轮询接入东财数据中心龙虎榜/大宗/两融；公告 Announcement 管线 10 分钟轮询接入巨潮资讯沪深京法定披露（分类白名单）；官方文件 Policy 管线每小时轮询接入统计局/证监会（正文全文入库）；数据集 Dataset 管线每日轮询接入 loot-drop.io 倒闭创业公司案例库（首个非财经域源 , 全量对账 + content_hash 变更检测）），存入 PostgreSQL；分析侧由独立部署的 Web 控制台（`k-spider-web` + 仓库根 `web/` 前端）承载：基于入库数据的只读聚合分析（入库趋势 / 分布 / 关键词）+ 运行状态总览、数据查询与任务控制。解决方案共 4 个项目，目标框架 net10.0，ORM 统一使用 SqlSugar，基于 Generic Host + 依赖注入 + Options 模式。
 
 ## 常用命令
 
@@ -58,7 +58,7 @@ dotnet publish src/k-spider-dotnet/k-spider-dotnet.csproj -c Release -r linux-x6
 | 项目 | 类型 | 职责 |
 |---|---|---|
 | `src/k-spider-dotnet` | Exe | 主爬虫：新闻抓取、解析、落库、Quartz 托管调度；含 Playwright（特殊页面抓取与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
-| `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 6 张数据表（4 张网页新闻 + `spider_flash_news` + `spider_research_report`）同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
+| `src/k-spider-sync` | Exe | 数据搬运：SqlSugar 把远端 PG 的 9 张数据表（4 张网页新闻 + 快讯/研报/榜单/公告/官方文件）同步到本地（新行按 Id 增量 + 已有行按 `update_time` 双键水位更新，水位存本地 `sync_transfer_watermark` 表、sync 启动幂等自建），引用主项目实体 |
 | `src/k-spider-web` | Exe | Web 控制台：只读查询/分析 Minimal API + 前端静态页伺服；任务控制（触发/暂停/恢复）写 `spider_job_command` 指令表异步受理（约 3 秒内由爬虫节点的 `NodeStateJob` 消费），引用主项目实体与 `SystemStatusDao` |
 | `src/k-spider-test` | 类库 | MSTest 单元测试（全部离线） |
 
@@ -95,7 +95,7 @@ src/k-spider-dotnet/
 │   ├── Ranking/               #   ── 盘面榜单域 ( 第四管线 ) : Eastmoney/ ( 龙虎榜/大宗/两融 )
 │   ├── Announcement/          #   ── 公告域 ( 第五管线 ) : Cninfo/ ( 巨潮资讯沪深京 )
 │   ├── Policy/                #   ── 官方文件域 ( 第六管线 ) : Stats/ + Csrc/ + IPolicySpider/PolicySpiderRegistry ( 双源 )
-│   ├── Dataset/               #   ── 数据集域 ( 第七管线 ) : LootDrop/ ( Supabase REST 有界集合 , 通用爬虫首个非财经域源 )
+│   ├── Dataset/               #   ── 数据集域 ( 第七管线 ) : LootDrop/ ( Supabase REST 有界集合 , 平台通用化路线首个非财经域源 )
 │   └── Verify/                #   反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
 │       ├── Model/             #     共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
 │       ├── Pipeline/          #     编排与运行时状态 : VerificationPipeline + VerificationSessionStore
@@ -152,7 +152,7 @@ ResearchReportJob (每5分钟, Job/Report/)
   注意 : 研报走独立表与独立 Job , 不进两个新闻注册表 ; reportapi 与新闻管线 np-listapi 不是同一套接口
 ```
 
-**数据集** ( loot-drop.io 案例库 , 通用爬虫路线首个非财经域源 ) —— API 直连有界集合 , 行会修订 :
+**数据集** ( loot-drop.io 案例库 , 平台通用化路线首个非财经域源 ) —— API 直连有界集合 , 行会修订 :
 
 ```
 LootDropDatasetJob (每24小时, Job/Dataset/)
@@ -206,6 +206,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 ( 含�
   - 运行状态上行：`JobRuntimeListener`（每次执行写执行结果）+ `NodeStateJob`（3 秒刷调度态）+ `NewsCheckJob`（5 分钟节点快照）写 3 张系统表；Web 只读。
   - 控制指令下行：Web 写 `spider_job_command`（`trigger`/`pause`/`resume`）→ `NodeStateJob` 轮询消费（约 3 秒），异步受理、结果回写指令行。**`NodeStateJob` 自身不许暂停**（代码里已拒绝该指令：它停了没人消费恢复指令）。
   - 新增 API 端点：`src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务（DI Singleton，只读），分页信封 `PageResult<T>`，分析聚合强制时间窗 ≤31 天。
+  - 新增分析维度（分析层）：`Query/` 加聚合方法（原生 SQL，遵守时间窗 ≤31 天约束）→ `Api/` 挂端点 → 前端 `api/hooks.ts` 加 hook + 图表 → `web/tests/fixtures/` 补夹具；分层定位与边界红线见 [docs/architecture.md](docs/architecture.md) 的"分析层"章节。
   - 新增前端页面：`web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求一律走 `api/hooks.ts` 的 TanStack Query 封装（轮询型 hook 带 `refetchInterval`）；改完必须 `bash scripts/build-web.sh` 才会进 `wwwroot`。
   - **前端 E2E**（`web/tests/`，Playwright + `@playwright/test`）：业务 API 由 `tests/helpers/mock-api.ts` 用 `page.route` 拦截成 `tests/fixtures/` 里的夹具——离线确定、进 CI；真实后端用例写进 `tests/live.spec.ts`（`@live` 前缀，默认跳过，`LIVE_E2E=1 pnpm test:e2e:live` 执行），与后端"夹具回归 + Live 连通性"同款分层。**新增 API 端点时同步补夹具**——页面请求了未登记的接口，测试会直接报"未 mock 的接口"；服务端 DTO 改字段时夹具跟着改（夹具约定见 `web/tests/fixtures/README.md`）。浏览器版本与主项目 .NET Playwright 对齐（共用 `~/Library/Caches/ms-playwright` 的 chromium-1243，零额外下载）。
   - Job 想在控制台带业务摘要：`Execute` 末尾给基类属性 `RunSummary` 赋值（如"新增列表 12"），listener 自动上报。
@@ -233,7 +234,7 @@ NewsCheckJob (每5分钟, Job/Check/): 各源栏目接口可用性探测 ( 含�
 
 ## 数据库
 
-- 库名 `k_script_spider`，14 张表的完整 DDL（含全量表/字段 COMMENT 注释，注释段幂等可对存量库重复执行）在 `db/k_script_spider.sql`（DBX 导出 + 增量演进段），新环境用它初始化。
+- 库名 `k_script_spider`，15 张表的完整 DDL（含全量表/字段 COMMENT 注释，注释段幂等可对存量库重复执行）在 `db/k_script_spider.sql`（DBX 导出 + 增量演进段），新环境用它初始化。
 - 唯一键约定：新闻三表以 `news_url` 去重，图片表以 `image_resource_url`，快讯表以 `(from_media, news_url)`，榜单表以 `(ranking_type, trade_date, row_key)`，公告表以 `announcement_id`，官方文件表以 `(from_media, doc_id)`，研报表以 `info_code`，数据集表以源侧主键 `id`。
 - 表**不是** CodeFirst 管理；`Data/Devtools/PgDevelop.cs` 可从库反向重新生成 SqlSugar 实体（DbFirst）。
 - 所有表有 `update_time_func()` 触发器自动刷新 `update_time`，upsert 时 ignore 这三列即可。

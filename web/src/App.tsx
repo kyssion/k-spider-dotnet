@@ -34,7 +34,7 @@ export default function App() {
           </span>
           <div>
             <div className="text-sm font-semibold">KSpider 控制台</div>
-            <div className="text-xs text-muted-foreground">金融数据爬虫</div>
+            <div className="text-xs text-muted-foreground">数据抓取与分析平台</div>
           </div>
         </div>
         <nav className="flex flex-col gap-1 px-3">

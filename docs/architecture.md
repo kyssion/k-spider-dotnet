@@ -9,7 +9,7 @@
 │ 财联社   电报     │─────▶│  Generic Host + DI   │─────▶│  远端库           │─────▶│  本地库           │
 │ 新浪/见闻/金十    │ HTTP │  Quartz 托管调度      │  ORM │  8 张表 + 触发器  │ 2 分钟│  (k-spider-sync) │
 └──────────────────┘      └──────────────────────┘      └────────┬─────────┘      └──────────────────┘
-                                   ▲ 状态上报 / 指令消费           │ 只读查询 / 写指令
+                                   ▲ 状态上报 / 指令消费           │ 查询分析 / 写指令
                                    │ ( 3 张系统表 )                ▼
                           ┌────────┴─────────────┐      ┌──────────────────┐
                           │  k-spider-web        │◀─────│  浏览器           │
@@ -17,7 +17,9 @@
                           └──────────────────────┘
 ```
 
-采集与使用物理分离：`k-spider-dotnet` 只写远端库，`k-spider-sync` 把 5 张新闻表搬到本地库，
+平台两层定位：**抓取是基座**——七条数据形态管线持续入库（各管线契约见"扩展点"）；**分析是数据挖掘层**——基座之上对入库数据的只读聚合与洞察（见"五、分析层"）。
+
+采集与使用物理分离：`k-spider-dotnet` 只写远端库，`k-spider-sync` 把 9 张数据表搬到本地库，
 分析侧读本地库不干扰采集进程，两边可以独立重启与部署。
 
 Web 控制台（`k-spider-web`）是第三个独立进程：只读查询与聚合分析直接读爬虫同库，
@@ -164,7 +166,27 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 `tests/fixtures/` 夹具——离线确定、进 CI；真实后端用例带 `@live` 前缀默认跳过
 （`LIVE_E2E=1` 执行），与后端测试的两层分层一致。
 
-## 五、关键设计决策
+## 五、分析层（抓取基座之上的数据挖掘能力）
+
+**定位与分层**：分析层是抓取基座之上的**只读数据挖掘层**——一切分析读爬虫同库 / 本地库，绝不写业务表、不干扰采集进程（写 `spider_job_command` 指令表是任务控制，不算分析）。分析能力随数据域扩展持续生长：新管线入库后，按下方扩展套路按需长出该域的分析维度，领域知识只活在分析实现里（与 Dataset 契约"机制领域无关"同款思路）。
+
+**1. 形态定义**：基于已入库数据的聚合 / 统计 / 排行 / 词频 / 趋势等**只读计算**。与 `NewsCheckJob` 运行监控的判别：监控看**采集系统自身健康**（接口活着吗、积压多少、滞后多久、对账差多少），分析看**数据内容本身**（什么在涨、谁在发、关键词如何分布）——前者进告警日志与节点快照，后者进分析 API 与图表。
+
+**2. 现状底册**（分析能力当前形态与覆盖面，新增维度时同步更新本表）：
+
+| 形态 | 实现 | 覆盖 |
+|---|---|---|
+| 在线聚合 API | `/api/analysis/volume`、`/api/analysis/distribute`、`/api/analysis/keywords`（`AnalysisQueryService` 原生 SQL：date_trunc 分桶、多 维 GROUP BY、unnest 词频跨表 UNION） | 新闻 + 快讯 |
+| 运行统计（半分析，供控制台总览） | `/api/status/pipeline`、`/api/status/flash-lag` | 各管线积压 / 快讯源实时性 |
+| 前端可视化 | `AnalysisPage`（Recharts 趋势 / 分布 / 词频图）、`DashboardPage`（统计卡片） | 同在线 API |
+
+覆盖面缺口（如实记录）：研报 / 榜单 / 公告 / 官方文件 / 数据集五类数据尚无分析端点。
+
+**3. 扩展套路**（新增分析维度）：`Query/` 加聚合方法（原生 SQL，遵守 `AnalysisQueryService.MaxWindowDays = 31` 时间窗约束与 `DateTime.SpecifyKind` 时区规约）→ `Api/` 挂端点（分析类路由进 `AnalysisEndpoints`）→ 前端 `api/hooks.ts` 加 hook + 图表 → `web/tests/fixtures/` 补夹具（E2E 对未 mock 接口直接报错）。
+
+**4. 边界与红线**：只读（分析层不写任何业务表）；时间窗 ≤31 天强制（防全表聚合拖垮与采集共写的同库）；不预建离线计算引擎 / 预聚合物化 / 独立 OLAP——当前数据量下单库直接聚合够用，真实瓶颈出现再立项，避免过度设计。
+
+## 六、关键设计决策
 
 | 决策 | 原因 | 代价 / 注意 |
 |---|---|---|
@@ -179,7 +201,7 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 | 轮询热路径依赖部分索引 | 轮询每 3 秒一次，全表扫描会拖垮库 | 索引变更要用 `CREATE INDEX CONCURRENTLY` 上线（普通建索引的写锁会卡住 3 秒轮询） |
 | 测试分"离线夹具 + 真实连通性"两层 | 门禁要确定性，接口是否还活着要能真实检验 | 联网用例需能从门禁排除 |
 
-## 六、扩展点
+## 七、扩展点
 
 | 要加什么 | 怎么做 |
 |---|---|
@@ -191,6 +213,7 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 | 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k_script_spider.sql` |
 | 同步到本地的表 | `k-spider-sync` 的 `TransferSpiderData.DoTransfer` 加一行 `SyncTableSafely<T>`（实体需实现 `ILongIdEntity` + `IUpdateTimeEntity`） |
 | Web API 端点 | `src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务 |
+| **分析维度**（分析层） | 按"五、分析层"的扩展套路：`Query/` 加聚合方法（时间窗 ≤31 天）→ `Api/` 挂端点 → 前端图表 + E2E 夹具 |
 | 前端页面 | `web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求用 `api/hooks.ts` 的 TanStack Query 封装 |
 | 需要浏览器渲染的页面 | `Spider/News/Web/Eastmoney/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |
 
@@ -268,7 +291,7 @@ E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route`
 
 ### Dataset 数据集型契约（第四个按清单立项的类型 , 首个非财经域管线）
 
-**1. 数据形态定义**：**API 直连的有界数据集**——源侧是一张可全量枚举的表（BaaS/开放数据接口，如 Supabase PostgREST），行是结构化记录（无 HTML 解析环节），**行会修订**（内容编辑、计数增长），集合有界（万行级）。与现有类型的判别：快讯型是"无界追加流、拉到即终态"，数据集型是"有界集合、行可变更"；研报型虽也是结构化列表，但那是"时间窗口流"（只拉近几天）而非"全量集合"。首个源 loot-drop.io（倒闭创业公司案例库，约 1800 行，Supabase REST 匿名可读，`from_media = LootDropMedia`）——本管线同时是**通用爬虫路线的第一个非财经域管线**，验证"形态轴 × 任意领域源"的扩展路径：领域内容只活在源实现里，机制（表范式 / 写入语义 / 监控）全部领域无关。
+**1. 数据形态定义**：**API 直连的有界数据集**——源侧是一张可全量枚举的表（BaaS/开放数据接口，如 Supabase PostgREST），行是结构化记录（无 HTML 解析环节），**行会修订**（内容编辑、计数增长），集合有界（万行级）。与现有类型的判别：快讯型是"无界追加流、拉到即终态"，数据集型是"有界集合、行可变更"；研报型虽也是结构化列表，但那是"时间窗口流"（只拉近几天）而非"全量集合"。首个源 loot-drop.io（倒闭创业公司案例库，约 1800 行，Supabase REST 匿名可读，`from_media = LootDropMedia`）——本管线同时是**平台通用化路线的第一个非财经域管线**，验证"形态轴 × 任意领域源"的扩展路径：领域内容只活在源实现里，机制（表范式 / 写入语义 / 监控）全部领域无关。
 
 **2. 存储**：**每源一表**（`spider_<源>_<实体>`，首源 `spider_lootdrop_startup`），主键直接用源侧 id（非自增，`INSERT` 必须带 id）；每表带 **`content_hash` 列**（全部业务字段的 SHA256，行内容指纹，变更检测依据）；JSON 数组/对象列存 JSON 文本（text，不用 jsonb——规避 Npgsql 参数类型坑，与 raw_content 同款处理）；`raw_content` 保留条目原始 JSON（解析重跑能力）；幂等建表 `Pg.EnsureLootDropStartupDbObjects()` 与 `db/k_script_spider.sql` 增量段双同步。
 
