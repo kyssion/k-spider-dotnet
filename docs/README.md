@@ -1,53 +1,16 @@
-# docs — 系统设计文档
+# docs — 设计文档
 
-本目录面向**维护者**，记录这套数据抓取 + 分析平台（抓取基座 + 分析层）的设计原则、架构、现状与运维手册。
-
-## 与其他文档的分工
-
-| 文档 | 面向 | 内容 |
-|---|---|---|
-| [README.md](../README.md) | 使用者 / 新人 | 这是什么、怎么跑起来、快速开始 |
-| [AGENTS.md](../AGENTS.md) | AI 编码代理 | 操作手册：命令、约定、扩展套路、已知坑（工具性、可执行） |
-| `docs/`（本目录） | 维护者 | 设计文档：为什么这么设计、系统全貌、演进与取舍 |
-
-三者都描述同一个系统，**结构或约定变更时必须同步更新**（见下方映射表）。
-
-## 文档索引
+面向维护者与 AI 代理，记录 DataForge（通用数据基座 + 数据分析基座）的目标架构与功能全集。
 
 | 文档 | 内容 |
 |---|---|
-| [principles.md](principles.md) | 设计原则与工程约定：分层、数据访问、错误处理与重试、测试分层、命名 |
-| [architecture.md](architecture.md) | 系统架构：项目分层、运行时模型、模块职责、分析层、关键设计决策、扩展点 |
-| [news-pipeline.md](news-pipeline.md) | 新闻管线：状态机、多源抽象、已接入源明细、落库与去重、已知限制 |
-| [anti-bot-verification.md](anti-bot-verification.md) | 反爬验证：识别与通过的契约、内置识别器/策略、扩展套路、误判防线与已知限制 |
-| [web-source-playbook.md](web-source-playbook.md) | 网页型源接入规范：侦察清单与方法、接入步骤、验收标准（固化快照，遇新情况按需调整） |
-| [data-model.md](data-model.md) | 数据模型：5 张表的职责、唯一键、索引、迁移与数据治理 |
-| [operations.md](operations.md) | 运行运维：配置、部署、监控、排障手册、数据同步 |
+| [architecture.md](architecture.md) | 目标架构：平台组成、统一数据模型、源适配器、管线引擎、抓取内核、分析基座、项目结构 |
+| [features.md](features.md) | 功能梳理：采集/反爬/存储/分析/控制台/运维能力全集与数据源清单 |
 
-## 文档与代码同步规则
-
-**改了代码就要改对应的文档**，否则文档会变成误导后来者的负担。变更与文档的对应关系：
-
-| 代码变更 | 必须更新 |
-|---|---|
-| 新增 / 修改新闻源（`Spider/*/`） | [news-pipeline.md](news-pipeline.md) 的源明细表；AGENTS.md 的新闻源套路；侦察或解析方法有新发现时回填 [web-source-playbook.md](web-source-playbook.md) |
-| 新增 / 修改反爬验证识别器或通过策略（`Spider/Verify/`） | [anti-bot-verification.md](anti-bot-verification.md) 的识别器/策略表与扩展套路；AGENTS.md 的验证模块套路；测试夹具登记到 `src/k-spider-test/TestData/README.md` |
-| 抓取层 HTTP 调用方式变更（`Common/Http/`、`Spider/Verify/VerifiedHttp`） | [anti-bot-verification.md](anti-bot-verification.md)、AGENTS.md 的验证模块套路 |
-| Web 控制台 API / 查询变更（`src/k-spider-web/Api|Query/`） | [architecture.md](architecture.md) 的 Web 控制台小节与扩展点表；AGENTS.md 的 Web 控制台套路；DTO 改字段时同步 `web/tests/fixtures/` 夹具与 `web/src/api/types.ts` |
-| **分析层新增分析维度**（`Query/` 聚合方法 + `Api/` 端点 + 前端图表） | [architecture.md](architecture.md) 的"分析层"章节（覆盖面底册同步更新）；前端夹具 `web/tests/fixtures/` |
-| 前端页面 / 依赖变更（`web/`） | [architecture.md](architecture.md) 的前端栈说明；`web/pnpm-lock.yaml` 随源提交；新页面补 `web/tests/` 对应 E2E 用例 |
-| 系统表（`spider_job_state` / `spider_job_command` / `spider_node_status`）结构变更 | [data-model.md](data-model.md)、`db/k_script_spider.sql`、`Pg.EnsureSystemDbObjects` 三处同步 |
-| 新增 / 修改定时任务（`Job/`、`Program.AddSpiderJobs`） | [architecture.md](architecture.md) 任务表、[operations.md](operations.md) 任务清单、README 任务表 |
-| **新立管线类型**（新表体系 + 新 Job + 新写入语义，如日历/公告/榜单） | [architecture.md](architecture.md) 的"管线类型契约"清单（动手前先定契约）与任务表、[data-model.md](data-model.md) 表清单、AGENTS.md 的类型套路；后续同类型新源加行时同步 news-pipeline.md 或对应类型文档 |
-| 表结构 / 索引 / 唯一键变更（`Model/`、`db/`、`Pg.EnsureSpiderNewsListDbObjects`） | [data-model.md](data-model.md)、`db/k_script_spider.sql` |
-| 状态机 / 重试语义 / 落库语义变更 | [news-pipeline.md](news-pipeline.md) |
-| 配置键 / 环境变量 / 部署方式变更 | [operations.md](operations.md)、README 配置章节 |
-| 分层、约定、测试策略变更 | [principles.md](principles.md)、AGENTS.md 代码约定 |
-| 任何结构性变更 | README.md 结构章节（如目录树、项目职责） |
+操作手册（命令、约定、扩展套路）在仓库根 [AGENTS.md](../AGENTS.md)。
 
 维护要求：
 
-- 机械兜底：`scripts/check-docs.sh`（已接入 `verify.sh` 与 CI）会校验全部 Markdown 的相对链接，改了文件名或挪了目录却漏改引用时门禁会红；**内容**层面的代码-文档一致性仍靠上表人工保证。
-- 文档写**现状**，不写"计划要做"（计划放 issue 或分支说明里）；设计动机与取舍要写清楚，这是维护者最需要的部分。
-- 文档里的每条断言都应能在代码里找到出处，涉及具体数值（间隔、批量、上限）时与代码保持一致。
-- 已知限制与坑要如实记录（包括"暂时没做"的部分），避免后来者重复踩坑。
+- 文档写**现状与目标设计**，设计动机与取舍写清楚；
+- 每条断言应能在代码里找到出处，具体数值（间隔、批量、上限）与代码保持一致；
+- 已知限制如实记录，包括"暂时没做"的部分。

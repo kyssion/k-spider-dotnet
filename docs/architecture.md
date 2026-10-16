@@ -1,308 +1,188 @@
-# 系统架构
+# DataForge 架构
 
-## 一、系统全貌
+## 一、平台定位
 
-```
-   数据源                       采集进程                          存储                     使用侧
-┌──────────────────┐      ┌──────────────────────┐      ┌──────────────────┐      ┌──────────────────┐
-│ 东方财富 列表/正文 │      │  k-spider-dotnet     │      │  PostgreSQL      │      │  PostgreSQL      │
-│ 财联社   电报     │─────▶│  Generic Host + DI   │─────▶│  远端库           │─────▶│  本地库           │
-│ 新浪/见闻/金十    │ HTTP │  Quartz 托管调度      │  ORM │  8 张表 + 触发器  │ 2 分钟│  (k-spider-sync) │
-└──────────────────┘      └──────────────────────┘      └────────┬─────────┘      └──────────────────┘
-                                   ▲ 状态上报 / 指令消费           │ 查询分析 / 写指令
-                                   │ ( 3 张系统表 )                ▼
-                          ┌────────┴─────────────┐      ┌──────────────────┐
-                          │  k-spider-web        │◀─────│  浏览器           │
-                          │  Web API + 前端静态页 │      └──────────────────┘
-                          └──────────────────────┘
-```
+**通用数据基座（采集）+ 数据分析基座（挖掘）**：基座侧以"数据形态管线 × 任意领域源"接入全网数据源；分析侧基于入库数据做语义查询、物化与派生表。两基座通过存储层契约连接，独立部署、独立演进。
 
-平台两层定位：**抓取是基座**——七条数据形态管线持续入库（各管线契约见"扩展点"）；**分析是数据挖掘层**——基座之上对入库数据的只读聚合与洞察（见"五、分析层"）。
+三个锚点：
 
-采集与使用物理分离：`k-spider-dotnet` 只写远端库，`k-spider-sync` 把 9 张数据表搬到本地库，
-分析侧读本地库不干扰采集进程，两边可以独立重启与部署。
+1. **数据不丢**：治理能力（分区/保留期/原始响应）内建于存储层；
+2. **机制与领域分离**：领域无关的机制（调度/存储/抓取/管线/监控/分析引擎）平台化，领域知识（源实现/字段映射）留在适配器里；
+3. **文化**：中文注释与日志、Conventional Commits、零警告门禁。
 
-Web 控制台（`k-spider-web`）是第三个独立进程：只读查询与聚合分析直接读爬虫同库，
-爬虫进程的运行状态（任务调度态、最近执行结果）与控制指令（手动触发/暂停/恢复）
-通过 3 张系统表（`spider_job_state` / `spider_job_command` / `spider_node_status`）跨进程传递，
-**主程序不开 HTTP 端口、不引入 Web 依赖**——这也是将来多节点分布式部署的最小雏形：
-状态与指令天然按 `node_id` 分组与路由。
+## 二、核心原则
 
-## 二、项目与依赖方向
-
-| 项目 | 类型 | 职责 |
+| # | 原则 | 说明 |
 |---|---|---|
-| `src/k-spider-dotnet` | Exe | 主爬虫：抓取、解析、落库、调度；含 Playwright（特殊页面渲染与栏目自检）与飞书 SDK（`Lark/`，当前无调用方） |
-| `src/k-spider-sync` | Exe | 数据搬运：远端 → 本地增量同步（新行按 Id + 已有行按 `update_time` 双键水位） |
-| `src/k-spider-web` | Exe | Web 控制台：只读查询 / 分析 API + 前端静态页伺服；任务控制走指令表异步受理 |
-| `src/k-spider-test` | 类库 | MSTest 测试：离线夹具回归 + 真实接口连通性（`TestCategory=Live`） |
+| 1 | **机制先行，领域克制** | 领域无关机制按"已知会持续增加的变化点"提前抽象；领域知识保持克制，不为假想源加分支 |
+| 2 | **契约即边界** | 基座之间只依赖契约包（`DataForge.Abstractions`），不依赖彼此实现 |
+| 3 | **数据与进程状态分离** | 业务行只存数据语义；抓取进度、阶段状态、重试计数归执行引擎（可重建、可重放） |
+| 4 | **一切皆注册** | 源、数据集、管线、Job、分析维度、派生表、告警规则都是注册表条目，平台能力自动生效，无手写分支 |
+| 5 | **放开度量，管住成本** | 不设硬编码小窗口/只读/禁物化限制，用查询预算、物化血缘、资源配额等可度量手段管成本 |
+| 6 | **可读性优先** | 抽象不为炫技；宁要直白的长代码，不要绕弯的短代码 |
+
+## 三、总体架构
 
 ```
-k-spider-sync ─┐
-k-spider-web  ─┼──▶ k-spider-dotnet   ( 复用 Model/ 实体、Data/Pg 连接工厂、Data/SystemStatusDao )
-k-spider-test ─┘
+                     ┌───────────────────────────────────────┐
+                     │         平台控制台 (Console)           │
+                     │   源管理 / 数据浏览 / 任务控制 /        │
+                     │   派生表管理 / 分析看板 / 监控告警      │
+                     └──────────────┬────────────────────────┘
+        ┌────────────────────────────┼────────────────────────────┐
+        ▼                            ▼                            ▼
+┌──────────────── 分析基座 (Analysis) ────────────────┐
+│  语义层   维度/指标/视图注册（声明式）                │
+│  查询引擎 语义查询 → SQL，查询预算制，大查询异步化     │
+│  物化引擎 物化视图 / 预聚合表 / 派生表（血缘+刷新）    │
+│  洞察插件 NLP / AI 摘要 / 事件抽取（远期，插件位）     │
+└───────────────────────┬─────────────────────────────┘
+                        │ 契约：只读查询 + 派生表登记
+┌───────────────────────▼─────────────────────────────┐
+│              存储层 (Storage)                         │
+│  注册表：source / dataset / derived_table / sys_*     │
+│  数据表：dataset_record + 投影列 + 分区               │
+│  治理：归档 / 保留期 / 同库 schema 隔离               │
+└───────────────────────▲─────────────────────────────┘
+                        │ 契约：SourceAdapter → StoreAdapter
+┌───────────────────────┴─────────────────────────────┐
+│            数据基座 (Collection)                      │
+│  调度引擎    注册表自动发现 / 单机形态（多节点契约预留）│
+│  源注册中心  身份 / 端点 / 认证 / 配额 / 健康 / 域标签 │
+│  管线引擎    Stage 链 / 幂等 / 重试 / 断点续跑 / 重放 │
+│  抓取内核    HTTP 出口 / 反爬验证 / 浏览器 / 代理 /   │
+│             按源限流 / 签名与认证策略                  │
+│  可观测      指标 / 健康探测（注册即覆盖）/ 告警插件   │
+└──────────────────────────────────────────────────────┘
+
+横切：契约包（双方只依赖它） · 测试体系 · 文档体系
 ```
 
-**实体只有一套**（主项目 `Model/`），另外三个项目不复制实体，避免多处漂移。
-前端源码在仓库根 `web/`（React + TS + Vite + pnpm），构建产物拷入 `k-spider-web/wwwroot` 由 Kestrel 伺服。
+## 四、核心设计
 
-## 三、运行时模型
+### 4.1 统一数据模型
 
-### 启动顺序（`Program.Main`）
-
-1. `DOTNET_ENVIRONMENT` 未设置时默认 `Development`（Host 标准环境选择）。
-2. `Host.CreateApplicationBuilder` 装配配置：`appsettings.json` → `appsettings.{环境}.json` → `K_SPIDER__` 前缀环境变量 → 代码默认值。
-3. DI 注册：`DatabaseOptions`（IOptions）、`Pg`、`SpiderNewsDao`、`SpiderNewsBatchDao`（均 Singleton）。
-4. `AddQuartz(AddSpiderJobs)` 集中注册任务与触发器；`AddQuartzHostedService(WaitForJobsToComplete = true)` 保证收到退出信号后等在跑任务收尾。
-5. `host.Build()` 后依次执行 `Pg.EnsureSpiderNewsListDbObjects()` / `EnsureFlashNewsDbObjects()` / `EnsureResearchReportDbObjects()` / `EnsureSystemDbObjects()` 幂等补齐库对象（库不可用时仅记日志，不阻断进程），再 `RunAsync()`。
-
-### 调度模型
-
-- **Quartz 内存态**：没有配置持久化 store，任务定义全部来自代码（`Program.AddSpiderJobs`），重启即按代码状态重建。
-- 每个任务都加 `DisallowConcurrentExecution`：同一任务的上一轮没跑完时跳过本轮，避免重复抓取与并发写同一批数据。
-- **短间隔轮询 + 状态机**，而不是消息队列 / 长连接：数据量级不大，任务状态直接存在数据库里可以随时自查，进程崩溃重启后按状态自然续跑，不需要额外中间件。
-
-### 定时任务现状
-
-| 任务 | 间隔 / Cron | 单轮批量 | 说明 |
-|---|---|---|---|
-| `FlashNewsJob` | 15 秒 | 每栏目最多 4 页 × 50 条 | **快讯源并发**拉取，直写 `spider_flash_news`（拉到即终态） |
-| `NewsListJob` | 2 分钟 | 每栏目最多 4 页 × 200 条 | **网页型源并发**抓列表（源内仍串行翻页），见下 |
-| `NewsContentOriginJob` | 3 秒 | 200 条 | 全源 FIFO 下载原始内容 |
-| `NewsContentJob` | 1 分钟 | 1000 条 | 全源 FIFO 解析详情 |
-| `NewsCheckJob` | 5 分钟 | — | 各源栏目探测 + 分源积压统计 + 反爬验证阻塞告警 + 节点快照上报（`spider_node_status`） |
-| `ResearchReportJob` | 5 分钟 | 三类各最多 4 页 × 100 条 + 摘要回填 20 条 | 东财研报中心三类（个股/行业/宏观）列表即元数据直写 `spider_research_report`（`ON CONFLICT DO NOTHING`），摘要由详情页二段回填（`summary_fail_count < 3` 重试）；独立于两个新闻注册表，直连 `DfResearchReportSpider` |
-| `RankingJob` | 30 分钟 | 三类各拉近 4 日窗口分页拉全 | 东财数据中心龙虎榜/大宗/两融快照直写 `spider_ranking`（`ON CONFLICT DO NOTHING` , 发布即终态） |
-| `AnnouncementJob` | 10 分钟 | 分类白名单拉近 3 天窗口 , 最多 40 页 | 巨潮资讯沪深京法定披露直写 `spider_announcement`（`ON CONFLICT DO NOTHING`） |
-| `PolicyJob` | 60 分钟 | 逐源列表 + 逐篇详情 | 统计局/证监会官方文件直写 `spider_policy_document`（正文全文入库） |
-| `LootDropDatasetJob` | 24 小时 | 全量拉取（约 1800 行 , 1000/页） | **数据集型第七管线（首个非财经源）**：loot-drop.io Supabase REST 全量拉取直写 `spider_lootdrop_startup`，`ON CONFLICT DO UPDATE WHERE content_hash` 变更检测（行会修订） |
-| `NodeStateJob` | 3 秒 | — | **状态通道**：刷新各任务调度态（下次触发/暂停）到 `spider_job_state` + 轮询消费 `spider_job_command` 指令；不许被暂停（它停了没人消费恢复指令） |
-| `TransferSpiderDataJob`（sync 进程） | 2 分钟 | 2000 行 / 批 | 远端 → 本地增量同步 |
-
-任务停用/启用只改 `Program.AddSpiderJobs` 里的注释，不要在别处加开关。
-
-另有 `JobRuntimeListener`（Quartz `IJobListener`，注册在 `AddSpiderJobs` 首行）：
-每次任务执行完把 结果/耗时/异常/`RunSummary` 摘要 upsert 到 `spider_job_state` 执行列，
-上报失败只记日志不影响任务。各 Job 在 `Execute` 末尾给基类 `SpiderJob.RunSummary` 赋值即可带上业务摘要
-（如"新增列表 12"），不设就是空。
-
-### 列表任务的并发模型
-
-`NewsListJob` 以 **media（源）** 为并发单位：`Task.WhenAll` 遍历 `NewsSpiderRegistry.All`，每个 media 在自己的连接、事务与节奏里跑完自己的全部栏目。
-
-- **media 之间并行**：各源互不依赖，整轮耗时从"各源之和"变成"最慢那个源"。
-- **media 内部保持原逻辑**：逐栏目、按游标串行翻页（下一页依赖上一页的游标），每页一个事务。
-- **每个 media 独占一个连接**（`SqlSugarClient` 不是线程安全的），因此并发度等于源的数量。当前 5 个源 + 连接池 `MaxPoolSize=10`，余量充足；源数量显著增长时需同步调大连接池。
-- **单个 media 失败不外溢**：`RunSourceAsync` 捕获全部异常并记日志，返回该源本轮写入数，不影响其它源，也不吞掉整轮汇总日志。
-- 汇总日志按源输出写入数（`source detail : DfMedia=12 | ClsMedia=3 | ...`），便于判断是哪个源没进来。
-
-实测（空库冷启动，5 源）：串行调度整轮约 29.1 秒（东财 26.0 秒 + 其余四源合计 3.1 秒），并行调度整轮约 25.7 秒 ≈ 东财单源耗时。
-
-> **关于各源的当前规模**：上面的耗时构成**只是当前开发进度的快照，不是架构特性**。东财是已开发最完整的源（35 个栏目），
-> 财联社文章 14 栏目、新浪文章 22 栏目、见闻 live 7 频道 + 文章全量流、金十文章 5 栏目、
-> 而其它源也**本身有大量栏目可供扩展**（金十快讯条目自带频道分类、财联社与新浪也都有分频道能力）。
-> 因此随着这些源的栏目补齐，"东财占大头"的格局会改变，media 级并行的收益也会随之放大
-> （整轮耗时始终等于**最慢那个媒体**，而不是各源之和）。
->
-> 但**补栏目不是加配置**：快讯源目前把频道参数与 `category` 写在各自 Resource 常量里，
-> 多栏目按 `SourceColumn` 遍历（见闻 live 的 7 频道是先例：`ColumnId` 反查频道资源取接口参数与分类号）。
->
-> 评估调度改动时另注意：东财列表接口的网络耗时波动很大（实测单轮 7~26 秒），不要用单次测量下结论。
-
-## 四、模块职责（主项目）
-
-```
-src/k-spider-dotnet/
-├── Program.cs        # 唯一装配入口 : 配置 + DI + 任务注册
-├── Config/           # DatabaseOptions ( IOptions 绑定 )
-├── Data/             # Pg 连接工厂 + DAO ( 事务由 Job 层管理 ) + SpiderNewsBatchDao 手拼批量 SQL + SystemStatusDao ( 系统表通道 )
-│   └── Devtools/     # DbFirst 实体生成器 ( 开发期工具 , 不参与生产 )
-├── Model/            # SqlSugar 实体 ( DbFirst 生成 , 带 Model 后缀 ) — 全解决方案唯一实体源
-├── Job/              # SpiderJob 基类 + 定时任务 , 与 Spider 同维度分组
-│   ├── News/Web/     #   网页型三段任务
-│   ├── News/Flash/   #   FlashNewsJob ( 15 秒 )
-│   ├── Report/       #   ResearchReportJob ( 5 分钟 , 研报第三管线 )
-│   ├── Dataset/      #   LootDropDatasetJob ( 24 小时 , 数据集第七管线 )
-│   ├── Check/        #   NewsCheckJob ( 含节点快照上报 )
-│   └── Node/         #   NodeStateJob + NodeIdentity ( 调度态上报与指令消费 )
-├── Spider/           # 抓取与解析 , 按 "数据域 → 管线类型 → 源" 三级分组 ; 每条管线一个顶级域
-│   ├── DataResource.cs   # 中心枚举 ( FromTypeOfNews / 状态机 / 分类号 )
-│   ├── SourceColumn.cs   # 根级共享词汇 : 源栏目 ( 新闻网页型/快讯型/官方文件管线共用 )
-│   ├── News/             # ── 新闻域 ( 两条子管线 ) ──
-│   │   ├── NewsSharedModel.cs  # 域内共享 : NewsContentSegment ( 正文片段 )
-│   │   ├── Web/           # 网页抓取型 : INewsSpider + NewsSpiderRegistry + Eastmoney/ ( 含 Playwright 兜底 )
-│   │   └── Flash/         # 实时快讯型 : IFlashNewsSpider + FlashNewsSpiderRegistry + Cls/ Sina/ Wscn/ Jin10/
-│   ├── Report/            # ── 研报域 ( 第三管线 ) : Eastmoney/ ( DfResearchReportSpider 直连 , 无注册表 , 单源 , 第二源出现再抽 )
-│   ├── Ranking/           # ── 盘面榜单域 ( 第四管线 ) : Eastmoney/ ( 龙虎榜/大宗/两融 )
-│   ├── Announcement/      # ── 公告域 ( 第五管线 ) : Cninfo/ ( 巨潮资讯沪深京 )
-│   ├── Policy/            # ── 官方文件域 ( 第六管线 ) : Stats/ + Csrc/ + IPolicySpider/PolicySpiderRegistry
-│   ├── Dataset/           # ── 数据集域 ( 第七管线 , 通用爬虫首个非财经域 ) : LootDrop/ ( Supabase REST 有界集合 )
-│   └── Verify/           # 反爬验证 ( 数据域无关 ) : 根 = 对外面 ( 契约接口 / Registry / Policy / VerifiedHttp )
-│       ├── Model/         #   共享词汇 : 枚举与纯数据 ( Kind / Probe / Challenge / Solving / Outcome / Session )
-│       ├── Pipeline/      #   编排与运行时状态 : VerificationPipeline + VerificationSessionStore
-│       ├── Detector/      #   识别器 : HTTP 门禁 / Cloudflare / JS cookie 门禁 / 验证码 / 载荷风控
-│       └── Solver/        #   通过策略 : Browser/ ( 浏览器基建 + 过挑战 / 滑块 ) + 人工升级
-├── Common/           # 通用工具 : 纯函数工具平铺 ( JsonTools / StringTools / ListTools / TimeTools / LogFactory ) + Http/ ( 伪装头客户端与 URL 工具 ) + Html/ ( 标签枚举与图片提取 )
-├── Lark/             # 飞书 SDK ( 当前无调用方 , 保留备用 )
-└── Exceptions/       # DownloadHttpException 族 + KDbException
-```
-
-### Web 控制台（`src/k-spider-web`）
-
-```
-src/k-spider-web/
-├── Program.cs        # 装配入口 : 配置 ( 与主程序同款 K_SPIDER__ 前缀 ) + DI + 静态页伺服 + SPA 回退
-├── Api/              # Minimal API 端点 , 一域一文件 ( Status / News / Flash / Analysis / JobCommand ) , WebEndpoints 装配
-├── Dto/              # 响应 record + PageResult<T> 分页信封
-├── Query/            # 只读查询服务 ( DI Singleton ) : 筛选分页 / 三表联查 / date_trunc 聚合 / 指令写入
-└── wwwroot/          # 前端构建产物 ( scripts/build-web.sh 拷入 , 不入库 )
-```
-
-前端（仓库根 `web/`）：React 19 + TypeScript + Vite + pnpm，React Router 路由，
-TanStack Query 管请求缓存与轮询（状态页 5 秒级刷新），Zustand 存分析页共享时间窗，
-Tailwind + 手写 shadcn 风格组件（不引 radix，保持零额外依赖），Recharts 画图。
-开发期 `pnpm dev` 起 5173 端口并把 `/api` 代理到 5800。
-E2E 测试用 `@playwright/test`（`web/tests/`）：业务 API 由 `page.route` 拦截成
-`tests/fixtures/` 夹具——离线确定、进 CI；真实后端用例带 `@live` 前缀默认跳过
-（`LIVE_E2E=1` 执行），与后端测试的两层分层一致。
-
-## 五、分析层（抓取基座之上的数据挖掘能力）
-
-**定位与分层**：分析层是抓取基座之上的**只读数据挖掘层**——一切分析读爬虫同库 / 本地库，绝不写业务表、不干扰采集进程（写 `spider_job_command` 指令表是任务控制，不算分析）。分析能力随数据域扩展持续生长：新管线入库后，按下方扩展套路按需长出该域的分析维度，领域知识只活在分析实现里（与 Dataset 契约"机制领域无关"同款思路）。
-
-**1. 形态定义**：基于已入库数据的聚合 / 统计 / 排行 / 词频 / 趋势等**只读计算**。与 `NewsCheckJob` 运行监控的判别：监控看**采集系统自身健康**（接口活着吗、积压多少、滞后多久、对账差多少），分析看**数据内容本身**（什么在涨、谁在发、关键词如何分布）——前者进告警日志与节点快照，后者进分析 API 与图表。
-
-**2. 现状底册**（分析能力当前形态与覆盖面，新增维度时同步更新本表）：
-
-| 形态 | 实现 | 覆盖 |
+| 概念 | 定义 | 关键属性 |
 |---|---|---|
-| 在线聚合 API | `/api/analysis/volume`、`/api/analysis/distribute`、`/api/analysis/keywords`（`AnalysisQueryService` 原生 SQL：date_trunc 分桶、多 维 GROUP BY、unnest 词频跨表 UNION） | 新闻 + 快讯 |
-| 运行统计（半分析，供控制台总览） | `/api/status/pipeline`、`/api/status/flash-lag` | 各管线积压 / 快讯源实时性 |
-| 前端可视化 | `AnalysisPage`（Recharts 趋势 / 分布 / 词频图）、`DashboardPage`（统计卡片） | 同在线 API |
+| `Source` | 一个外部数据提供方 | `source_id`（稳定短码）、`domain`（内容域）、端点、认证、限流配额、健康状态 |
+| `Dataset` | 源下的一个逻辑数据实体 | schema 声明、写入语义、时间语义、保留策略 |
+| `Record` | 一条数据 | `(dataset_id, record_key)` 唯一、`content_hash`、`version`、`event_time` |
+| `Pipeline` | 一条抓取管线 | Stage 链 + 抓取策略 + 重试/幂等/游标语义 |
+| `Job` | 调度单元 | Pipeline + 触发策略 + 并发策略 + 配额 |
+| `DerivedTable` | 分析产物表 | 血缘、构建策略、刷新节奏、保留期 |
 
-覆盖面缺口（如实记录）：研报 / 榜单 / 公告 / 官方文件 / 数据集五类数据尚无分析端点。
+**物理表设计契约**（表结构定稿必须满足，具体形态见最终表设计）：
 
-**3. 扩展套路**（新增分析维度）：`Query/` 加聚合方法（原生 SQL，遵守 `AnalysisQueryService.MaxWindowDays = 31` 时间窗约束与 `DateTime.SpecifyKind` 时区规约）→ `Api/` 挂端点（分析类路由进 `AnalysisEndpoints`）→ 前端 `api/hooks.ts` 加 hook + 图表 → `web/tests/fixtures/` 补夹具（E2E 对未 mock 接口直接报错）。
+1. 业务行只存数据语义，进程状态（阶段进度/重试计数/游标）外置到 `sys_*`；
+2. 去重键稳定：`(dataset_id, record_key)`，record_key 选源内稳定形态；
+3. 写入语义只能是三模式之一：`Append` / `UpsertByKey`（发布即终态）/ `Revisioned`（哈希条件更新）；
+4. `event_time`（数据业务时间，滞后监控/分区依据）与 `ingest_time`（入库时间）分离；
+5. 治理能力：按 event_time 分区（或等价分批归档）+ 保留期声明；
+6. 原始响应可独立归档，但解析重放窗口内必须可达。
 
-**4. 边界与红线**：只读（分析层不写任何业务表）；时间窗 ≤31 天强制（防全表聚合拖垮与采集共写的同库）；不预建离线计算引擎 / 预聚合物化 / 独立 OLAP——当前数据量下单库直接聚合够用，真实瓶颈出现再立项，避免过度设计。
+### 4.2 源注册中心与适配器
 
-## 六、关键设计决策
+```csharp
+interface ISourceAdapter           // 一个源一个实现
+{
+    SourceDescriptor Descriptor { get; }       // 身份/域/端点/认证/限流配额
+    IFetchStrategy   FetchStrategy { get; }    // 抓取模式
+    IRecordMapper    Mapper { get; }           // 响应 → Record（纯函数，可离线测）
+}
 
-| 决策 | 原因 | 代价 / 注意 |
-|---|---|---|
-| 三段接力 + 状态机，而不是一次抓完 | 抓取、下载、解析的失败原因与重试策略不同；解析规则改版后可直接用已存的原始内容重跑，不必重新抓取 | 需要维护状态机与重试计数；积压要额外监控 |
-| 原始内容（`spider_news_content_origin`）单独存整篇响应 | 解析可重跑、源改版后可回溯比对、出问题能拿到原始证据 | 表增长快，需要定期归档（见 data-model） |
-| 事务边界在 Job 层，DAO 只接收连接 | 一次业务动作的原子范围一眼可见；DAO 无状态、可复用 | Job 代码略长 |
-| 表结构不用 CodeFirst，DDL 手工维护 + DbFirst 反向生成实体 | 索引 / 部分索引 / 触发器 / 约束这些是对生产库有实际影响的对象，交给 DDL 更可控 | 改表要 Model 与 DDL 两处同步 |
-| 多源抽象在出现第二个源时才提取 | 避免为假想扩展点提前设计（见 principles） | 东财单源时期的历史代码需要一次性改造 |
-| 快讯型源在列表阶段直接落原始内容并置 `status=3` | 这类源没有可回查的单条接口，原始内容只能在列表响应里拿到 | 列表行与原始内容必须同事务写入 |
-| Web 控制台的运行状态与控制走系统表，而不是主程序开内部 HTTP 端口 | 独立部署 / 独立重启零耦合；多节点分布式时 `node_id` 分组天然成立，指令表就是任务分发通道的最小形态 | 状态有秒级延迟（NodeStateJob 3 秒轮询）；指令是异步受理（约 3 秒内生效） |
-| `spider_job_state` 用 upsert 单行（节点 × 任务）而不是 append-only 执行日志 | `NewsContentOriginJob` 每 3 秒一轮，append 表日增数万行；控制台只需要"最近一次 + 连续失败计数" | 没有执行历史趋势；v2 有真实需要再上 run_log + 保留期清理 |
-| 轮询热路径依赖部分索引 | 轮询每 3 秒一次，全表扫描会拖垮库 | 索引变更要用 `CREATE INDEX CONCURRENTLY` 上线（普通建索引的写锁会卡住 3 秒轮询） |
-| 测试分"离线夹具 + 真实连通性"两层 | 门禁要确定性，接口是否还活着要能真实检验 | 联网用例需能从门禁排除 |
+interface IFetchStrategy           // 内置四种，覆盖全部数据形态
+{
+    CursorPagingStrategy     // 页码/时间游标；边界语义（含边界/严格小于/是否单调）显式配置
+    FullScanStrategy         // 全量对账（有界集合）
+    WindowSnapshotStrategy   // 周期性数值快照
+    IncrementalByKeyStrategy // 按源内键增量（水位）
+}
+```
 
-## 七、扩展点
+接入新源 = 一个适配器（Descriptor + Strategy + Mapper）+ 注册一行。不需要新表、新 Job、新 DAO、监控分支、文档契约七步施工。
 
-| 要加什么 | 怎么做 |
+### 4.3 管线引擎
+
+```
+Pipeline = Trigger → [Fetch] → [Parse] → [Normalize] → [Validate] → [Store] → [Enrich?]
+```
+
+- Stage 是可插拔处理器；引擎统一提供幂等键、重试策略、断点续跑（游标持久化）、阶段状态持久化、**重放**（按原始响应重跑 Parse→Store）；
+- Job 退化为声明（pipeline + trigger + 并发策略 + 配额），不手写循环/事务/状态机；
+- 阶段进度存执行引擎表，业务行只留数据语义。
+
+### 4.4 调度（v1 单机形态）
+
+- 注册表自动发现：Job 定义来自注册条目，不是手工逐个挂；
+- v1 单机实现：进程内触发 + 任务级并发互斥；同机只跑一个采集实例（启动自检保证）；
+- 多节点契约预留：认领/心跳/分片/misfire 是接口不是实现，扩容时换实现不动契约；引擎选型（持久化调度库 vs 自研抢占式）待定，单机阶段两者均够用。
+
+### 4.5 抓取内核（反爬验证）
+
+- 内核唯一 HTTP 出口：自动带已通过验证的会话 cookie，被拦截时识别验证类型 → 按策略自动通过 → 重放请求；过不了抛带类型的异常并告警，**绝不静默返回空数据**；
+- **识别器注册表**：纯判定、不联网（可离线回归），顺序即优先级（特征越具体越靠前）；
+- **通过策略注册表**：按代价升序尝试（浏览器过挑战 → 滑块 → 人工升级）；JS/Cloudflare 类默认自动处理，人机确认类按源显式放开；
+- **防误判防线**：内容型识别器只对 HTML 生效、风控词只扫响应 envelope 不进业务数据数组、中文泛词必须配合表单元素、词表不放中性词；
+- **对目标站的克制**：同主机串行处理、失败进冷却期、限流按源站 `Retry-After` 退避；会话经 CookieContainer 回放，不手动拼 Cookie 头；
+- 平台能力：全局限流器（按源令牌桶，跨 Job 共享配额）、代理池（插件位）、浏览器渲染服务（按需启动）。
+
+### 4.6 存储层（同库 schema 隔离）
+
+- **统一库、分表**：采集写入与分析产物同库、schema 隔离，权限与备份策略可分别配置；未来分库是运维动作，不是架构障碍；
+- 分析负载与采集共库，靠查询预算制 + 物化错峰 + `statement_timeout` 管住；
+- 治理：按 event_time 分区 + 保留期声明；原始响应表独立归档策略。
+
+### 4.7 分析基座
+
+| 层 | 内容 |
 |---|---|
-| 同类型的新闻源 | 实现 `Spider/News/Web/INewsSpider.cs` → 在 `NewsSpiderRegistry` 注册一行 → `FromTypeOfNews` 加枚举值；表结构无需改动。参考 [news-pipeline.md](news-pipeline.md)。快讯源同构（`FlashNewsSpiderRegistry`），研报源直连（见下条） |
-| **管线类型**（数据形态是新的） | 先按下方"管线类型契约"清单把契约定进本文档，再动代码。判别：需要**新表体系 + 新 Job + 新重试/写入语义**就是新类型，只往现有类型的表加行则按上一条走 |
-| 反爬验证识别方式 / 通过手段 | `Spider/Verify/` 下实现 `IVerificationDetector` 或 `IVerificationSolver` → 在 `VerificationRegistry` 注册一行（识别器位置即优先级）→ `VerificationKind` 按需加值；按源调整策略用 `VerificationRegistry.SetPolicy`。参考 [anti-bot-verification.md](anti-bot-verification.md) |
-| 抓取层的 HTTP 请求 | 一律走 `VerifiedHttp.GetStringAsync` / `SendStringAsync`（自带会话回放与自动过验证），不要直接调 `HttpClientTools`；需要自定义请求头时传请求工厂（`HttpRequestMessage` 不能重发） |
-| 定时任务 | 继承 `Job/SpiderJob.cs`（只需实现 `Execute`）→ 构造函数注入 DAO/Pg/`ILogger<T>` → `Program.AddSpiderJobs` 加 `AddJob` + `AddTrigger` 两行（`DisallowConcurrentExecution` 必加） |
-| 表字段 / 索引 | 增量演进（列、索引）可加到 `Pg.EnsureSpiderNewsListDbObjects()` 启动幂等执行；结构性变更同时改 `Model/` 与 `db/k_script_spider.sql` |
-| 同步到本地的表 | `k-spider-sync` 的 `TransferSpiderData.DoTransfer` 加一行 `SyncTableSafely<T>`（实体需实现 `ILongIdEntity` + `IUpdateTimeEntity`） |
-| Web API 端点 | `src/k-spider-web/Api/` 一域一文件写 `MapXxxApis` 扩展 → `WebEndpoints.MapSpiderApis` 加一行；查询逻辑在 `Query/` 对应服务 |
-| **分析维度**（分析层） | 按"五、分析层"的扩展套路：`Query/` 加聚合方法（时间窗 ≤31 天）→ `Api/` 挂端点 → 前端图表 + E2E 夹具 |
-| 前端页面 | `web/src/pages/` 加页面 → `App.tsx` 的 `NAV_ITEMS` 与 `Routes` 各加一项；请求用 `api/hooks.ts` 的 TanStack Query 封装 |
-| 需要浏览器渲染的页面 | `Spider/News/Web/Eastmoney/Playwright/` 已有模式可参考；该命名空间下调用库入口要写全限定 `Microsoft.Playwright.Playwright` |
+| **语义层** | `Dimension`（维度：字段+粒度+可用数据集）、`Metric`（指标：聚合表达式）、`AnalysisView`（数据集组合+维度+指标+默认过滤）声明式注册 |
+| **查询引擎** | 语义查询 → SQL；**查询预算制**：解析 → 基于分区剪枝与表统计估算 → 预算检查（最大扫描行/时长/返回行）→ 执行（statement_timeout）；超预算转异步（提交→排队→结果通知） |
+| **物化引擎** | `DerivedTable` 一等公民：定义/血缘/构建策略（全量重建/增量/按需）/刷新节奏/保留期；实现从 PG 物化视图（REFRESH CONCURRENTLY）起步，按数据量演进到预聚合表与列存扩展点 |
+| **洞察插件**（远期） | NLP（分词/实体/情感/事件抽取）、LLM 摘要/RAG 作为派生表的生产者接入 |
 
-### 管线类型契约（新立类型时先定契约再写代码）
+### 4.8 可观测与告警
 
-管线类型由**数据形态**决定（形态决定轮询节奏、表结构、写入与重试语义），而不是由网站决定——同一网站可以挂多种类型（财联社 = Flash 电报 + Web 文章）。当前已有七种：Web 网页抓取型（三段 + 状态机）、Flash 实时快讯型（单段直写）、Report 研报型（列表即结构化元数据 + 摘要回填）、Ranking 盘面榜单型（周期性数值快照）、Announcement 公告型（文档元数据 + 附件链接）、Policy 官方文件型（文件元数据 + 正文全文）、Dataset 数据集型（API 有界集合 + 行可修订）——各自契约见下。
+- 指标自动覆盖：每个注册的 source/dataset/job/stage 自动产出 成功率/延迟/新鲜度/积压/反爬冷却 指标；
+- 健康探测注册即覆盖：接口可用性、实时性滞后（阈值按 dataset 声明的数据节奏配置）、积压巡检；
+- 告警通道插件化（日志/飞书/Webhook），规则注册。
 
-引入新类型之前，**必须先把下列契约定进本文档**，参照已有类型的先例逐项落定：
+### 4.9 平台控制台
 
-1. **数据形态定义**：什么特征的数据归此类型，与现有类型如何判别；
-2. **存储**：表结构、去重键、热路径索引（含部分索引）、`Pg.Ensure*DbObjects()` 幂等建表方法与 `db/k_script_spider.sql` 增量段双同步；
-3. **节奏**：轮询间隔、单轮批量、翻页 / 停机回补上限；
-4. **写入语义**：冲突策略（`DO NOTHING` / `DO UPDATE` 及其条件，如"值会修正"的类型必须定义回填条件）、失败重试语义（计数上限、`KDbException` 不消耗计数）；
-5. **监控**：接口探测、实时性滞后指标（阈值按数据节奏定）、积压巡检 SQL（进 operations.md）；
-6. **生态挂接**：`k-spider-sync` 纳入同步、`NewsCheckJob` 探测、是否进 Web 控制台（无消费方不进）；
-7. **测试基线**：夹具回归 + `LiveConnectivityTest` 连通性 + DAO 手拼 SQL 形态锁 + `JobDependencyTest` 覆盖新 Job 构造依赖。
+- 源管理、数据集浏览（schema 驱动动态表格，无需每类数据写页面）、任务与节点控制、派生表管理与血缘查看、分析看板（视图元数据驱动）、监控告警；
+- 控制台与基座经库通信（注册表 + 指令表），基座不开业务 HTTP 端口。
 
-完整参照实现：Report 型全链路（`Spider/Report/Eastmoney/` + `ResearchReportJob` + `SpiderResearchReportDao` + `spider_research_report`）。契约立好后，同类型的每个新源只是"往里加行"：新 Resource/Spider 模块 + 直连或注册一行，不再重复决策。
+## 五、项目结构
 
-### Ranking 盘面榜单型契约（第一个按上述清单立项的类型）
+```
+src/
+├── DataForge.Abstractions/     # 契约包：模型 + 接口 + 注册表契约（两基座唯一共同依赖）
+├── DataForge.Storage/          # 存储实现：连接工厂/托管 migration/同步引擎/治理
+├── DataForge.Collection/       # 数据基座（Exe）
+│   ├── Kernel/                 #   抓取内核（反爬验证）、限流、代理池
+│   ├── Engine/                 #   调度引擎 + 管线引擎
+│   ├── Sources/                #   源适配器（按域分目录）
+│   └── Observer/               #   指标/健康探测/告警
+├── DataForge.Analysis/         # 分析基座（Exe）：语义层/查询引擎/物化/派生表/API
+├── DataForge.Console/          # 平台控制台（Exe）：Web API + 前端伺服
+├── DataForge.Tests/            # 契约测试/夹具回归/Live 分层/对账
+└── web/                        # 控制台前端
+```
 
-**1. 数据形态定义**：交易所/数据商按交易日披露的**周期性数值快照**（龙虎榜席位、大宗交易逐笔、两融余额），与新闻的"事件叙述"、研报的"分析文章"都不同——行即数值，无正文。数据源为东财数据中心 `datacenter-web.eastmoney.com/api/data/v1/get` 的 **reportName 接口族**（同站同伪装，`from_media` 恒 `DfMedia`），**同接口族加一类 = 加一个 reportName 配置行**。北向资金因 2024-08 起交易所停止每日披露，暂无数据源，类型枚举预留。
+依赖方向：`Collection / Analysis / Console → Abstractions →（运行时）Storage`；源适配器只依赖 Abstractions + Kernel。
 
-**2. 存储**：单表 `spider_ranking`（通用宽表 + JSONB 长尾），`Model/SpiderRankingModel.cs`；去重键 **`(ranking_type, trade_date, row_key)`**——`row_key` 是类型内自然键，**每类型必须定义组装规则**（龙虎榜=代码+上榜原因、大宗=代码+买卖营业部+成交价、两融=代码，契约变更即数据语义变更）；热路径索引 `(ranking_type, trade_date DESC)`；幂等建表 `Pg.EnsureRankingDbObjects()` 与 `db/k_script_spider.sql` 增量段双同步。
+## 六、测试体系
 
-**3. 节奏**：`RankingJob` 每 30 分钟（数据在盘中/盘后陆续披露，30 分钟足够新鲜）；每轮拉近 4 个自然日窗口（覆盖 T+1 披露与周末），pageSize=500 按分页拉全。
+| 层 | 方法 |
+|---|---|
+| 契约测试 | 适配器/策略/引擎的接口契约（纯判定、可离线） |
+| 夹具回归 | 接口真实响应做解析回归（真实响应，不手搓 JSON） |
+| Live 连通性 | 真实接口"能调通 + 能拿到数据集 + 能解析"；断网报告跳过，门禁排除 |
 
-**4. 写入语义**：`ON CONFLICT DO NOTHING`——盘面快照**发布即终态**（实测未见源侧修正，与快讯的"发布后修正"相反）；拉取失败记日志下一轮自然重试，`KDbException` 不消耗计数（无回填段，整条语义比 Report 型简单）。
+## 七、待定事项
 
-**5. 监控**：`NewsCheckJob` 加 datacenter 探测（龙虎榜最新页非空即存活）+ 滞后监控（`max(trade_date)` 距今超 5 天告警，只记日志不入节点快照——控制台榜单页未建）；巡检 SQL 进 operations.md。
-
-**6. 生态挂接**：`k-spider-sync` 纳入（第 7 张数据表）；不进任何 Spider 注册表（单源 reportName 族直连，与 Report 同理）；Web 控制台榜单页未建不进。
-
-**7. 测试基线**：三类夹具（龙虎榜/大宗/两融真实响应）+ 解析回归（行键组装 / 通用列映射 / 三类字段差异）+ `LiveConnectivityTest` 三类连通 + `JobDependencyTest` 覆盖新 Job 构造依赖。
-
-参照实现：`Spider/Ranking/Eastmoney/`（Resource/Model/Spider）+ `Job/Ranking/RankingJob.cs` + `Data/SpiderRankingDao.cs` + `spider_ranking`。
-
-### Announcement 公告型契约（第二个按清单立项的类型）
-
-**1. 数据形态定义**：交易所法定披露的**结构化文档元数据**——证券代码 + 公告标题 + 分类 + PDF 附件链接，与研报同为"列表即元数据"，但多了**证券维度与附件维度**、没有正文（PDF 不下载不解析，链接即交付物）。A 股时效最强信息源（业绩预告/重大事项/股权激励盘后集中披露）。数据源为巨潮资讯 `hisAnnouncement/query`（POST，沪深京全市场，`from_media = CninfoMedia`）。
-
-**2. 存储**：单表 `spider_announcement`，去重键 **`announcement_id`**（巨潮站内唯一标识）；`pdf_url` 存附件链接；热路径索引 `publish_date DESC`；幂等建表 `Pg.EnsureAnnouncementDbObjects()` 与 DDL 增量段双同步。
-
-**3. 节奏**：`AnnouncementJob` 每 10 分钟（公告时效最强）；**分类白名单配置化**（`CninfoAnnouncementResource.AnnouncementCategoryList`，10 个核心高价值分类——全市场全类型每日数千条噪声大，白名单约 500 条/日；加分类 = 数组加行）；**pageSize 钳 30**（实测 100/200 均被服务端钳回 30）；拉近 3 天窗口，每轮最多 40 页。
-
-**4. 写入语义**：`ON CONFLICT DO NOTHING`——公告披露即终态（与 Ranking 同款，巨潮偶发的补充更正公告本身就是新 announcementId 的新行）。
-
-**5. 监控**：`NewsCheckJob` 加巨潮探测（查询非空即存活）+ 滞后监控（最新 `publish_time` 距今：工作时段超 1 天、节假日放宽 4 天告警，只记日志——控制台公告页未建）；巡检 SQL 进 operations.md。
-
-**6. 生态挂接**：`k-spider-sync` 纳入（第 8 张数据表）；不进 Spider 注册表（直连）；Web 控制台公告页未建不进。
-
-**7. 测试基线**：夹具（巨潮真实响应）+ 解析回归（字段映射 / 分类解析 / 坏数据跳过）+ `LiveConnectivityTest` 连通 + `JobDependencyTest` 覆盖新 Job。
-
-参照实现：`Spider/Announcement/Cninfo/`（Resource/Model/Spider）+ `Job/Announcement/AnnouncementJob.cs` + `Data/SpiderAnnouncementDao.cs` + `spider_announcement`。
-
-### Policy 官方文件型契约（第三个按清单立项的类型）
-
-**1. 数据形态定义**：政府/官方机构发布的**文件元数据 + 正文全文**（发文机关、文号、效力级别、正文纯文本、附件链接）。与公告同为文档元数据，但两处本质差异：① **正文即价值**——政策文本是核心语料，必须入库（公告是"链接即交付物"不下载正文）；② **维度不同**——公告有证券维度，官方文件有发文机关/文号维度、无证券。主体谱系 = 国务院/部委/地方，类型谱系 = 法规/政策文件/数据发布/征求意见/处罚决定。政府站多为 TRS 建站系统，解析器体系独立（`PolicyContentExtractor` 共用提取件）。
-
-**2. 存储**：单表 `spider_policy_document`，去重键 **`(from_media, doc_id)`**（每官方站一枚举：`StatsMedia=10`/`CsrcMedia=11`…；`doc_id` 为源内文档唯一键）；`content_text` 正文纯文本列（段落+表格文本化）；`attachments` 附件 JSON 数组；热路径索引 `publish_time DESC`；幂等建表 `Pg.EnsurePolicyDbObjects()` 与 DDL 增量段双同步。
-
-**3. 节奏**：`PolicyJob` 每 60 分钟（政府披露以小时/天计，非秒级）；源清单 `PolicySpiderRegistry` 遍历，两源当前均为单页全量列表（`common_xq_list`/`zxfb` 无静态分页），`MaxPageNumber=10` 保护。
-
-**4. 写入语义**：`ON CONFLICT DO NOTHING`（文件发布即终态；政府站的修订是新 URL 新行）。详情下载失败单篇记日志不中断整列（政府站点可用性波动常见），下一轮自然重试。
-
-**5. 监控**：`NewsCheckJob` 逐源列表探测 + 滞后监控（最新发布距今超 3 天告警，只记日志）；巡检 SQL 进 operations.md。
-
-**6. 生态挂接**：`k-spider-sync` 纳入（第 9 张数据表）；不进新闻注册表；Web 控制台政策页未建不进。
-
-**7. 测试基线**：夹具（统计局列表+详情、证监会列表+详情真实页面）+ 解析回归（行键/正文提取/附件/meta 元数据/坏数据）+ `LiveConnectivityTest` 分源连通（证监会见边界）+ `JobDependencyTest` 覆盖新 Job。
-
-参照实现：`Spider/Policy/Stats/` + `Spider/Policy/Csrc/`（`IPolicySpider` 两步取数：列表存根→详情组装）+ `Job/Policy/PolicyJob.cs` + `Data/SpiderPolicyDao.cs` + `spider_policy_document`。
-
-**已知边界**：① 证监会列表被阿里云 CDN 会话机制拦截（首次 302 + `acw_tc` cookie + https→http 降级 Location，.NET 拒绝降级跟随）——解析器已由夹具验证，运行时打通需 VerifiedHttp 支持降级跟随或会话预热；② gov.cn 政策文件库（中央聚合库，杠杆最大）为 SPA 动态加载，接口需浏览器抓包定位；③ 中国人民银行为 JS 加密反爬，需 Playwright 路线。三者的侦察结论见 news-pipeline.md。
-
-### Dataset 数据集型契约（第四个按清单立项的类型 , 首个非财经域管线）
-
-**1. 数据形态定义**：**API 直连的有界数据集**——源侧是一张可全量枚举的表（BaaS/开放数据接口，如 Supabase PostgREST），行是结构化记录（无 HTML 解析环节），**行会修订**（内容编辑、计数增长），集合有界（万行级）。与现有类型的判别：快讯型是"无界追加流、拉到即终态"，数据集型是"有界集合、行可变更"；研报型虽也是结构化列表，但那是"时间窗口流"（只拉近几天）而非"全量集合"。首个源 loot-drop.io（倒闭创业公司案例库，约 1800 行，Supabase REST 匿名可读，`from_media = LootDropMedia`）——本管线同时是**平台通用化路线的第一个非财经域管线**，验证"形态轴 × 任意领域源"的扩展路径：领域内容只活在源实现里，机制（表范式 / 写入语义 / 监控）全部领域无关。
-
-**2. 存储**：**每源一表**（`spider_<源>_<实体>`，首源 `spider_lootdrop_startup`），主键直接用源侧 id（非自增，`INSERT` 必须带 id）；每表带 **`content_hash` 列**（全部业务字段的 SHA256，行内容指纹，变更检测依据）；JSON 数组/对象列存 JSON 文本（text，不用 jsonb——规避 Npgsql 参数类型坑，与 raw_content 同款处理）；`raw_content` 保留条目原始 JSON（解析重跑能力）；幂等建表 `Pg.EnsureLootDropStartupDbObjects()` 与 `db/k_script_spider.sql` 增量段双同步。
-
-**3. 节奏**：`LootDropDatasetJob` 每 24 小时（数据集日更个位数行，天级足够）；**每轮全量拉取**（万行级以下全量即对账，实测 2 个请求拉完；涨到十万行级再引入水位增量优化，届时修订本契约）；分页 1000/页按 id 升序 offset 翻页，`MaxRows` 上限 100000 防翻页失控。
-
-**4. 写入语义**：`ON CONFLICT (id) DO UPDATE SET … WHERE spider_lootdrop_startup.content_hash IS DISTINCT FROM EXCLUDED.content_hash`——**本管线与所有现有类型的本质差异**：行会修订，但用内容哈希做变更检测，只有内容真变的行才被 UPDATE（`update_time` 触发器只在真变更时刷新，保住"最后修改时间"语义，下游按 `update_time` 的水位同步不被全量重拉污染）；插入新行与更新变更行是同一条语句；`from_media` 是源身份，冲突时不更新。拉取失败记日志下一轮自然重试；无状态机无计数，`KDbException` 语义天然满足（失败即本轮无写入）。
-
-**5. 监控**：`NewsCheckJob` 加数据集探测（REST 取单行非空即存活）+ 对账滞后监控（远端 `Content-Range` 总数与本地行数差值超 100 告警，只记日志——控制台数据集页未建）；每轮 `RunSummary` 上报"全量 N / 写入 x"，行数与写入曲线经 `spider_job_state` 天然可查。
-
-**6. 生态挂接**：不进任何 Spider 注册表（Job 直连源类，与 Report 同理）；`k-spider-sync` 暂不纳入（首源为本地研究数据集，无远端镜像需求；纳入时 `update_time` 水位天然兼容）；Web 控制台数据集页未建不进。
-
-**7. 测试基线**：夹具（REST 真实响应两份：常规页 + 边界行——脏空白字符串/空值/JSON 数组列）+ 解析回归（字段映射 / JSON 列序列化 / content_hash 稳定性与敏感性 / 脏数据清洗）+ `LiveConnectivityTest` 连通（网络不可达报告跳过）+ `JobDependencyTest` 覆盖新 Job 构造依赖。
-
-参照实现：`Spider/Dataset/LootDrop/`（Resource/SpiderModel/Spider）+ `Job/Dataset/LootDropDatasetJob.cs` + `Data/SpiderLootDropStartupDao.cs` + `spider_lootdrop_startup`。
+| 事项 | 状态 |
+|---|---|
+| 物理表设计 | 设计中（受 4.1 六条契约约束） |
+| 调度引擎选型 | 待定（持久化调度库 vs 自研抢占式；单机阶段均够用） |
+| 平台命名 | 暂定 `DataForge` |
