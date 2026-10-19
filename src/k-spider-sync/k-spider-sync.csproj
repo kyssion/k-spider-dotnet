@@ -10,7 +10,7 @@
       <PackageReference Include="SqlSugarCore" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\k-spider-dotnet\k-spider-dotnet.csproj" />
+        <ProjectReference Include="..\k-spider-dotnet-old\k-spider-dotnet-old.csproj" />
     </ItemGroup>
 
 </Project>

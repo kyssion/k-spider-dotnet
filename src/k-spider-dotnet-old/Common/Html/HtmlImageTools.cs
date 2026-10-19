@@ -9,7 +9,7 @@ namespace KSpider.Common.Html;
 public static class HtmlImageTools
 {
     // 开发期写死的本机输出路径 , 下载 / 落盘流程未接入生产
-    public const string MaxOsImagePath = "/Users/bytedance/RiderProjects/k-spider-dotnet/newsImg/";
+    public const string MaxOsImagePath = "/Users/bytedance/RiderProjects/k-spider-dotnet-old/newsImg/";
 
     /// <summary>
     ///     下载图片字节并回填到 ImgInfo.Data

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "k-spider-dotnet", "src\k-spider-dotnet\k-spider-dotnet.csproj", "{E53E2B25-291A-4191-BD52-585D1492896A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "k-spider-dotnet-old", "src\k-spider-dotnet-old\k-spider-dotnet-old.csproj", "{E53E2B25-291A-4191-BD52-585D1492896A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "k-spider-test", "src\k-spider-test\k-spider-test.csproj", "{F52706C9-02CB-4E8D-8750-48EA509AB943}"
 EndProject

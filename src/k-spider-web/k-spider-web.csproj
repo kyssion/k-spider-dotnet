@@ -11,7 +11,7 @@
     </ItemGroup>
     <ItemGroup>
         <!-- 复用主项目的 Model 实体 / Pg 连接工厂 / SystemStatusDao -->
-        <ProjectReference Include="..\k-spider-dotnet\k-spider-dotnet.csproj" />
+        <ProjectReference Include="..\k-spider-dotnet-old\k-spider-dotnet-old.csproj" />
     </ItemGroup>
     <ItemGroup>
         <!-- 基础配置 + 当前目标环境的配置文件 , 其余环境文件不进产物 ( 与主项目同款 ) -->
