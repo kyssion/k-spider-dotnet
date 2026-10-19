@@ -6,6 +6,7 @@
 |---|---|
 | [architecture.md](architecture.md) | 目标架构：平台组成、统一数据模型、源适配器、管线引擎、抓取内核、分析基座、项目结构 |
 | [features.md](features.md) | 功能梳理：采集/反爬/存储/分析/控制台/运维能力全集与数据源清单 |
+| [data-model.md](data-model.md) | 物理表设计：分类/渠道/列表/详情五表抽象、完整 DDL、六契约对照、关键设计决策 |
 
 操作手册（命令、约定、扩展套路）在仓库根 [AGENTS.md](../AGENTS.md)。
 
