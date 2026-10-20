@@ -1,6 +1,6 @@
 # 功能梳理
 
-DataForge 的能力全集。按域组织；每条是**功能规格**（新系统必须承接的能力），不含历史实现细节（源站侦察结论与踩坑记录在 git 历史中）。
+k-spider 的能力全集。按域组织；每条是**功能规格**（新系统必须承接的能力），不含历史实现细节（源站侦察结论与踩坑记录在 git 历史中）。
 
 ## 一、采集功能
 
@@ -39,12 +39,12 @@ DataForge 的能力全集。按域组织；每条是**功能规格**（新系统
 
 ## 二、存储功能
 
-- 数据集注册（schema 声明、保留策略）与记录统一表；
-- 写入语义唯一：覆盖式 upsert（适配器声明）；历史快照由 record_key 选型表达；"内容真变才更新"为存储层实现优化；
-- 变更检测（content_hash）与行版本（version）；
-- 投影列：表达式索引 → 热字段提升实物列；
-- 分区（event_time）与保留期治理；原始响应保留与解析重放窗口；
-- 分发：dataset 级同步（新行按 Id 水位 + 已有行按 update_time 双键水位）。
+- 四业务表：channel_category / channel / data_source / data_detail（DDL 与规则唯一权威见 [data-model.md](data-model.md)）；
+- 原始载荷双侧留存（source.raw / detail.raw，bytea 任意格式），解析重放窗口内可达；
+- 覆盖式写入唯一：ON CONFLICT + 哈希条件（内容未变不空转）；历史快照由 detail 内容键含时间窗表达；
+- source : detail = 1 : N（资源按链接唯一性、内容按业务唯一性，键生成是纯代码逻辑）；
+- 分发：双键水位（新行按 Id、已有行按 update_time）；
+- 治理：retention_days 保留期声明，首期不分区。
 
 ## 三、分析功能
 
