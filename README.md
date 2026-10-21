@@ -30,4 +30,4 @@ dotnet build k-spider-dotnet.sln      # 构建（零警告零错误）
 | [AGENTS.md](AGENTS.md) | 开发指南：原则、契约、约定 |
 | [docs/architecture.md](docs/architecture.md) | 平台定位与职责划分 |
 | [docs/data-model.md](docs/data-model.md) | 数据模型：四表 DDL、关键规则、七管线装填对照 |
-| [docs/features.md](docs/features.md) | 功能全集：数据源清单与能力规格、平台边界 |
+| [docs/features.md](docs/features.md) | 功能梳理：数据源清单与能力现状 |

@@ -6,7 +6,7 @@
 |---|---|
 | [architecture.md](architecture.md) | 平台定位与三职责划分（结构设计重新设计中） |
 | [data-model.md](data-model.md) | 数据模型：四表 DDL 与规则 |
-| [features.md](features.md) | 功能全集：数据源清单与能力规格、平台边界 |
+| [features.md](features.md) | 功能梳理：数据源清单与能力现状（只描述现状，非限制或约定） |
 
 操作手册（命令、约定、扩展套路）在仓库根 [AGENTS.md](../AGENTS.md)。
 

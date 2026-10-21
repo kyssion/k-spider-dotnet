@@ -15,8 +15,9 @@
 
 规则：
 
+- 采集库只存原始数据：解析仅限抓取必需（record_key 预映射、详情抓取目标现场解析），标题/业务时间等一切解析产物归分析侧；
 - record_key 格式「渠道前缀id:sha256」：预映射与哈希由代码生成、PG 只存；source 键 = 资源唯一性（链接不变行不变），detail 键 = 内容唯一性（可含时间窗）；
-- raw（bytea）为未解析原始载荷，title / event_time / extra 为解析投影；
+- raw（bytea）为未解析原始载荷，双侧留存（source 条目 / detail 全量）；
 - 写入唯一覆盖式 upsert（ON CONFLICT DO UPDATE）；
 - data_status 记数据事实，exec_status 记执行进度，两列独立；执行细节在 extra 约定键（fail_count / next_retry_at / last_error；新增约定键须先与项目所有者确认）；
 - adapter / parser 命名：无前缀 = 本表自己的快照，带下游前缀（detail_）= 下游计划；
@@ -107,14 +108,12 @@ CREATE TABLE data_source (
                                           --   （文章id/doc_id/url 唯一段等），同一链接同一行；
                                           --   哈希由应用层计算、PG 只存储不参与计算（代码逻辑）；
                                           --   生成规则适配器声明、选定后不可换（去重键稳定性，契约第 2 条）
-    title         text,                   -- 解析投影：标题（其余差异化字段进 extra）
-    event_time    timestamptz,            -- 解析投影：业务时间（源站发布时间），与 create_time 分离（契约第 4 条）
     adapter       text NOT NULL,
         -- 列表适配器编码快照：实际产出本行的实现类（溯源：谁拉到了这条数据）
     parser        text NOT NULL,
         -- 列表解析器编码快照：实际解析出本行的解析器
     raw           bytea NOT NULL,         -- 原始载荷：列表响应中本条目的未解析原文（JSON 片段/HTML 分段）；
-                                          --   title/event_time/extra 均由 parser 对本列解析产出；
+                                          --   record_key 预映射与详情抓取目标从本列解析；
                                           --   解析重放基于本列
     detail_adapter text NOT NULL,
         -- 详情适配器编码：本条数据的详情怎么抓的实现类；
@@ -128,8 +127,7 @@ CREATE TABLE data_source (
         CHECK (exec_status IN ('pending', 'running', 'failed', 'success')),
         -- 执行进度（采集生命周期）：待运行 / 运行中 / 失败（重试细节在 extra 约定键）/ 成功
     extra         jsonb NOT NULL DEFAULT '{}',
-        -- 渠道差异化字段：summary / author / 栏目 / 机构 / 文号 / 是否付费 / 榜单数值 ...；
-        --   执行态约定键（fail_count/next_retry_at/last_error）也在此；
+        -- 执行态约定键（fail_count/next_retry_at/last_error）；
         --   新增约定键须先与项目所有者确认
     create_time   timestamptz NOT NULL DEFAULT now(),
     update_time   timestamptz NOT NULL DEFAULT now(),
@@ -139,20 +137,17 @@ COMMENT ON TABLE data_source IS '数据源列表表：资源登记，每个要�
 COMMENT ON COLUMN data_source.id IS '代理主键';
 COMMENT ON COLUMN data_source.channel_id IS '归属渠道（channel.id）';
 COMMENT ON COLUMN data_source.record_key IS '资源唯一键「渠道前缀id:sha256」：预映射=适配器按资源唯一性从载荷解析的唯一标识（文章id/doc_id/url 唯一段等），同一链接同一行；哈希由应用层计算、PG 只存储；选定不可换';
-COMMENT ON COLUMN data_source.title IS '解析投影：标题';
-COMMENT ON COLUMN data_source.event_time IS '解析投影：业务时间（源站发布时间）';
 COMMENT ON COLUMN data_source.adapter IS '产出本行的列表适配器编码快照';
 COMMENT ON COLUMN data_source.parser IS '产出本行的解析器编码快照';
-COMMENT ON COLUMN data_source.raw IS '列表响应中本条目的未解析原文（JSON 片段/HTML 分段）；title/event_time/extra 由 parser 对本列解析产出；解析重放依据';
+COMMENT ON COLUMN data_source.raw IS '列表响应中本条目的未解析原文（JSON 片段/HTML 分段）；record_key 预映射与详情抓取目标从本列解析；解析重放依据';
 COMMENT ON COLUMN data_source.detail_adapter IS '详情适配器编码（列表即全文时与自身同源）';
 COMMENT ON COLUMN data_source.detail_parser IS '详情解析器编码';
 COMMENT ON COLUMN data_source.data_status IS '数据事实：normal 正常/filtered 规则跳过/dead 源站已删/paywalled 付费墙；新增取值须同步本注释';
 COMMENT ON COLUMN data_source.exec_status IS '执行进度：pending 待运行/running 运行中/failed 失败/success 成功';
-COMMENT ON COLUMN data_source.extra IS '渠道差异化字段（summary/author/栏目/机构/文号/是否付费/榜单数值等）+ 执行态约定键（fail_count/next_retry_at/last_error）；新增约定键须先确认';
+COMMENT ON COLUMN data_source.extra IS '执行态约定键（fail_count/next_retry_at/last_error）；新增约定键须先确认';
 COMMENT ON COLUMN data_source.create_time IS '创建时间（首次入库）';
 COMMENT ON COLUMN data_source.update_time IS '修改时间（同步水位）';
 
-CREATE INDEX data_source_time_idx ON data_source (event_time DESC);   -- 新鲜度/归档剪枝
 CREATE INDEX data_source_sync_idx ON data_source (update_time, id);   -- 分发双水位
 
 -- ============================================================
@@ -183,8 +178,7 @@ CREATE TABLE data_detail (
         CHECK (exec_status IN ('pending', 'running', 'failed', 'success')),
         -- 执行进度：行由成功抓取产出，落行即 success
     extra         jsonb NOT NULL DEFAULT '{}',
-        -- 扩展字段：附件链接等差异化信息 + 执行态约定键；新增约定键须先与项目所有者确认
-    event_time    timestamptz,            -- 详情页修订后的准确业务时间（源站事实）
+        -- 执行态约定键（fail_count/next_retry_at/last_error）；新增约定键须先与项目所有者确认
     create_time   timestamptz NOT NULL DEFAULT now(),
     update_time   timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT data_detail_uk UNIQUE (source_id, record_key),   -- 同一资源下内容键唯一
@@ -202,11 +196,9 @@ COMMENT ON COLUMN data_detail.parser IS '产出本行的解析器编码快照';
 COMMENT ON COLUMN data_detail.raw IS '详情原始载荷：bytea 任意格式（文本/二进制/图片/自定义结构），格式定义与解码在 adapter、PG 只存字节';
 COMMENT ON COLUMN data_detail.data_status IS '数据事实：normal 正常/filtered 规则跳过/dead 源站已删/paywalled 付费墙；新增取值须同步本注释';
 COMMENT ON COLUMN data_detail.exec_status IS '执行进度：行由成功抓取产出，默认 success';
-COMMENT ON COLUMN data_detail.extra IS '差异化信息 + 执行态约定键；新增约定键须先确认';
-COMMENT ON COLUMN data_detail.event_time IS '详情页修订后的准确业务时间';
+COMMENT ON COLUMN data_detail.extra IS '执行态约定键；新增约定键须先确认';
 COMMENT ON COLUMN data_detail.create_time IS '创建时间（首次入库）';
 COMMENT ON COLUMN data_detail.update_time IS '修改时间（同步水位）';
 
-CREATE INDEX data_detail_time_idx ON data_detail (event_time DESC);   -- 新鲜度/归档剪枝
 CREATE INDEX data_detail_sync_idx ON data_detail (update_time, id);   -- 分发双水位
 ```
