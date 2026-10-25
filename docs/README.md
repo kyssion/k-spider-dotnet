@@ -4,8 +4,11 @@
 
 | 文档 | 内容 |
 |---|---|
-| [architecture.md](architecture.md) | 平台定位与三职责划分（结构设计重新设计中） |
+| [architecture.md](architecture.md) | 目标架构：四模块分层、数据链路、核心机制、项目结构 |
 | [data-model.md](data-model.md) | 数据模型：四表 DDL 与规则 |
+| [crawler.md](crawler.md) | k-spider-crawler 技术文档（抓取服务，填充中） |
+| [process.md](process.md) | k-spider-process 技术文档（处理服务，填充中） |
+| [admin.md](admin.md) | k-spider-admin 技术文档（管理控制服务，填充中） |
 | [features.md](features.md) | 功能梳理：数据源清单与能力现状（只描述现状，非限制或约定） |
 
 操作手册（命令、约定、扩展套路）在仓库根 [AGENTS.md](../AGENTS.md)。

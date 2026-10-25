@@ -17,6 +17,24 @@
 7. **契约定立须确认**：契约（数据模型契约、基座间契约、表设计规范、管线形态契约、公共接口等）的制定与修改必须先向项目所有者提案并获确认，不得自行拍板；未确认前只能以"待确认"草案形式存在（如 data-model.md 待拍板表），不得当作既定事实写进代码或文档正文；
 8. **先方案后执行**：动手前先出方案（目标、做法、影响面）向项目所有者提交，确认后执行；有拿不准的点主动讨论，不带猜测落地、不自行拍板。
 
+## 项目结构
+
+```
+k-spider-dotnet/
+├── k-spider-dotnet.sln
+├── db/                           # DDL 与 migration 基线
+├── docs/ deploy/ scripts/
+├── web/                          # 展示层前端项目（Node/pnpm）
+└── src/                          # .NET 后端（三服务）
+    ├── k-spider-crawler/         #   底层：原始数据抓取（实现逐步落地）
+    ├── k-spider-process/         #   中间层：数据加工（预留）
+    └── k-spider-admin/           #   旁路：管理控制服务（Web API）
+```
+
+- 数据链路：crawler 抓取入库（data_source.raw / data_detail.raw）→ process 加工为结构化数据 → web 组装展示；
+- admin 为旁路控制面：经库通信（读注册表与数据、写指令表）控制 crawler 与 process，不在数据链路上；
+- 命名空间 PascalCase（`KSpider.Crawler / KSpider.Process / KSpider.Admin`）。
+
 ## 数据模型契约（表设计必须满足）
 
 1. 业务行只存数据语义；执行进度以 `exec_status` 列显式表达（pending/running/failed/success），失败计数、重试时间等执行细节记录在行内扩展字段（extra 约定键），可重建、可重放；
@@ -47,8 +65,17 @@ dotnet build k-spider-dotnet.sln      # 构建（零警告零错误）
 
 配置优先级：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`。
 
+```bash
+dotnet build k-spider-dotnet.sln      # 构建（零警告零错误）
+./scripts/verify.sh                   # 一键验证（CI 同款）
+dotnet run --project src/k-spider-crawler   # 抓取服务
+dotnet run --project src/k-spider-admin     # 管理控制服务
+```
+
+配置优先级：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`。
+
 ## 当前状态与待定事项
 
-- 模块划分与目录结构**重新设计中**（此前设计已废弃清理，不留存档）；
-- **物理表设计**：已定稿，见 [docs/data-model.md](docs/data-model.md)（DDL 待落 `db/` migration 基线）；
-- **平台命名**：已拍板 `k-spider`。
+- 模块划分：四模块已定稿（crawler / process / admin / web，见项目结构）；
+- **物理表设计**：已定稿，DDL 已落 [db/001_business_tables.sql](db/001_business_tables.sql)（幂等脚本）；
+- **待实现**：crawler 的数据访问与抓取引擎、admin 的管理接口、process 整体设计。
