@@ -4,6 +4,33 @@
 -- ============================================================
 
 -- ============================================================
+-- crawler_adapter 适配器注册表（admin 聚合节点上报维护）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS crawler_adapter (
+    id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    code         text NOT NULL UNIQUE,    -- 适配器编码（如 'em.news' / 'em.news_detail'），与代码注册表对齐
+    type         text NOT NULL
+        CHECK (type IN ('source', 'detail')),
+                                           -- source = 渠道列表抓取；detail = 资源详情抓取
+    name         text NOT NULL,            -- 展示名
+    description  text,                     -- 描述：抓什么、怎么抓的要点
+    parser_code  text NOT NULL,
+                                           -- 隐式绑定的解析器编码：驱动抓取的最小解析（record_key 预映射、
+                                           --   详情抓取目标）；渠道配置无需感知，此处仅登记供目录展示与溯源
+    create_time  timestamptz NOT NULL DEFAULT now(),
+    update_time  timestamptz NOT NULL DEFAULT now()
+);
+COMMENT ON TABLE crawler_adapter IS '适配器注册表：抓取适配器目录（admin 聚合节点上报维护），parser 隐式绑定';
+COMMENT ON COLUMN crawler_adapter.id IS '代理主键';
+COMMENT ON COLUMN crawler_adapter.code IS '适配器编码（如 em.news），与代码注册表对齐，唯一';
+COMMENT ON COLUMN crawler_adapter.type IS '适配器类型：source 渠道列表抓取 / detail 资源详情抓取';
+COMMENT ON COLUMN crawler_adapter.name IS '展示名';
+COMMENT ON COLUMN crawler_adapter.description IS '描述：抓什么、怎么抓的要点';
+COMMENT ON COLUMN crawler_adapter.parser_code IS '隐式绑定的解析器编码：驱动抓取的最小解析；渠道无需配置，仅登记供目录展示与溯源';
+COMMENT ON COLUMN crawler_adapter.create_time IS '创建时间';
+COMMENT ON COLUMN crawler_adapter.update_time IS '修改时间';
+
+-- ============================================================
 -- channel_category 渠道分类表（树形归属：站点 → 模块 → 栏目）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS channel_category (
@@ -40,11 +67,16 @@ CREATE TABLE IF NOT EXISTS channel (
     source_adapter text NOT NULL,
                                            -- source 列表获取适配器编码（如 'em.news'）：
                                            --   代码注册表按编码解析到实现类；抓取方式（策略/URL模板/
-                                           --   请求签名/反爬放行集）全部固化在适配器实现里，
-                                           --   未知编码加载即抛（fail-fast）
-    source_parser  text NOT NULL,
-                                           -- source 列表解析器编码：代码注册表解析，纯函数可离线回归
+                                           --   请求签名/反爬放行集）与解析全部固化在适配器实现里
+                                           --   （parser 隐式绑定），未知编码加载即抛（fail-fast）
+    detail_adapter text NOT NULL,
+                                           -- 详情适配器编码：本渠道数据的详情怎么抓；
+                                           --   「列表即全文」场景与 source_adapter 同值
     -- ── 治理 ──
+    write_mode    text NOT NULL DEFAULT 'overwrite'
+        CHECK (write_mode IN ('overwrite', 'skip', 'append')),
+                                           -- 入库规则：overwrite 覆盖（upsert）/ skip 不处理（DO NOTHING）/
+                                           --   append 增加（直接插入，要求 record_key 含时间窗）
     retention_days int CHECK (retention_days IS NULL OR retention_days > 0),
                                            -- 保留期声明，NULL = 永久（契约第 5 条）
     -- ── 调度与监控 ──
@@ -63,8 +95,9 @@ COMMENT ON TABLE channel IS '数据渠道表：一个可拉取的数据供给单
 COMMENT ON COLUMN channel.id IS '代理主键';
 COMMENT ON COLUMN channel.category_id IS '归属分类（channel_category.id），通常挂叶子';
 COMMENT ON COLUMN channel.channel_name IS '渠道名（同分类下唯一）';
-COMMENT ON COLUMN channel.source_adapter IS '列表适配器编码（如 em.news），代码注册表解析到实现类；抓取方式（策略/URL模板/签名/反爬放行集）全部固化在适配器实现里';
-COMMENT ON COLUMN channel.source_parser IS '列表解析器编码';
+COMMENT ON COLUMN channel.source_adapter IS '列表适配器编码（如 em.news），代码注册表解析到实现类；抓取方式与解析固化在适配器里（parser 隐式绑定）';
+COMMENT ON COLUMN channel.detail_adapter IS '详情适配器编码：本渠道数据的详情怎么抓；列表即全文场景与 source_adapter 同值';
+COMMENT ON COLUMN channel.write_mode IS '入库规则：overwrite 覆盖/skip 不处理/append 增加（要求 record_key 含时间窗）；source/detail 行快照来源';
 COMMENT ON COLUMN channel.retention_days IS '保留期（天），NULL=永久';
 COMMENT ON COLUMN channel.schedule IS '拉取节奏：间隔/cron 等';
 COMMENT ON COLUMN channel.status IS '渠道状态：active 启用/paused 已暂停/retired 已退役；新增取值须同步本注释';
@@ -85,16 +118,15 @@ CREATE TABLE IF NOT EXISTS data_source (
                                           --   生成规则适配器声明、选定后不可换（去重键稳定性，契约第 2 条）
     adapter       text NOT NULL,
         -- 列表适配器编码快照：实际产出本行的实现类（溯源：谁拉到了这条数据）
-    parser        text NOT NULL,
-        -- 列表解析器编码快照：实际解析出本行的解析器
     raw           bytea NOT NULL,         -- 原始载荷：列表响应中本条目的未解析原文（JSON 片段/HTML 分段）；
                                           --   record_key 预映射与详情抓取目标从本列解析；
                                           --   解析重放基于本列
     detail_adapter text NOT NULL,
         -- 详情适配器编码：本条数据的详情怎么抓的实现类；
         --   「列表即全文」场景与自身同源
-    detail_parser text NOT NULL,
-        -- 详情解析器编码：本条详情的解析器
+    write_mode    text NOT NULL DEFAULT 'overwrite'
+        CHECK (write_mode IN ('overwrite', 'skip', 'append')),
+        -- 入库规则快照（继承渠道配置）：本行的冲突处理方式
     data_status   text NOT NULL DEFAULT 'normal'
         CHECK (data_status IN ('normal', 'filtered', 'dead', 'paywalled')),
         -- 数据事实（终态结论）：正常 / 规则跳过 / 源站已删 / 付费墙
@@ -113,10 +145,9 @@ COMMENT ON COLUMN data_source.id IS '代理主键';
 COMMENT ON COLUMN data_source.channel_id IS '归属渠道（channel.id）';
 COMMENT ON COLUMN data_source.record_key IS '资源唯一键「渠道前缀id:sha256」：预映射=适配器按资源唯一性从载荷解析的唯一标识（文章id/doc_id/url 唯一段等），同一链接同一行；哈希由应用层计算、PG 只存储；选定不可换';
 COMMENT ON COLUMN data_source.adapter IS '产出本行的列表适配器编码快照';
-COMMENT ON COLUMN data_source.parser IS '产出本行的解析器编码快照';
 COMMENT ON COLUMN data_source.raw IS '列表响应中本条目的未解析原文（JSON 片段/HTML 分段）；record_key 预映射与详情抓取目标从本列解析；解析重放依据';
 COMMENT ON COLUMN data_source.detail_adapter IS '详情适配器编码（列表即全文时与自身同源）';
-COMMENT ON COLUMN data_source.detail_parser IS '详情解析器编码';
+COMMENT ON COLUMN data_source.write_mode IS '入库规则快照（继承渠道配置）：overwrite 覆盖/skip 不处理/append 增加';
 COMMENT ON COLUMN data_source.data_status IS '数据事实：normal 正常/filtered 规则跳过/dead 源站已删/paywalled 付费墙；新增取值须同步本注释';
 COMMENT ON COLUMN data_source.exec_status IS '执行进度：pending 待运行/running 运行中/failed 失败/success 成功';
 COMMENT ON COLUMN data_source.extra IS '执行态约定键（fail_count/next_retry_at/last_error）；新增约定键须先确认';
@@ -141,11 +172,12 @@ CREATE TABLE IF NOT EXISTS data_detail (
     fetch_url     text NOT NULL,          -- 抓取态快照：实际请求的地址（可能经重定向）
     adapter       text NOT NULL,
         -- 详情适配器编码快照：实际抓取本详情的实现类（重放依据）
-    parser        text NOT NULL,
-        -- 详情解析器编码快照：实际解析出本详情的实现类
     raw           bytea NOT NULL,         -- 原始数据：未解析的原始载荷，格式不限（文本/二进制/图片/
                                           --   复合或自定义结构），格式定义与解码在 adapter、PG 只存字节；
                                           --   解析重放基于本列，解析产物归分析侧
+    write_mode    text NOT NULL DEFAULT 'overwrite'
+        CHECK (write_mode IN ('overwrite', 'skip', 'append')),
+        -- 入库规则快照（继承渠道配置）
     data_status   text NOT NULL DEFAULT 'normal'
         CHECK (data_status IN ('normal', 'filtered', 'dead', 'paywalled')),
         -- 数据事实（语义同 data_source.data_status）
@@ -167,8 +199,8 @@ COMMENT ON COLUMN data_detail.source_id IS '来源资源（data_source.id）';
 COMMENT ON COLUMN data_detail.record_key IS '内容唯一键「渠道前缀id:sha256」：可含时间窗（榜单按天/快讯按条），同一资源可产出多份内容；哈希由应用层计算；选定不可换';
 COMMENT ON COLUMN data_detail.fetch_url IS '实际请求地址（抓取态快照）';
 COMMENT ON COLUMN data_detail.adapter IS '产出本行的详情适配器编码快照';
-COMMENT ON COLUMN data_detail.parser IS '产出本行的解析器编码快照';
 COMMENT ON COLUMN data_detail.raw IS '详情原始载荷：bytea 任意格式（文本/二进制/图片/自定义结构），格式定义与解码在 adapter、PG 只存字节';
+COMMENT ON COLUMN data_detail.write_mode IS '入库规则快照（继承渠道配置）：overwrite 覆盖/skip 不处理/append 增加';
 COMMENT ON COLUMN data_detail.data_status IS '数据事实：normal 正常/filtered 规则跳过/dead 源站已删/paywalled 付费墙；新增取值须同步本注释';
 COMMENT ON COLUMN data_detail.exec_status IS '执行进度：行由成功抓取产出，默认 success';
 COMMENT ON COLUMN data_detail.extra IS '执行态约定键；新增约定键须先确认';

@@ -9,6 +9,7 @@
 | [crawler.md](crawler.md) | k-spider-crawler 技术文档（抓取服务，填充中） |
 | [process.md](process.md) | k-spider-process 技术文档（处理服务，填充中） |
 | [admin.md](admin.md) | k-spider-admin 技术文档（管理控制服务，填充中） |
+| [distributed.md](distributed.md) | 分布式架构方案（节点/任务分配/租约/限速，设计中） |
 | [features.md](features.md) | 功能梳理：数据源清单与能力现状（只描述现状，非限制或约定） |
 
 操作手册（命令、约定、扩展套路）在仓库根 [AGENTS.md](../AGENTS.md)。

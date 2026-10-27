@@ -39,7 +39,7 @@ k-spider-dotnet/
 
 1. 业务行只存数据语义；执行进度以 `exec_status` 列显式表达（pending/running/failed/success），失败计数、重试时间等执行细节记录在行内扩展字段（extra 约定键），可重建、可重放；
 2. 去重键稳定：source 按 `(channel_id, record_key)`（资源唯一性）、detail 按 `(source_id, record_key)`（内容唯一性，1:N），record_key 格式「渠道前缀id:sha256」由代码生成；
-3. 写入语义唯一：覆盖式 upsert——source 按 `(channel_id, record_key)`、detail 按 `(source_id, record_key)`；历史快照由 detail 内容键含时间窗表达；
+3. 写入规则三模式（渠道配置 write_mode，source/detail 行级快照）：overwrite 覆盖（upsert）/ skip 不处理（DO NOTHING）/ append 增加（直接插入，要求 record_key 含时间窗）；source 键 `(channel_id, record_key)`、detail 键 `(source_id, record_key)`；
 4. 采集库只存原始数据：解析仅限抓取必需（record_key 预映射、详情抓取目标），标题/业务时间等解析产物归分析侧；
 5. 治理能力：按 create_time 等价分批归档 + 保留期声明；
 6. 原始响应可独立归档，但解析重放窗口内必须可达。
