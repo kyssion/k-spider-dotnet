@@ -19,7 +19,7 @@
 | 5 | **parser** | 最小解析：record_key 预映射、详情抓取目标——深解析归 process（process 的 parser 才是主要能力，crawler 的 adapter 才是核心） |
 | 6 | **kernel** | 抓取内核：HttpGateway 唯一 HTTP 出口、反爬验证（识别/通过/策略）、按源限流与失败冷却；所有 adapter 必须经 Gateway 发请求，不得自建 HttpClient |
 | 7 | **common** | 通用工具：无业务语义、无状态才进 |
-| 8 | **repository** | 数据访问：连接管理、覆盖式 upsert、双水位——数据库操作全部封装于此 |
+| 8 | **repository** | 数据访问：连接管理、按 write_mode 三模式入库、双水位——数据库操作全部封装于此 |
 
 ## 三、核心流程
 
@@ -35,7 +35,7 @@
 
 ## 六、数据访问
 
-（待补充：连接管理、migration、覆盖式 upsert、双水位）
+（待补充：连接管理、migration、write_mode 三模式入库、双水位）
 
 ## 七、配置
 

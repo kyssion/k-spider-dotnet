@@ -4,7 +4,7 @@
 
 ## 一、定位与职责
 
-（待补充：服务边界、输入（data_source.raw / data_detail.raw）与输出、与 crawler/admin 的关系）
+（待补充：服务边界、输入（data_source.raw / data_detail.raw）与输出、与 crawler 的关系）
 
 ## 二、模块设计
 

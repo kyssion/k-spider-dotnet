@@ -41,9 +41,9 @@ k-spider 的能力现状，按域组织；不含历史实现细节（源站侦�
 
 ## 二、存储功能
 
-- 四业务表：channel_category / channel / data_source / data_detail（DDL 与规则唯一权威见 [data-model.md](data-model.md)）；
+- 业务表：crawler_adapter（适配器注册）+ channel_category / channel / data_source / data_detail（规则唯一权威见 [data-model.md](data-model.md)，DDL 落 `db/001_business_tables.sql`）；
 - 原始载荷双侧留存（source.raw / detail.raw，bytea 任意格式），解析重放窗口内可达；
-- 覆盖式写入唯一：ON CONFLICT DO UPDATE；历史快照由 detail 内容键含时间窗表达；
+- 写入规则三模式（渠道 write_mode 配置，source/detail 行级快照）：overwrite 覆盖（upsert）/ skip 不处理 / append 增加（要求 record_key 含时间窗）；
 - 解析边界：采集库只存原始数据，标题/业务时间等解析产物归分析侧，采集侧解析仅限 record_key 预映射与详情抓取目标；
 - source : detail = 1 : N（资源按链接唯一性、内容按业务唯一性，键生成是纯代码逻辑）；
 - 分发：双键水位（新行按 Id、已有行按 update_time）；

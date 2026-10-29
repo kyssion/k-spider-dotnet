@@ -1,10 +1,10 @@
 -- ============================================================
--- k-spider 业务表基线 : 四表 DDL（定稿见 docs/data-model.md）
+-- k-spider 业务表基线 : crawler_adapter + 四业务表 DDL（定稿见 docs/data-model.md）
 -- 幂等脚本 : 全部 IF NOT EXISTS，可重复执行
 -- ============================================================
 
 -- ============================================================
--- crawler_adapter 适配器注册表（admin 聚合节点上报维护）
+-- crawler_adapter 适配器注册表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS crawler_adapter (
     id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS crawler_adapter (
     create_time  timestamptz NOT NULL DEFAULT now(),
     update_time  timestamptz NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE crawler_adapter IS '适配器注册表：抓取适配器目录（admin 聚合节点上报维护），parser 隐式绑定';
+COMMENT ON TABLE crawler_adapter IS '适配器注册表：抓取适配器目录，parser 隐式绑定';
 COMMENT ON COLUMN crawler_adapter.id IS '代理主键';
 COMMENT ON COLUMN crawler_adapter.code IS '适配器编码（如 em.news），与代码注册表对齐，唯一';
 COMMENT ON COLUMN crawler_adapter.type IS '适配器类型：source 渠道列表抓取 / detail 资源详情抓取';
@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS channel (
     id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     -- ── 身份 ──
     category_id    bigint NOT NULL REFERENCES channel_category(id),
-                                           -- 归属分类（树形：站点→模块→栏目，通常挂叶子）
+                                           -- 归属分类（树形：站点→模块→栏目，通常挂叶子）；
+                                           --   内容域由站点级归属与适配器推导，不设独立列
     channel_name   text NOT NULL,
     -- ── 接入 ──
     source_adapter text NOT NULL,
@@ -93,7 +94,7 @@ CREATE TABLE IF NOT EXISTS channel (
 );
 COMMENT ON TABLE channel IS '数据渠道表：一个可拉取的数据供给单元';
 COMMENT ON COLUMN channel.id IS '代理主键';
-COMMENT ON COLUMN channel.category_id IS '归属分类（channel_category.id），通常挂叶子';
+COMMENT ON COLUMN channel.category_id IS '归属分类（channel_category.id），通常挂叶子；内容域由站点归属与适配器推导，不设独立列';
 COMMENT ON COLUMN channel.channel_name IS '渠道名（同分类下唯一）';
 COMMENT ON COLUMN channel.source_adapter IS '列表适配器编码（如 em.news），代码注册表解析到实现类；抓取方式与解析固化在适配器里（parser 隐式绑定）';
 COMMENT ON COLUMN channel.detail_adapter IS '详情适配器编码：本渠道数据的详情怎么抓；列表即全文场景与 source_adapter 同值';
@@ -154,7 +155,7 @@ COMMENT ON COLUMN data_source.extra IS '执行态约定键（fail_count/next_ret
 COMMENT ON COLUMN data_source.create_time IS '创建时间（首次入库）';
 COMMENT ON COLUMN data_source.update_time IS '修改时间（同步水位）';
 
-CREATE INDEX data_source_sync_idx ON data_source (update_time, id);   -- 分发双水位
+CREATE INDEX IF NOT EXISTS data_source_sync_idx ON data_source (update_time, id);   -- 分发双水位
 
 -- ============================================================
 -- data_detail 数据详情表（资源抓取产出的原始内容，source : detail = 1 : N）
@@ -207,4 +208,4 @@ COMMENT ON COLUMN data_detail.extra IS '执行态约定键；新增约定键须�
 COMMENT ON COLUMN data_detail.create_time IS '创建时间（首次入库）';
 COMMENT ON COLUMN data_detail.update_time IS '修改时间（同步水位）';
 
-CREATE INDEX data_detail_sync_idx ON data_detail (update_time, id);   -- 分发双水位
+CREATE INDEX IF NOT EXISTS data_detail_sync_idx ON data_detail (update_time, id);   -- 分发双水位

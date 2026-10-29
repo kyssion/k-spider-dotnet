@@ -4,7 +4,7 @@
 
 ## 平台是什么
 
-**通用爬虫数据抓取和分析平台**：抓取侧接入任意领域数据源、原始载荷入 PostgreSQL；处理侧对原始数据提取加工为结构化/格式化数据；管理侧统一监控配置与查看。数据模型见 [docs/data-model.md](docs/data-model.md)，功能全集见 [docs/features.md](docs/features.md)。
+**通用爬虫数据抓取和分析平台**：抓取侧接入任意领域数据源、原始载荷入 PostgreSQL；处理侧对原始数据提取加工为结构化/格式化数据。数据模型见 [docs/data-model.md](docs/data-model.md)，功能全集见 [docs/features.md](docs/features.md)。
 
 ## 核心原则（最高优先级，覆盖以下所有条目）
 
@@ -25,14 +25,12 @@ k-spider-dotnet/
 ├── db/                           # DDL 与 migration 基线
 ├── docs/ deploy/ scripts/
 ├── web/                          # 展示层前端项目（Node/pnpm）
-└── src/                          # .NET 后端（三服务）
+└── src/                          # .NET 后端（两服务）
     ├── k-spider-crawler/         #   底层：原始数据抓取（实现逐步落地）
-    ├── k-spider-process/         #   中间层：数据加工（预留）
-    └── k-spider-admin/           #   旁路：管理控制服务（Web API）
+    └── k-spider-process/         #   中间层：数据加工（预留）
 ```
 
 - 数据链路：crawler 抓取入库（data_source.raw / data_detail.raw）→ process 加工为结构化数据 → web 组装展示；
-- admin 为旁路控制面：经库通信（读注册表与数据、写指令表）控制 crawler 与 process，不在数据链路上；
 - 命名空间 PascalCase（`KSpider.Crawler / KSpider.Process / KSpider.Admin`）。
 
 ## 数据模型契约（表设计必须满足）
@@ -59,23 +57,15 @@ k-spider-dotnet/
 ## 命令
 
 ```bash
-dotnet build k-spider-dotnet.sln      # 构建（零警告零错误）
-./scripts/verify.sh                   # 一键验证（CI 同款）
-```
-
-配置优先级：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`。
-
-```bash
-dotnet build k-spider-dotnet.sln      # 构建（零警告零错误）
-./scripts/verify.sh                   # 一键验证（CI 同款）
-dotnet run --project src/k-spider-crawler   # 抓取服务
-dotnet run --project src/k-spider-admin     # 管理控制服务
+dotnet build k-spider-dotnet.sln             # 构建（零警告零错误）
+./scripts/verify.sh                          # 一键验证（CI 同款）
+dotnet run --project src/k-spider-crawler    # 抓取服务
 ```
 
 配置优先级：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`。
 
 ## 当前状态与待定事项
 
-- 模块划分：四模块已定稿（crawler / process / admin / web，见项目结构）；
+- 模块划分：三模块已定稿（crawler / process / web，见项目结构）；分布式方案已定稿（admin 中央调度 + 节点执行，见 [docs/distributed.md](docs/distributed.md)），k-spider-admin 服务待重建；
 - **物理表设计**：已定稿，DDL 已落 [db/001_business_tables.sql](db/001_business_tables.sql)（幂等脚本）；
-- **待实现**：crawler 的数据访问与抓取引擎、admin 的管理接口、process 整体设计。
+- **待实现**：crawler 的数据访问与抓取引擎、admin 调度与集群维护服务（k-spider-admin 待重建）、process 整体设计。

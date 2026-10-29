@@ -1,8 +1,8 @@
 # k-spider 架构
 
-通用爬虫数据抓取和分析平台：抓取 → 处理 → 展示三层数据链路，管理旁路控制。
+通用爬虫数据抓取和分析平台：抓取 → 处理 → 展示三层数据链路，admin 旁路中央调度。
 
-**数据链路**：crawler 抓取 → 原始载荷入库（data_source.raw / data_detail.raw）→ process 加工为结构化/格式化数据 → web 组装展示。admin 为旁路控制面：经库通信（读注册表与数据、写指令表）控制 crawler 与 process，不在数据链路上。
+**数据链路**：crawler 抓取 → 原始载荷入库（data_source.raw / data_detail.raw）→ process 加工为结构化/格式化数据 → web 组装展示。admin 为旁路控制面：中央调度（任务分发与对账）+ 集群维护（心跳与 web 后台），方案见 [distributed.md](distributed.md)，不在数据链路上。
 
 ## 一、模块
 
@@ -10,10 +10,10 @@
 |---|---|---|---|---|
 | 底层 | 抓取 | k-spider-crawler | 原始数据抓取入库；自含数据模型与存储访问 | 开发中 |
 | 中间层 | 处理 | k-spider-process | 消费原始载荷，提取加工为结构化/格式化数据 | 预留 |
-| 旁路 | 管理 | k-spider-admin | 控制 crawler 与 process：配置、指令下发、状态监控（Web API） | 预留 |
+| 旁路 | 管理 | k-spider-admin | 中央调度器：任务分发与对账、节点心跳与集群维护、web 后台（Web API） | 待重建 |
 | 顶层 | 展示 | k-spider-web | 组装展示数据 + 前端页面（Node/pnpm，非 .NET） | 预留 |
 
-依赖方向：`web → process → collector（数据基座）`；admin 旁路引用两者做控制。
+依赖方向：`web → process → collector（数据基座）`；admin 旁路调度 crawler / process。
 
 ## 二、项目结构
 
@@ -26,18 +26,18 @@ k-spider-dotnet/
 └── src/                          # .NET 后端（三服务）
     ├── k-spider-crawler/         #   底层：原始数据抓取
     ├── k-spider-process/         #   中间层：数据加工（预留）
-    └── k-spider-admin/           #   旁路：管理控制服务
+    └── k-spider-admin/           #   旁路：中央调度与集群维护（待重建，见 distributed.md）
 ```
 
 命名空间 PascalCase（`KSpider.Crawler / KSpider.Process / KSpider.Admin`）。
 
 ## 三、核心机制
 
-- **数据模型**：四表 + 覆盖式写入 + source:detail=1:N——规则与 DDL 唯一权威见 [data-model.md](data-model.md)；
+- **数据模型**：分类→渠道→资源→内容四张业务表 + 适配器注册表 + write_mode 三模式入库 + source:detail=1:N——规则唯一权威见 [data-model.md](data-model.md)，DDL 落 `db/001_business_tables.sql`；
 - **源适配器**：渠道级列表适配器（拉资源、登记 source）+ 资源级详情适配器（产出内容）+ 解析器（纯函数，可离线回归）；一切皆注册——代码注册表按编码取用（未知编码加载即抛），接入新源 = 适配器实现 + 渠道行；
-- **管线**：列表轮（资源登记）→ 详情回填轮（按 exec_status 取件）；覆盖式 upsert，异常按渠道粒度兜底，本轮失败下一轮再来；
+- **管线**：列表轮（资源登记）→ 详情回填轮（按 exec_status 取件）；按渠道 write_mode 入库（三模式），异常按渠道粒度兜底，本轮失败下一轮再来；
 - **抓取内核**：HttpGateway 唯一 HTTP 出口（每主机独立客户端、同主机串行 + 最小间隔、失败冷却）；反爬验证 Detector（纯判定注册表，越具体越靠前）→ Solver（代价升序）→ Policy（按源放行集），行为对齐 v1 实测；
-- **调度**：注册表驱动（扫 channel 表自动发现 Job），单机形态；调度实现藏在引擎内（选型待定），指令消费走库指令表；
+- **调度**：admin 统一调度 + 节点执行（方案见 [distributed.md](distributed.md)），尚未实现；
 - **可观测**：指标 / 健康探测 / 告警通道插件化，注册即覆盖；
 - **处理与分析未启动**：process 的提取加工 / 语义层 / 查询引擎（预算制）/ 物化，按真实需求立项，不预建。
 
@@ -49,6 +49,4 @@ k-spider-dotnet/
 
 | 事项 | 状态 |
 |---|---|
-| 引擎设施表 DDL（指令通道 / 分发水位） | 起草后确认 |
-| 调度实现选型（Quartz vs 自研） | 先内置轻量实现，契约不暴露 |
 | process 设计 | 未开始 |
