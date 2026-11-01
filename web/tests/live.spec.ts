@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
 
-// 真实后端连通性 : 需要先启动 k-spider-web ( 5800 ) , 用 LIVE_E2E=1 pnpm test:e2e:live 执行 ;
+// 真实后端连通性 : 需要先启动 k-spider-admin ( 5094 ) , 用 LIVE_E2E=1 pnpm test:e2e:live 执行 ;
 // 默认跳过 ( 与后端 Live 测试分类同款分层 : 门禁保持离线确定 )。
-test.skip(!process.env.LIVE_E2E, '需要真实后端 : 先 dotnet run --project src/k-spider-web 再 LIVE_E2E=1 执行')
+test.skip(!process.env.LIVE_E2E, '需要真实后端 : 先 dotnet run --project src/k-spider-admin 再 LIVE_E2E=1 执行')
 
-test.use({ baseURL: 'http://localhost:5800' })
+test.use({ baseURL: 'http://localhost:5094' })
 
 test('@live 健康探针可访问', async ({ request }) => {
   const res = await request.get('/api/health')

@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 echo "==> 文档链接检查"
 bash scripts/check-docs.sh
 
-# 前端构建 ( 产物进 k-spider-web/wwwroot ) : 无 pnpm 环境时跳过 ( CI 与前端开发必跑 )
+# 前端构建 ( 产物进 k-spider-admin/wwwroot ) : 无 pnpm 环境时跳过 ( CI 与前端开发必跑 )
 if command -v pnpm >/dev/null 2>&1; then
   echo "==> 前端构建"
   bash scripts/build-web.sh
@@ -25,7 +25,8 @@ fi
 echo "==> dotnet build"
 dotnet build k-spider-dotnet.sln
 
+# v1 测试暂留门禁，待新 crawler 测试落地后替换；不加 --no-build，保证干净环境先构建测试项目
 echo "==> dotnet test ( 离线 : 排除 Live 分类的真实接口连通性用例 )"
-dotnet test src/k-spider-test/k-spider-test.csproj --no-build --filter "TestCategory!=Live"
+dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"
 
 echo "==> verify ok"

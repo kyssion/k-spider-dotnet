@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 构建前端并拷贝产物到 k-spider-web 的 wwwroot ( 保留 .gitkeep 占位 )
+# 构建前端并拷贝产物到 k-spider-admin 的 wwwroot ( admin 托管前端 ; 保留 .gitkeep 占位 )
 set -euo pipefail
 
 # 锚定脚本绝对路径 : 本脚本会被 verify.sh 以相对路径调用 , 下面还要 cd 进 web/ ,
@@ -18,8 +18,8 @@ pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 echo "==> pnpm build ( tsc 类型检查 + vite 打包 )"
 pnpm build
 
-echo "==> 拷贝产物到 src/k-spider-web/wwwroot"
-WWWROOT="$SCRIPT_DIR/../src/k-spider-web/wwwroot"
+echo "==> 拷贝产物到 src/k-spider-admin/wwwroot"
+WWWROOT="$SCRIPT_DIR/../src/k-spider-admin/wwwroot"
 mkdir -p "$WWWROOT"
 find "$WWWROOT" -mindepth 1 -not -name '.gitkeep' -delete
 cp -R dist/. "$WWWROOT"

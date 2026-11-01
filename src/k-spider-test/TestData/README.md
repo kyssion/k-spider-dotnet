@@ -1,5 +1,7 @@
 # TestData — 真实抓取响应夹具
 
+> 本目录为 v1 抓取实现的真实响应夹具，随 v1 测试暂留门禁；新 crawler 的夹具按 [docs/crawler.md](../../../docs/crawler.md) 与 [AGENTS.md](../../../AGENTS.md) 约定重建、登记，不复用 v1 代码。
+
 解析回归测试用的**真实接口响应**（原样保存，未做字段裁剪）。测试通过 `AppContext.BaseDirectory/TestData` 读取，
 csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完全离线。
 
@@ -59,7 +61,7 @@ csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完�
 | `verify_jsl_clearance.html` | 加速乐（JS 计算 cookie） | `__jsl_clearance` |
 | `verify_acw_sc_v2.html` | 阿里云盾（JS 计算 cookie） | `acw_sc__v2` |
 | `verify_slider_aliyun.html` | 阿里云盾滑块（旧版 NoCaptcha） | `nc-container` / `nc_scale` / `nc_1_n1z` |
-| `verify_aliyun_waf_captcha.html` | 阿里云 WAF 人机验证页（新版 AliyunCaptcha） | `aliyunCaptcha` / `aliyunCaptcha-sliding-slider` / `aliyun_waf_aa`；实测样本来自财联社 `/detail/*`（2026-09-25，见 `docs/anti-bot-verification.md`） |
+| `verify_aliyun_waf_captcha.html` | 阿里云 WAF 人机验证页（新版 AliyunCaptcha） | `aliyunCaptcha` / `aliyunCaptcha-sliding-slider` / `aliyun_waf_aa`；实测样本来自财联社 `/detail/*`（2026-09-25，识别器实现见 `src/k-spider-dotnet-old/Spider/Verify/`） |
 | `verify_slider_geetest.html` | 极验滑块 | `geetest_panel` / `geetest_slider_button` |
 | `verify_image_captcha.html` | 图形验证码 | `captcha_img` / `name="captcha"` / `看不清，换一张` |
 | `verify_sms_captcha.html` | 短信验证码 | `smsCode` / `获取验证码` |

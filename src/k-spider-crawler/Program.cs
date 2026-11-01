@@ -3,12 +3,14 @@ using Microsoft.Extensions.Hosting;
 var builder = Host.CreateApplicationBuilder(args);
 
 // 抓取基座 : 原始数据抓取入库。
-// 待实现（按 docs/data-model.md 与模块结构逐步落地）：
-//   Models/  四业务表实体 + 代码枚举
-//   Data/    Pg 连接 / 托管 migration / 覆盖式 upsert / 双水位
-//   Http/    HttpGateway 唯一出口
-//   Verification/  反爬验证
-//   Engine/  调度 + 管线
-//   Sources/ 源适配器
+// 待实现（分层与职责唯一权威见 docs/crawler.md）：
+//   Hosting/  启动与控制
+//   Channel/  渠道调度编排
+//   Engine/   列表轮 / 详情回填轮
+//   Adapter/  源适配器
+//   Parser/   最小解析
+//   Kernel/   HttpGateway 与反爬验证
+//   Common/   通用工具
+//   Repository/ 数据访问
 
 await builder.Build().RunAsync();

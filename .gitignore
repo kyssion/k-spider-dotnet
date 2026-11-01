@@ -9,9 +9,9 @@ k-spider-dotnet.sln.DotSettings.user
 .vs
 output.log
 
-# Web 控制台前端产物 ( 由 scripts/build-web.sh 生成 , 不入库 )
-src/k-spider-web/wwwroot/*
-!src/k-spider-web/wwwroot/.gitkeep
+# Web 控制台前端产物 ( 由 scripts/build-web.sh 生成 , 不入库 ; admin 托管 )
+src/k-spider-admin/wwwroot/*
+!src/k-spider-admin/wwwroot/.gitkeep
 
 # ZCode 会话工作目录 ( 本地工具产物 , 不入库 )
 .zcode/

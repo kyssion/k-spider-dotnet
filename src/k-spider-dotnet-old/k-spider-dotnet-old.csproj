@@ -16,6 +16,12 @@
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
     </ItemGroup>
     <ItemGroup>
+        <!-- satellites/ 是 v1 独立子项目归档 ; 不并入本项目的默认编译项 -->
+        <Compile Remove="satellites/**/*.cs" />
+        <None Remove="satellites/**" />
+        <EmbeddedResource Remove="satellites/**" />
+    </ItemGroup>
+    <ItemGroup>
         <!-- 基础配置 + 当前目标环境的配置文件 , 其余环境文件不进产物 ( 避免连接串互相泄漏 ) -->
         <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
         <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(SpiderEnvironment)' == 'Development'" />
