@@ -2,18 +2,20 @@
 
 > 底层：原始数据抓取服务。数据模型规则见 [data-model.md](../data-model.md)，平台架构见 [architecture.md](../architecture.md)，任务调度见 [distributed.md](../distributed.md)。
 
+> **状态**：目标设计，尚未实现；当前仓库仅有骨架。
+
 ## 一、定位与职责
 
-原始数据的抓取：按渠道调度，把列表条目与详情原始载荷写入 `data_source` / `data_detail`，不在采集侧做业务解析。
+原始数据的抓取：按 admin 派发的任务包执行渠道轮次，把列表条目与详情原始载荷写入 `data_source` / `data_detail`，不在采集侧做业务解析。
 
 ## 二、模块设计
 
-分层关系：**驱动 → 执行 → 实现**——channel 驱动（何时跑）、engine 执行（一轮怎么跑）、adapter 实现（这个源怎么抓）；源差异知识只落在 adapter + parser，其余各层保持领域无关。
+分层关系：**执行 → 实现**——channel 绑定任务（哪个渠道）、engine 执行（一轮怎么跑）、adapter 实现（这个源怎么抓）；源差异知识只落在 adapter + parser，其余各层保持领域无关。
 
 | # | 层 | 职责 |
 |---|---|---|
 | 1 | **hosting** | 服务启动与运行控制：初始化、系统信号监听、配置读取 |
-| 2 | **channel** | 渠道调度编排：读 channel 表发现渠道、按 schedule 节奏触发、管理运行状态——不亲自抓取 |
+| 2 | **channel** | 渠道任务绑定：按任务包中的 `channel_id` 加载渠道与适配器配置、管理本轮运行状态——不发现渠道、不自行定时、不亲自抓取 |
 | 3 | **engine** | 抓取引擎：轮次推进（列表轮 / 详情回填轮）、游标与翻页控制、exec_status 流转、重试——通用机制，不含单源知识 |
 | 4 | **adapter** | 源适配器：source / detail 的抓取实现（URL 拼装、签名、请求构造）——源差异知识的唯一落点 |
 | 5 | **parser** | 最小解析：record_key 预映射、详情抓取目标——深解析归 process（process 的 parser 才是主要能力，crawler 的 adapter 才是核心） |
@@ -23,11 +25,11 @@
 
 ## 三、核心流程
 
-- **列表轮**：channel 驱动按 `channel.schedule` 触发；source adapter 拉列表；parser 做最小解析（record_key 预映射、详情抓取目标）；repository 按渠道 write_mode 写入 `data_source`；
+- **列表轮**：admin 派发列表轮任务后，engine 按任务包中的 `channel_id` 加载渠道配置；source adapter 拉列表；parser 做最小解析（record_key 预映射、详情抓取目标）；repository 按渠道 write_mode 写入 `data_source`；
 - **详情回填轮**：按 `data_source.exec_status` 取待回填行；detail adapter 抓详情；repository 写入 `data_detail`；行存在即详情已抓取，`exec_status` 落 `success`；
 - **翻页控制**：自适应停止（翻到存量区间即停）、停机回补上限、每轮批量上限，参数来自渠道 `extra`；
 - **多栏目**：栏目号/频道参数/伪栏目由 adapter + `channel.extra` 表达，不新增表结构；
-- **异常**：按渠道粒度兜底，本轮失败下一轮再来；任务级失败由 admin 对账重派，见 [distributed.md](../distributed.md)；
+- **异常**：按渠道粒度兜底，本轮失败由 admin 对账或下一轮任务包重派，见 [distributed.md](../distributed.md)；
 - **两段回填**：目标态只保留「列表 → 详情」两段；v1 的三段历史不再作为目标契约。
 
 ## 四、源适配器
@@ -49,17 +51,27 @@
 
 ## 六、数据访问
 
-- 连接管理、DDL / migration 幂等执行、按 write_mode 三模式入库、双键水位、批量写入集中在 repository；规则唯一权威见 [data-model.md](../data-model.md)，实现约定见 [AGENTS.md](../../AGENTS.md)；
+- 连接管理、DDL / migration 幂等执行、按 write_mode 三模式入库、批量写入集中在 repository；规则唯一权威见 [data-model.md](../data-model.md)，实现约定见 [AGENTS.md](../../AGENTS.md)；
+- 双键水位的消费侧归 process（设计待定）；crawler repository 只负责写入并正确刷新 `update_time`，不得依赖数据库默认值替代更新；
 - 数据访问异常（`KDbException`）与数据本身失败分开：前者不消耗重试计数。
 
 ## 七、配置
 
 - 配置来自 `appsettings.json` / 环境配置 / `K_SPIDER__` 前缀环境变量，优先级见 [AGENTS.md](../../AGENTS.md)；
 - 渠道实例参数（栏目号、窗口、批量上限、凭据引用名等）走 `channel.extra`；凭据只存 `credential_key` 引用，真实值由部署方环境注入；
-- 具体配置键随实现补齐。
+- **待确认**：`channel.extra` 的键名、类型、默认值与所属适配器尚未定稿，实现前须先与项目所有者确认并登记；
 
 ## 八、测试
 
 - 通用测试约定（夹具 / Live / 门禁）见 [AGENTS.md](../../AGENTS.md)；
 - 本服务分层：契约测试（离线）/ 夹具回归（真实响应）/ Live 连通性（门禁排除）；
 - 当前门禁暂跑 v1 测试（`src/k-spider-test`，随 v1 代码）；新 crawler 测试落地后替换。
+
+## 九、待定事项
+
+| 事项 | 说明 |
+|---|---|
+| `channel.extra` 键表 | 栏目号、窗口、批量上限、凭据引用等键名与类型（实现前确认） |
+| 列表即全文 | `detail_adapter` 与 `source_adapter` 同值时，是否仍写 `data_detail` 行、raw 是否复用列表载荷（实现前确认） |
+| 抓取配置键 | 限流、冷却、批量等 crawler 配置键（实现时定） |
+| 反爬策略细节 | 识别器特征、放行集合与告警阈值（随实现补齐） |

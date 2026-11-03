@@ -151,6 +151,8 @@ COMMENT ON COLUMN data_source.update_time IS '修改时间（分发水位，规�
 
 CREATE INDEX IF NOT EXISTS data_source_sync_idx ON data_source (update_time, id);   -- 双键水位（规则见 docs/data-model.md）
 
+CREATE INDEX IF NOT EXISTS data_source_backfill_idx ON data_source (channel_id, exec_status, id);   -- 详情回填取数（按渠道 + 执行状态）
+
 -- ============================================================
 -- data_detail 数据详情表（资源抓取产出的原始内容，source : detail = 1 : N）
 -- 语义与边界见 docs/data-model.md；行存在 = 详情已抓取
@@ -158,8 +160,7 @@ CREATE INDEX IF NOT EXISTS data_source_sync_idx ON data_source (update_time, id)
 CREATE TABLE IF NOT EXISTS data_detail (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     channel_id    bigint NOT NULL,        -- 冗余渠道（与 source 一致，便于按渠道查询/归档）
-    source_id     bigint NOT NULL REFERENCES data_source(id),
-                                          -- 来源资源（一个资源可产出多份内容）
+    source_id     bigint NOT NULL,        -- 来源资源（一个资源可产出多份内容）；外键统一定义在表尾
     record_key    text NOT NULL,          -- 内容唯一键；格式与生成规则见 docs/data-model.md
     fetch_url     text NOT NULL,          -- 抓取态快照：实际请求的地址（可能经重定向）
     adapter       text NOT NULL,
@@ -198,3 +199,6 @@ COMMENT ON COLUMN data_detail.create_time IS '创建时间（首次入库）';
 COMMENT ON COLUMN data_detail.update_time IS '修改时间（分发水位，规则见 docs/data-model.md）';
 
 CREATE INDEX IF NOT EXISTS data_detail_sync_idx ON data_detail (update_time, id);   -- 双键水位（规则见 docs/data-model.md）
+
+-- 旧基线曾在 source_id 列级重复定义外键；新基线只保留 data_detail_fk，这里清理已存在的旧约束
+ALTER TABLE data_detail DROP CONSTRAINT IF EXISTS data_detail_source_id_fkey;

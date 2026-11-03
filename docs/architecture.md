@@ -19,7 +19,7 @@
 
 ## 二、核心机制
 
-每条机制只在对应主题文档定义，这里只做索引：
+每条机制只在对应主题文档定义，这里只做索引；除 data-model / distributed / auth 的已确认契约外，其余均为目标设计，模块状态以 [README.md](../README.md) 为准。
 
 - **数据模型**：分类 → 渠道 → 资源 → 内容四张业务表 + 适配器注册表；语义与规则见 [data-model.md](data-model.md)，物理结构见 `db/001_business_tables.sql`；
 - **抓取**：crawler 的 hosting / channel / engine / adapter / parser / kernel / common / repository 分层，以及 HttpGateway、反爬验证、write_mode 入库、双键水位，见 [crawler.md](tech/crawler.md)；

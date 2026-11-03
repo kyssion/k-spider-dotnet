@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 一键验证 : 构建 + 全部单元测试 ( 离线 , 不依赖网络与数据库 ) + 前端构建 ( 本机有 pnpm 时 )
+# 一键验证 : 构建 + v1 过渡测试 ( 离线 , 不依赖网络与数据库 ) + 前端构建 / E2E ( 本机有 pnpm 时 )
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -14,7 +14,7 @@ else
   echo "==> 跳过前端构建 ( 未安装 pnpm ; 需要时执行 scripts/build-web.sh )"
 fi
 
-# 前端 E2E ( mock API , 离线确定 ) : 需要 pnpm + 已安装 playwright 浏览器 , 缺任一则跳过
+# 前端 E2E ( 当前为骨架冒烟 , 离线确定 ) : 需要 pnpm + 已安装 playwright 浏览器 , 缺任一则跳过
 if command -v pnpm >/dev/null 2>&1 && { [ -d "$HOME/Library/Caches/ms-playwright" ] || [ -d "$HOME/.cache/ms-playwright" ]; }; then
   echo "==> 前端 E2E 测试"
   (cd web && pnpm test:e2e)

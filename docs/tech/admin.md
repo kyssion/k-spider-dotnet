@@ -14,11 +14,11 @@
 
 ## 三、启动与运行
 
-（待补充：配置加载顺序、日志、Kestrel 单端口 Http1AndHttp2、健康检查、优雅停机、admin 单机约束）
+（待补充：配置加载顺序、日志、REST / gRPC 分离监听端点、健康检查、优雅停机、admin 单机约束；gRPC 明文 h2c，TLS 按端点预留）
 
 ## 四、调度与对账
 
-（待补充：读 `channel.schedule` 生成任务包、节点选择、派发互斥、对账循环、重派与取消的实现落点；机制唯一权威见 [distributed.md](../distributed.md)）
+（待补充：读 `channel.schedule` 生成任务包、节点选择、派发互斥、对账循环、重派与取消的实现落点；机制唯一权威见 [distributed.md](../distributed.md)。`channel.schedule` 的 JSON 键、时区与错过轮次语义尚未定稿，实现前先确认）
 
 ## 五、gRPC 节点服务
 
@@ -46,7 +46,7 @@
 
 ## 十一、部署与运维
 
-（待补充：发布方式、systemd 托管、日志与告警、升级与回滚、TLS 配置位）
+（待补充：发布方式、systemd 托管、日志与告警、升级与回滚、REST / gRPC 端口与 TLS 配置）
 
 ## 十二、测试
 
@@ -54,4 +54,4 @@
 
 ## 十三、待定事项
 
-（待补充：proto 字段与错误码、TLS、对账参数默认值、后台页面范围等；与 [distributed.md](../distributed.md) 的待定章节保持一致）
+（待补充：proto 字段与错误码、`task_detail` / `extra` JSON 契约、节点认证、REST / gRPC 端口与 TLS、对账参数默认值、后台页面范围等；与 [distributed.md](../distributed.md) 的待定章节保持一致）

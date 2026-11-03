@@ -2,6 +2,8 @@
 
 > 中间层：数据处理服务——消费 crawler 留存的原始载荷，提取加工为结构化/格式化数据。数据模型见 [data-model.md](../data-model.md)，平台架构见 [architecture.md](../architecture.md)，节点接入方式见 [distributed.md](../distributed.md)。
 
+> **状态**：未开始；本文仅为骨架。
+
 ## 一、定位与职责
 
 （待补充：服务边界、输入（data_source.raw / data_detail.raw）与输出、与 crawler 的关系）

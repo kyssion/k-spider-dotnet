@@ -34,9 +34,9 @@
 | [auth.md](auth.md) | 认证与账号方案（已确认） |
 | [data-model.md](data-model.md) | 业务表语义与设计规则（物理结构落 `db/001`） |
 | [crawler.md](tech/crawler.md) | k-spider-crawler 技术文档（抓取服务） |
-| [process.md](tech/process.md) | k-spider-process 技术文档（处理服务，填充中） |
-| [admin.md](tech/admin.md) | k-spider-admin 技术文档（调度、gRPC、REST API、认证、前端托管，填充中） |
-| [web.md](tech/web.md) | k-spider web 技术文档（技术选型、目录、页面与交互，填充中） |
+| [process.md](tech/process.md) | k-spider-process 技术文档（未开始） |
+| [admin.md](tech/admin.md) | k-spider-admin 技术文档（骨架） |
+| [web.md](tech/web.md) | k-spider web 技术文档（骨架） |
 | [distributed.md](distributed.md) | 分布式架构：admin 中央调度 + 节点执行（gRPC 双向流） |
 | [features.md](features.md) | 功能与数据源清单：能力、现状与缺口 |
 
@@ -45,9 +45,9 @@
 ## 维护要求
 
 - 同一主题只在一处定义；其他文档只链接。发现重复时保留权威位置，删除其余定义；
-- 文档写**现状与目标设计**，并明确标注状态；目标设计不冒充现状；
-- 现状断言应能在代码里找到出处；目标设计写清动机与取舍；
-- 具体数值（间隔、批量、上限）与代码保持一致；
-- DDL 是物理结构唯一权威，文档是语义/规则唯一权威；改一方必须同步另一方，且只改定义处；
+- 文档写**现状与目标设计**，并明确标注状态；状态词与根 README 一致（未开始 / 骨架 / 实现中 / 可用），目标设计不冒充现状；
+- 现状断言应能在代码里找到出处；目标设计写清动机与取舍；未确认的契约用【待确认】标注；
+- 目标数值（间隔、批量、上限）先写目标值，实现落地后与代码保持一致；
+- DDL 是物理结构唯一权威，文档是语义/规则唯一权威；DDL 注释可引用语义，但不作为规则定义处；改一方必须同步另一方，且只改定义处；
 - 已知限制如实记录，包括"暂时没做"的部分；
 - v1 代码、部署单元与旧库导出归档在 `src/k-spider-dotnet-old/`，不作现行依据；v1 测试暂留 `src/k-spider-test/`（门禁过渡）。

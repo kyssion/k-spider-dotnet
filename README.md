@@ -4,10 +4,12 @@
 
 | 职责 | 项目 | 状态 |
 |---|---|---|
-| 抓取（底层） | `k-spider-crawler` | 开发中 |
-| 处理（中间层） | `k-spider-process` | 预留 |
-| 管理（旁路） | `k-spider-admin` | 待重建 |
-| 展示（顶层） | `web/`（前端项目） | 骨架已重建，待实现 |
+| 抓取（底层） | `k-spider-crawler` | 骨架 |
+| 处理（中间层） | `k-spider-process` | 未开始 |
+| 管理（旁路） | `k-spider-admin` | 骨架 |
+| 展示（顶层） | `web/`（前端项目） | 骨架 |
+
+状态口径：**未开始 / 骨架 / 实现中 / 可用**。
 
 模块职责与依赖见 [docs/architecture.md](docs/architecture.md)；数据模型见 [docs/data-model.md](docs/data-model.md)；功能清单见 [docs/features.md](docs/features.md)。
 
@@ -19,14 +21,16 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 ├── db/                             现行 DDL 基线（001 业务 / 002 系统 / 003 认证，均幂等）
 ├── deploy/                         部署单元（现行服务待补齐；v1 单元已归档）
 ├── docs/ scripts/
-├── web/                            前端项目（Node/pnpm，构建产物由 admin 托管）
+├── web/                            前端项目（Node/pnpm，构建产物目标由 admin 托管，当前未接入）
 └── src/
     ├── k-spider-crawler/           底层：原始数据抓取
     ├── k-spider-process/           中间层：数据加工
     ├── k-spider-admin/             旁路：中央调度、集群维护与前端托管
     ├── k-spider-test/              v1 测试与夹具（门禁过渡，待新测试替换）
-    └── k-spider-dotnet-old/        v1 代码/部署/旧库导出归档（不依赖）
+    └── k-spider-dotnet-old/        v1 代码/部署/旧库导出归档（仅考古，生产不依赖）
 ```
+
+v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试落地后移除。
 
 数据链路与 admin 调度方案见 [docs/architecture.md](docs/architecture.md) 与 [docs/distributed.md](docs/distributed.md)。
 

@@ -28,7 +28,8 @@
 
 - **粒度 = 任务包**：一个渠道一轮一行任务；`task_detail`(jsonb) 装任务全部内容（channel_id、轮次类型、批量上限、时间窗、运行上限快照等）。**不逐条建任务**——详情回填一轮数千条，逐条建行差三个数量级；包内推进靠业务表 `exec_status`，节点自治；
 - **派发**：admin 先 `INSERT sys_task`（`pushing`），再通过该节点的 gRPC 流下发 `task_dispatch`；写流成功置 `pushed`，失败置 `push_failed`；
-- **节点直写状态**：crawler 直接 UPDATE sys_task 维护运行状态与进度（与直写业务表同模式），不经 admin 接口；终态通过流上 `task_result` 唤醒 admin；
+- **派发 token（必需）**：每次派发生成唯一 token 写入 `extra`；节点所有状态、进度与终态更新都必须带 `dispatch_token=@token` 条件；admin 重派时生成新 token。没有 token，旧节点的迟到终态会在新节点已进入 `running` 后覆盖新进度；
+- **节点直写状态**：crawler 直接 UPDATE sys_task 维护运行状态与进度（与直写业务表同模式），不经 admin 接口；终态通过流上 `task_result` 唤醒 admin（携带 token）；
 - **node_id 不建外键**：节点行会被清删而任务行还在，只存引用；
 - **状态时间不入列**：各状态时间戳、进度、fail_count、派发 token 全记 extra；`update_time` 随状态与进度回报更新，兼对账超时判据（见六）。
 
@@ -49,10 +50,13 @@
 
 ```sql
 UPDATE sys_task SET status='success', ...
-WHERE id=@task AND status='running';   -- 影响行数 0 → 状态已被 admin 改过（取消/重派），放弃写入
+WHERE id=@task
+  AND status='running'
+  AND extra->>'dispatch_token' = @token;
+-- 影响行数 0 → 状态或派发代次已变（取消/重派），放弃写入
 ```
 
-一条规则兜住两个场景：取消通知丢失时节点写终态自然发现被取消、安全收敛；重派后旧节点的迟到终态不覆盖新节点进度。更严谨可在 extra 放派发 token 进条件【待定：实现时定】。
+条件同时覆盖两个场景：取消通知丢失时节点写终态自然发现被取消、安全收敛；重派后旧节点的迟到终态因 token 不匹配而不会覆盖新节点进度。仅靠 `status='running'` 不够——新节点重派后也会进入 `running`。
 
 ## 四、通信协议
 
@@ -60,13 +64,14 @@ WHERE id=@task AND status='running';   -- 影响行数 0 → 状态已被 admin 
 - **契约项目**：proto 与生成代码放 `src/k-spider-grpc/`，admin / crawler 共同引用；`task_detail` 以 JSON 字符串原样传递，各服务不共享实体项目；
 - **上行**：`register` / `heartbeat`（10s，负载快照）/ `task_result`（终态唤醒）/ `probe_reply`；
 - **下行**：`register_ack` / `task_dispatch` / `task_cancel` / `probe_request`；
-- **监听**：admin 单端口 Kestrel `Http1AndHttp2`，同承 REST 管理 API 与 gRPC；内网默认 h2c 明文，TLS 配置位预留；每连接写操作加锁序列化下行；
+- **监听**：REST 管理 API 与 gRPC 使用**分离的监听端点**——REST 走 HTTP/1.1，gRPC 端点只承载 HTTP/2。明文单端口 `Http1AndHttp2` 无法同时协商 h2c gRPC，不能作为实现方案；内网 gRPC 默认 h2c 明文，TLS 按端点预留；每连接写操作加锁序列化下行；
 - **重连**：节点断线后指数退避重连（1/2/5/10/30s），重连成功即重新绑定 `node_id`；
-- 接口路径与 proto 字段细节【待定：实现时定】。
+- **信任边界【待定】**：节点 gRPC 连接认证尚未定稿；实现前须确认 mTLS、共享 token 或网络隔离中的一种，并确保 admin gRPC 端点只对内网开放；节点直写数据库，数据库凭证也属于同一信任边界；
+- 接口路径、proto 字段与 `task_detail` / `extra` 的 JSON 键细节【待定：实现时定】。
 
 ## 五、调度规则
 
-- **派发互斥**：同一渠道同一时刻只派发一个任务（admin 内存互斥 + 重启后从 sys_task 非终态恢复互斥映射）——一条规则同时消灭"同渠道重复派发"与"多节点同源 QPS 叠加"；
+- **派发互斥**：同一渠道同一时刻只派发一个任务（admin 内存互斥 + 重启后从 sys_task 非终态恢复互斥映射）——消灭"同渠道重复派发"；同源站跨渠道的 QPS 叠加由 crawler 的 host 级限流兜底，不由本层负责；
 - **节奏**：admin 读 `channel.schedule` 生成渠道轮任务包；
 - **节点选择**：依据心跳负载快照（在跑任务数）做简单均衡；
 - **全局限速数值**：归 crawler 抓取配置（源/渠道级令牌桶），不在此层。
@@ -76,14 +81,14 @@ WHERE id=@task AND status='running';   -- 影响行数 0 → 状态已被 admin 
 admin 周期扫描非终态任务，纠正"库里说的"与"实际发生的"偏差：
 
 - **统一判据**：`status 非终态 AND update_time < now() - 无活动超时`。节点跑批时每批回报进度 touch update_time（进度写 extra），因此一个索引扫描同时覆盖"节点死了"与"任务卡死了"两类故障（健康长任务不会误杀）；
-- **探测失败 ≠ 执行失败**：对超时任务先在流上发 `probe_request`（5s deadline），重试 3 次 / 持续 30s 仍不可达才判死重派——防网络抖动把正在跑的任务重发导致双跑；
+- **探测失败 ≠ 执行失败**：对超时任务先在流上发 `probe_request`（单次探测 5s 超时、按请求关联应答，不是给整条长连接设 deadline），重试 3 次 / 持续 30s 仍不可达才判死重派——防网络抖动把正在跑的任务重发导致双跑；
 - **重派**：run_failed 或节点判死 → 回退状态重发（fail_count+1）；达上限（默认 3）转 `abandoned` 终态（防坏任务无限重派占住渠道互斥位）；
 - **admin 重启**：节点重连后重新注册；非终态任务重启后做一轮主动探测对齐（节点后续直写也会自然收敛）；
 - **参数不硬编码**：探测重试 K/T、无活动超时、对账周期、重派上限是 admin 循环级参数，走 admin 配置；运行上限可按渠道 / 任务类型覆盖，派发时算好快照进 task_detail。**不放 sys_task.extra**——每行复制循环参数既冗余又改不动（改了只影响新任务）。
 
 ## 七、取消
 
-admin 改状态为 `cancelled` + 流上发 `task_cancel`（快路径）；通知丢失由条件更新兜底（节点写终态时影响行数为 0，自然停）。取消后是否补发新任务包由调度另行决定，不混入取消变迁。
+admin 改状态为 `cancelled` + 流上发 `task_cancel`（快路径）；节点收到后取消当前执行上下文，并在每批 / 每页 / 每次请求前检查取消。通知丢失由条件更新兜底：节点写终态时影响行数为 0，但**这只阻止状态写入，不阻止已开始的执行**，因此取消检查点必须显式实现。取消后是否补发新任务包由调度另行决定，不混入取消变迁。
 
 ## 八、重派安全前提
 
@@ -107,6 +112,9 @@ admin 定期 DELETE 终态且 update_time 超过 N 天（默认 7 天，配置�
 | 事项 | 说明 |
 |---|---|
 | proto 契约 | 消息字段、错误码与流控细节（实现时定） |
-| TLS | 内网 h2c 明文优先；TLS 配置位预留 |
+| `task_detail` / `extra` JSON 契约 | 键名、类型、枚举与 casing；`dispatch_token` 键名先随 proto 定稿 |
+| TLS 与端口 | REST / gRPC 分离监听；gRPC 内网 h2c，TLS 按端点预留 |
+| 节点认证 | mTLS / 共享 token / 网络隔离的选型（实现前确认） |
+| 同渠道互斥持久化 | `channel_id` 在 `task_detail` JSONB 中；恢复映射需解析 JSONB，是否提升为独立列并加索引（实现时定） |
 | 对账参数默认值 | K/T、无活动超时、对账周期、重派上限（admin 配置落地时定） |
 | k-spider-admin 重建 | 项目结构恢复 admin 服务（调度循环 + gRPC 服务端 + REST 管理 API + web 后台） |

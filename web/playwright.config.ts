@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 // E2E 测试 : 浏览器跑前端页面的真实渲染与交互 ;
 // 业务 API 在用例内按需 mock , 保证门禁离线确定。
-// 真实后端用例后续按 live 分层补齐 ( LIVE_E2E=1 才执行 , 对齐后端 TestCategory=Live 的分层 )。
+// 真实后端用例后续补 live spec , 与后端 TestCategory=Live 的分层对齐。
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,

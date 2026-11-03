@@ -21,7 +21,7 @@
 
 - `src/`：crawler / process / admin 三个 .NET 服务；`web/`：前端项目（构建产物由 admin 托管）；
 - `src/k-spider-test/`：v1 测试与夹具，门禁过渡，待新测试替换；
-- `src/k-spider-dotnet-old/`：v1 代码、部署单元与旧库导出的归档，仅作考古参照，不依赖；
+- `src/k-spider-dotnet-old/`：v1 代码、部署单元与旧库导出的归档，仅作考古参照；生产代码不依赖，v1 测试过渡期临时引用；
 - 完整结构与模块状态以 [README.md](README.md) 为唯一来源；模块边界与依赖方向见 [docs/architecture.md](docs/architecture.md)。
 
 ## 数据模型契约
@@ -33,10 +33,10 @@
 - 注释、日志、commit message 用中文；注释解释**为什么**，不复述代码在做什么；
 - Job / Stage / 引擎一律 async：网络调用直接 `await`，不要 `.Result` / `.Wait()`；
 - 事务写法：`BeginTran → 业务 → CommitTran`，catch 中 `RollbackTran`，不要在 finally 里回滚；
-- 批量写入集中在数据访问层，按 write_mode 三模式实现；目标选型为 linq2db（overwrite=`OnConflictKeyDoUpdate` / skip=`OnConflictDoNothing` / append=普通 Insert），DDL runner、双键水位、对账扫描走裸 SQL；异常包装为 `KDbException`；
+- 批量写入集中在数据访问层，按 write_mode 三模式实现；目标选型为 linq2db（尚未引入依赖，实现前需确认；overwrite=`OnConflictKeyDoUpdate` / skip=`OnConflictDoNothing` / append=普通 Insert），DDL runner、双键水位、对账扫描走裸 SQL；异常包装为 `KDbException`；
 - 数据访问异常（`KDbException`）与数据本身失败分开：前者不消耗重试计数；
 - 源适配器必须线程安全：游标与页状态走方法参数与返回值，不用可变实例字段；
-- 分布式契约（proto + 生成代码）放 `src/k-spider-grpc/`，admin / crawler 共同引用；各服务不共享实体项目；
+- 分布式契约（proto + 生成代码）放 `src/k-spider-grpc/`（待创建），admin / crawler 共同引用；各服务不共享实体项目；
 - 新增 NuGet 包：`Directory.Packages.props` 加 `PackageVersion` + 项目 csproj 加无版本 `PackageReference`；
 - 测试夹具用接口真实响应（不手搓 JSON），新增夹具登记来源与抓取时间；真实接口连通性用例标注 Live 分类，门禁排除；
 - 凭据红线：不向仓库提交真实凭据；环境相关值走配置/Options，部署方环境变量注入。

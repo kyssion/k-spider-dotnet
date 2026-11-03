@@ -86,11 +86,13 @@ Data Protection 密钥按第 6 节配置持久化。
 |---|---|---|
 | 列表 | `GET /api/users` | 返回 id、username、displayName、status、createTime |
 | 新建 | `POST /api/users` | 设置初始密码（规则见 2.2）；用户名约束见 2.1 |
-| 修改展示名 | `PATCH /api/users/{id}` | 仅改 `display_name` |
-| 禁用/启用 | `PATCH /api/users/{id}` | 禁用自己或最后一个 active 账号时拒绝请求 |
+| 修改展示名 | `PATCH /api/users/{id}` | 请求体 `{ "displayName": "..." }`；仅改 `display_name` |
+| 禁用/启用 | `PATCH /api/users/{id}` | 请求体 `{ "status": "active" \| "disabled" }`；禁用自己或最后一个 active 账号时拒绝请求 |
 | 重置密码 | `POST /api/users/{id}/reset-password` | 设置新密码（规则见 2.2）；作用于其他账号，自己改密走 3.3 |
 
 账号写操作写应用日志：操作者、目标账号、动作、时间。
+
+两个 `PATCH /api/users/{id}` 共用路径，请求体至少包含 `displayName` 或 `status` 之一；同时包含时一并更新。是否拆成独立端点【待确认】。
 
 ## 五、安全
 
@@ -98,7 +100,9 @@ Data Protection 密钥按第 6 节配置持久化。
 - 除 `POST /api/auth/login` 外，所有 `POST/PUT/PATCH/DELETE` 请求带 `X-CSRF-TOKEN`，服务端用 ASP.NET Core Antiforgery 校验；
 - `POST /api/auth/login` 校验 `Origin` / `Referer` 与当前站点同源，并依赖 3.2 的 SameSite 设置；
 - 生产环境强制 HTTPS，反向代理启用 HSTS；
-- 响应头补齐 `X-Content-Type-Options: nosniff`、`Referrer-Policy`、`X-Frame-Options` / `frame-ancestors`。
+- 响应头补齐 `X-Content-Type-Options: nosniff`、`Referrer-Policy`、`X-Frame-Options` / `frame-ancestors`；
+- 开发期 Vite 代理下浏览器 `Origin` 是 `http://localhost:5173`，admin 需允许配置的开发源，或改用同源开发方式；生产严格同源；
+- Cookie `Secure` 在 HTTPS 下开启；本地 HTTP 开发需允许关闭（仅限 Development 环境）。
 
 ## 六、配置
 

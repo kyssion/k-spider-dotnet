@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 前端构建 : pnpm + Node , 产物进 k-spider-web/wwwroot ( 后续 dotnet build 打包 )
+      # 前端构建 : pnpm + Node , 产物进 k-spider-admin/wwwroot ( 目标由 admin 托管 )
       - uses: pnpm/action-setup@v4
         with:
           version: 12
@@ -25,7 +25,7 @@ jobs:
       - name: 前端构建
         run: bash scripts/build-web.sh
 
-      # E2E : mock API 夹具驱动 ( 离线确定 ) ; live 用例默认跳过 , 与后端 Live 分类同款分层
+      # 前端 E2E : 当前为骨架冒烟用例 ( 离线确定 ) ; 业务 mock 夹具与 live 用例后续补齐
       # playwright 浏览器缓存 : 命中时跳过下载 ; 安装与跑测拆成两步 , 挂起时能直接看出卡在哪 ;
       # 不用 --with-deps ( ubuntu runner 镜像自带依赖 , apt 安装会与镜像维护进程抢锁 )
       - uses: actions/cache@v4
@@ -53,5 +53,6 @@ jobs:
         run: dotnet build k-spider-dotnet.sln
 
       # 排除 Live 分类 : 真实接口连通性用例依赖线上可达 , 不放进门禁 ( 本地手动跑 dotnet test 即可 )
+      # 测试项目暂未加入 sln , 不能用 --no-build ; v1 测试替换后再调整门禁
       - name: 测试 ( 离线 )
-        run: dotnet test src/k-spider-test/k-spider-test.csproj --no-build --filter "TestCategory!=Live"
+        run: dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"
