@@ -1,6 +1,6 @@
 # 功能与数据源清单
 
-k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](data-model.md)、[crawler.md](crawler.md)、[distributed.md](distributed.md)、[auth.md](auth.md) 为准。
+k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](data-model.md)、[crawler.md](tech/crawler.md)、[distributed.md](distributed.md)、[auth.md](auth.md) 为准。
 
 除特别标注外，本清单为平台目标能力；模块级落地状态以 [README.md](../README.md) 状态表为准。
 
@@ -33,7 +33,7 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 - **编码与解析**：JSON / HTML / GBK 等响应编码；
 - **条目级过滤**：广告/站外跳转/付费专享/非内容形态。
 
-机制、参数与边界见 [crawler.md](crawler.md)。
+机制、参数与边界见 [crawler.md](tech/crawler.md)。
 
 ### 1.3 反爬验证
 
@@ -43,12 +43,12 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 - **防误判**：识别器与词表约束；
 - **平台能力**：全局限流、代理池插件位、浏览器渲染服务。
 
-机制与实现见 [crawler.md](crawler.md#五抓取内核)。
+机制与实现见 [crawler.md](tech/crawler.md#五抓取内核)。
 
 ## 二、存储能力
 
 - 业务表与写入规则：crawler_adapter + channel_category / channel / data_source / data_detail；完整定义见 [data-model.md](data-model.md)；
-- 原始载荷双侧留存、write_mode 三模式、source : detail = 1 : N、retention_days 保留期、双键水位分发；规则见 [data-model.md](data-model.md)，实现见 [crawler.md](crawler.md#六数据访问)。
+- 原始载荷双侧留存、write_mode 三模式、source : detail = 1 : N、retention_days 保留期、双键水位分发；规则见 [data-model.md](data-model.md)，实现见 [crawler.md](tech/crawler.md#六数据访问)。
 
 ## 三、分析功能
 

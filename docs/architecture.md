@@ -22,15 +22,17 @@
 每条机制只在对应主题文档定义，这里只做索引：
 
 - **数据模型**：分类 → 渠道 → 资源 → 内容四张业务表 + 适配器注册表；语义与规则见 [data-model.md](data-model.md)，物理结构见 `db/001_business_tables.sql`；
-- **抓取**：crawler 的 hosting / channel / engine / adapter / parser / kernel / common / repository 分层，以及 HttpGateway、反爬验证、write_mode 入库、双键水位，见 [crawler.md](crawler.md)；
+- **抓取**：crawler 的 hosting / channel / engine / adapter / parser / kernel / common / repository 分层，以及 HttpGateway、反爬验证、write_mode 入库、双键水位，见 [crawler.md](tech/crawler.md)；
 - **调度**：admin 中央调度 + 节点执行，gRPC 双向流、任务包、对账与取消，见 [distributed.md](distributed.md)；
+- **admin 实现**：服务模块结构、REST 管理 API、前端托管与部署，见 [admin.md](tech/admin.md)；
+- **web 前端**：技术选型、目录结构、页面路由与交互约定，见 [web.md](tech/web.md)；
 - **认证与账号**：登录、会话、账号管理、CSRF 与配置，见 [auth.md](auth.md)；
 - **功能与运维**：数据源清单、抓取/分析/控制台/运维能力见 [features.md](features.md)；
 - **处理与分析**：process 设计未开始；目标语义层 / 查询引擎 / 物化按真实需求立项，不预建；v1 的只读分析页面不等同于目标分析引擎。
 
 ## 三、测试体系
 
-测试夹具、Live 用例与门禁约定见 [AGENTS.md](../AGENTS.md)；crawler 的测试分层见 [crawler.md](crawler.md)。
+测试夹具、Live 用例与门禁约定见 [AGENTS.md](../AGENTS.md)；crawler 的测试分层见 [crawler.md](tech/crawler.md)。
 
 ## 四、状态与待定
 

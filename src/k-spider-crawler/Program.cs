@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 var builder = Host.CreateApplicationBuilder(args);
 
 // 抓取基座 : 原始数据抓取入库。
-// 待实现（分层与职责唯一权威见 docs/crawler.md）：
+// 待实现（分层与职责唯一权威见 docs/tech/crawler.md）：
 //   Hosting/  启动与控制
 //   Channel/  渠道调度编排
 //   Engine/   列表轮 / 详情回填轮

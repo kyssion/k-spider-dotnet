@@ -1,6 +1,6 @@
 # TestData — 真实抓取响应夹具
 
-> 本目录为 v1 抓取实现的真实响应夹具，随 v1 测试暂留门禁；新 crawler 的夹具按 [docs/crawler.md](../../../docs/crawler.md) 与 [AGENTS.md](../../../AGENTS.md) 约定重建、登记，不复用 v1 代码。
+> 本目录为 v1 抓取实现的真实响应夹具，随 v1 测试暂留门禁；新 crawler 的夹具按 [docs/tech/crawler.md](../../../docs/tech/crawler.md) 与 [AGENTS.md](../../../AGENTS.md) 约定重建、登记，不复用 v1 代码。
 
 解析回归测试用的**真实接口响应**（原样保存，未做字段裁剪）。测试通过 `AppContext.BaseDirectory/TestData` 读取，
 csproj 已配置 `CopyToOutputDirectory=PreserveNewest`，因此测试仍然完全离线。

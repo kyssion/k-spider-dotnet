@@ -103,7 +103,7 @@ COMMENT ON COLUMN channel.write_mode IS '入库规则（取值见 CHECK；语义
 COMMENT ON COLUMN channel.retention_days IS '保留期（天），NULL=永久；治理规则见 docs/data-model.md';
 COMMENT ON COLUMN channel.schedule IS '拉取节奏：间隔/cron 等；调度语义见 docs/distributed.md';
 COMMENT ON COLUMN channel.status IS '渠道状态：active 启用/paused 已暂停/retired 已退役；新增取值须同步本注释';
-COMMENT ON COLUMN channel.extra IS '渠道实例参数：栏目号/拉取窗口/批量上限/凭据引用名（只存引用不存值）等；具体键见 docs/crawler.md 配置章节';
+COMMENT ON COLUMN channel.extra IS '渠道实例参数：栏目号/拉取窗口/批量上限/凭据引用名（只存引用不存值）等；具体键见 docs/tech/crawler.md 配置章节';
 COMMENT ON COLUMN channel.create_time IS '创建时间';
 COMMENT ON COLUMN channel.update_time IS '修改时间';
 
