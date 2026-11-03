@@ -7,7 +7,7 @@
 | 抓取（底层） | `k-spider-crawler` | 开发中 |
 | 处理（中间层） | `k-spider-process` | 预留 |
 | 管理（旁路） | `k-spider-admin` | 待重建 |
-| 展示（顶层） | `web/`（前端项目） | v1 已实现，待重写 |
+| 展示（顶层） | `web/`（前端项目） | 骨架已重建，待实现 |
 
 模块职责与依赖见 [docs/architecture.md](docs/architecture.md)；数据模型见 [docs/data-model.md](docs/data-model.md)；功能清单见 [docs/features.md](docs/features.md)。
 

@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// E2E 测试 : 浏览器跑五个页面的真实渲染与交互 ;
-// 业务 API 全部由 tests/helpers/mock-api.ts 用 route 拦截 mock 成夹具——离线确定性 , 可进 CI。
-// 真实后端用例在 *.live.spec.ts , 默认跳过 ( LIVE_E2E=1 才执行 , 对齐后端 TestCategory=Live 的分层 )。
+// E2E 测试 : 浏览器跑前端页面的真实渲染与交互 ;
+// 业务 API 在用例内按需 mock , 保证门禁离线确定。
+// 真实后端用例后续按 live 分层补齐 ( LIVE_E2E=1 才执行 , 对齐后端 TestCategory=Live 的分层 )。
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,

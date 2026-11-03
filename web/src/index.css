@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* shadcn 风格设计令牌 ( 亮色 ) */
 :root {
   --background: oklch(0.985 0.002 247.839);
   --foreground: oklch(0.129 0.042 264.695);
@@ -21,7 +20,6 @@
   --radius: 0.5rem;
 }
 
-/* 暗色跟随系统 */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: oklch(0.129 0.042 264.695);
@@ -69,7 +67,6 @@ body {
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
-/* 数字等宽 , 时间与计数对齐更好看 */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
