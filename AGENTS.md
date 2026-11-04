@@ -19,7 +19,7 @@
 
 ## 项目结构
 
-- `src/`：crawler / process / admin 三个 .NET 服务；`web/`：前端项目（构建产物由 admin 托管）；
+- `src/`：crawler / process / admin 三个 .NET 服务；`web/`：前端项目（构建产物目标由 admin 托管，当前未接入）；
 - `.agents/skills/`：项目级通用 Agent Skills（模型/agent 无关），说明见 [docs/skills.md](docs/skills.md)；
 - `src/k-spider-test/`：v1 测试与夹具，门禁过渡，待新测试替换；
 - `src/k-spider-dotnet-old/`：v1 代码、部署单元与旧库导出的归档，仅作考古参照；生产代码不依赖，v1 测试过渡期临时引用；
@@ -43,14 +43,22 @@
 - 技能文件遵循 Agent Skills 格式；`.agents/skills/` 下由 `manifest.json` 记录的 .NET 技能由同步脚本维护，不直接手改，自定义技能另建目录；
 - 凭据红线：不向仓库提交真实凭据；环境相关值走配置/Options，部署方环境变量注入。
 
+## 文档记录
+
+- 唯一权威、文档索引与写作规则见 [docs/README.md](docs/README.md)；每份设计文档必须有状态与最后核对日期；
+- 新服务/模块文档用 [docs/templates/tech-doc.md](docs/templates/tech-doc.md)；契约与架构决策登记到 [docs/decisions/README.md](docs/decisions/README.md)；
+- 未确认的契约、参数、接口只能标【待确认】并登记，不得写进正文或代码当作既定事实；
+- 改代码、DDL、契约、配置或脚本时，同一次改动内同步权威文档、状态日期与索引；提交前运行 `node scripts/check-docs.mjs`。
+
 ## 命令
 
 ```bash
 dotnet build k-spider-dotnet.sln             # 构建（零警告零错误）
 ./scripts/verify.sh                          # 一键验证（CI 同款）
+node scripts/check-docs.mjs                  # 文档链接 / 索引 / 状态 / 过期路径检查
 dotnet run --project src/k-spider-crawler    # 抓取服务
 dotnet run --project src/k-spider-admin      # 调度与后台
-./scripts/sync-dotnet-skills.sh             # 同步 .NET Agent Skills 到 .agents/skills
+node scripts/sync-dotnet-skills.mjs          # 同步 .NET Agent Skills 到 .agents/skills
 ```
 
 配置优先级（唯一说明）：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`。
@@ -58,5 +66,5 @@ dotnet run --project src/k-spider-admin      # 调度与后台
 ## 当前状态与待定事项
 
 - 模块状态、待实现项以 [README.md](README.md) 状态表为唯一来源；
-- 设计待定项见各主题文档的“待定”章节；
+- 设计待定项见 [docs/decisions/README.md](docs/decisions/README.md) 的待确认清单与各主题文档的“待定”章节；
 - v1 的代码、部署单元与旧库导出已归档到 `src/k-spider-dotnet-old/`，不作现行依据；v1 测试与夹具暂留 `src/k-spider-test/`（门禁过渡，待新测试替换）。

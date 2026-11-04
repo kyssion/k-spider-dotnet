@@ -2,6 +2,8 @@
 
 k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](data-model.md)、[crawler.md](tech/crawler.md)、[distributed.md](distributed.md)、[auth.md](auth.md) 为准。
 
+> **状态**：目标设计（含 v1 历史参考）（最后核对：2026-11-04）。
+
 除特别标注外，本清单为平台目标能力；模块级落地状态以 [README.md](../README.md) 状态表为准。
 
 ## 一、采集功能

@@ -2,6 +2,8 @@
 
 > 业务表语义与规则唯一权威；物理结构唯一权威是 `db/001_business_tables.sql`（列/约束/索引/COMMENT）。
 > 系统设施表：sys_node / sys_task 语义见 [distributed.md](distributed.md)，物理结构落 `db/002_sys_tables.sql`；sys_user 行为见 [auth.md](auth.md)，物理结构落 `db/003_auth_tables.sql`。
+>
+> **状态**：已确认（最后核对：2026-11-04）。
 
 ## 模型
 

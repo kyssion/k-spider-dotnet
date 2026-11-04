@@ -8,9 +8,9 @@
 同步：
 
 ```bash
-./scripts/sync-dotnet-skills.sh          # 跟随上游 main
-./scripts/sync-dotnet-skills.sh <ref>    # 指定分支或 tag
-DOTNET_SKILLS_SOURCE=/path/to/checkout ./scripts/sync-dotnet-skills.sh
+node scripts/sync-dotnet-skills.mjs          # 跟随上游 main
+node scripts/sync-dotnet-skills.mjs <ref>    # 指定分支或 tag
+DOTNET_SKILLS_SOURCE=/path/to/checkout node scripts/sync-dotnet-skills.mjs
 ```
 
 同步脚本只复制技能目录，不执行上游脚本。已安装清单见 `manifest.json`；不要直接修改这些受管技能，更新会在下次同步时覆盖。其他非 .NET 的自定义技能可以放在 `.agents/skills/` 下，不会被本脚本删除。

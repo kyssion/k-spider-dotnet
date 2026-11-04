@@ -2,6 +2,8 @@
 
 抓取 → 处理 → 展示三层数据链路，admin 旁路中央调度；平台定位见 [README.md](../README.md)。
 
+> **状态**：目标设计（最后核对：2026-11-04）；模块落地状态以 [README.md](../README.md) 为准。
+
 **数据链路**：crawler 抓取 → 原始载荷入库（data_source.raw / data_detail.raw）→ process 加工为结构化/格式化数据 → web 前端展示。admin 为旁路控制面：中央调度（任务分发与对账）+ 集群维护（心跳、状态、web 后台），不在数据链路上。
 
 **依赖方向**：web 前端 → admin HTTP API（认证、管理、查询）；admin 旁路调度 crawler / process；crawler 与 process 通过 PostgreSQL 数据契约衔接，互不依赖实现。

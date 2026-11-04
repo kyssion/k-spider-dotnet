@@ -2,7 +2,7 @@
 
 > 底层：原始数据抓取服务。数据模型规则见 [data-model.md](../data-model.md)，平台架构见 [architecture.md](../architecture.md)，任务调度见 [distributed.md](../distributed.md)。
 
-> **状态**：目标设计，尚未实现；当前仓库仅有骨架。
+> **状态**：目标设计（最后核对：2026-11-04）；尚未实现，当前仓库仅有骨架。
 
 ## 一、定位与职责
 

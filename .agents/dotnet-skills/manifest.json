@@ -1,7 +1,7 @@
 {
   "source": "https://github.com/dotnet/skills",
-  "commit": "95e7d0cb7994d47b5789baa68e13f7a2f348b956",
-  "installedAt": "2026-11-04T02:51:53.782386+00:00",
+  "commit": "281e39451fb4487b4828d62fcb51ca853589a185",
+  "installedAt": "2026-11-04T04:00:37.136Z",
   "skills": [
     {
       "name": "csharp-expert",

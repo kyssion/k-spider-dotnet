@@ -46,8 +46,8 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: 文档链接检查
-        run: bash scripts/check-docs.sh
+      - name: 文档检查
+        run: node scripts/check-docs.mjs
 
       - name: 构建
         run: dotnet build k-spider-dotnet.sln

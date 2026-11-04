@@ -1,12 +1,12 @@
 # k-spider 认证与账号方案
 
 > 本文为认证与账号行为、接口与配置要求的唯一权威；表结构见 2.1。
-> **状态**：已确认（2026-11-01）。
+> **状态**：已确认（最后核对：2026-11-04）。
 > 关联：[architecture.md](architecture.md)、[data-model.md](data-model.md)、[distributed.md](distributed.md)。
 
 ## 一、落点
 
-认证与账号由 `k-spider-admin` 承载，前端页面在 `web/`，账号表为 `sys_user`；模块职责见 [architecture.md](architecture.md)。admin 与 web 同源部署（admin 托管 `web/dist`）。
+认证与账号由 `k-spider-admin` 承载，前端页面在 `web/`，账号表为 `sys_user`；模块职责见 [architecture.md](architecture.md)。目标同源部署（admin 托管 `web/dist`），当前 web 托管尚未接入。
 
 ## 二、账号
 
