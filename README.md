@@ -21,6 +21,7 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 ├── db/                             现行 DDL 基线（001 业务 / 002 系统 / 003 认证，均幂等）
 ├── deploy/                         部署单元（现行服务待补齐；v1 单元已归档）
 ├── docs/ scripts/
+├── .agents/skills/                 Agent Skills 标准技能（跨 agent / 模型共享）
 ├── web/                            前端项目（Node/pnpm，构建产物目标由 admin 托管，当前未接入）
 └── src/
     ├── k-spider-crawler/           底层：原始数据抓取
@@ -31,6 +32,10 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 ```
 
 v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试落地后移除。
+
+## 技能
+
+通用 Agent Skills 放在 `.agents/skills/`，遵循 [Agent Skills](https://agentskills.io) 开放格式；opencode、Claude Code、Codex 共享同一份技能。目录、跨 agent 发现方式与上游同步见 [docs/skills.md](docs/skills.md)。
 
 数据链路与 admin 调度方案见 [docs/architecture.md](docs/architecture.md) 与 [docs/distributed.md](docs/distributed.md)。
 

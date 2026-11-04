@@ -1,0 +1,537 @@
+{
+  "source": "https://github.com/dotnet/skills",
+  "commit": "95e7d0cb7994d47b5789baa68e13f7a2f348b956",
+  "installedAt": "2026-11-04T02:51:53.782386+00:00",
+  "skills": [
+    {
+      "name": "csharp-expert",
+      "plugin": "dotnet",
+      "path": "plugins/dotnet/skills/csharp-expert"
+    },
+    {
+      "name": "csharp-refactoring",
+      "plugin": "dotnet",
+      "path": "plugins/dotnet/skills/csharp-refactoring"
+    },
+    {
+      "name": "msbuild",
+      "plugin": "dotnet",
+      "path": "plugins/dotnet/skills/msbuild"
+    },
+    {
+      "name": "setup-local-sdk",
+      "plugin": "dotnet",
+      "path": "plugins/dotnet/skills/setup-local-sdk"
+    },
+    {
+      "name": "csharp-scripts",
+      "plugin": "dotnet-advanced",
+      "path": "plugins/dotnet-advanced/skills/csharp-scripts"
+    },
+    {
+      "name": "dotnet-pinvoke",
+      "plugin": "dotnet-advanced",
+      "path": "plugins/dotnet-advanced/skills/dotnet-pinvoke"
+    },
+    {
+      "name": "nuget-trusted-publishing",
+      "plugin": "dotnet-advanced",
+      "path": "plugins/dotnet-advanced/skills/nuget-trusted-publishing"
+    },
+    {
+      "name": "vectorization",
+      "plugin": "dotnet-advanced",
+      "path": "plugins/dotnet-advanced/skills/vectorization"
+    },
+    {
+      "name": "technology-selection",
+      "plugin": "dotnet-ai",
+      "path": "plugins/dotnet-ai/skills/technology-selection"
+    },
+    {
+      "name": "convert-blazor-server-to-webapp",
+      "plugin": "dotnet-aspnetcore",
+      "path": "plugins/dotnet-aspnetcore/skills/convert-blazor-server-to-webapp"
+    },
+    {
+      "name": "dotnet-webapi",
+      "plugin": "dotnet-aspnetcore",
+      "path": "plugins/dotnet-aspnetcore/skills/dotnet-webapi"
+    },
+    {
+      "name": "author-component",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/author-component"
+    },
+    {
+      "name": "collect-user-input",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/collect-user-input"
+    },
+    {
+      "name": "configure-auth",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/configure-auth"
+    },
+    {
+      "name": "coordinate-components",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/coordinate-components"
+    },
+    {
+      "name": "create-blazor-project",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/create-blazor-project"
+    },
+    {
+      "name": "fetch-and-send-data",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/fetch-and-send-data"
+    },
+    {
+      "name": "plan-ui-change",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/plan-ui-change"
+    },
+    {
+      "name": "support-prerendering",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/support-prerendering"
+    },
+    {
+      "name": "use-igniteui-blazor",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/use-igniteui-blazor"
+    },
+    {
+      "name": "use-js-interop",
+      "plugin": "dotnet-blazor",
+      "path": "plugins/dotnet-blazor/skills/use-js-interop"
+    },
+    {
+      "name": "create-datadriven-aspnetcore",
+      "plugin": "dotnet-data",
+      "path": "plugins/dotnet-data/skills/create-datadriven-aspnetcore"
+    },
+    {
+      "name": "optimizing-ef-core-queries",
+      "plugin": "dotnet-data",
+      "path": "plugins/dotnet-data/skills/optimizing-ef-core-queries"
+    },
+    {
+      "name": "analyzing-dotnet-performance",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/analyzing-dotnet-performance"
+    },
+    {
+      "name": "android-tombstone-symbolication",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/android-tombstone-symbolication"
+    },
+    {
+      "name": "apple-crash-symbolication",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/apple-crash-symbolication"
+    },
+    {
+      "name": "clr-activation-debugging",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/clr-activation-debugging"
+    },
+    {
+      "name": "dotnet-trace-collect",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/dotnet-trace-collect"
+    },
+    {
+      "name": "dump-collect",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/dump-collect"
+    },
+    {
+      "name": "microbenchmarking",
+      "plugin": "dotnet-diag",
+      "path": "plugins/dotnet-diag/skills/microbenchmarking"
+    },
+    {
+      "name": "exp-mock-usage-analysis",
+      "plugin": "dotnet-experimental",
+      "path": "plugins/dotnet-experimental/skills/exp-mock-usage-analysis"
+    },
+    {
+      "name": "exp-test-maintainability",
+      "plugin": "dotnet-experimental",
+      "path": "plugins/dotnet-experimental/skills/exp-test-maintainability"
+    },
+    {
+      "name": "dotnet-maui-doctor",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/dotnet-maui-doctor"
+    },
+    {
+      "name": "maui-app-lifecycle",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-app-lifecycle"
+    },
+    {
+      "name": "maui-collectionview",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-collectionview"
+    },
+    {
+      "name": "maui-data-binding",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-data-binding"
+    },
+    {
+      "name": "maui-dependency-injection",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-dependency-injection"
+    },
+    {
+      "name": "maui-safe-area",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-safe-area"
+    },
+    {
+      "name": "maui-shell-navigation",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-shell-navigation"
+    },
+    {
+      "name": "maui-theming",
+      "plugin": "dotnet-maui",
+      "path": "plugins/dotnet-maui/skills/maui-theming"
+    },
+    {
+      "name": "binlog-failure-analysis",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/binlog-failure-analysis"
+    },
+    {
+      "name": "binlog-generation",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/binlog-generation"
+    },
+    {
+      "name": "build-parallelism",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/build-parallelism"
+    },
+    {
+      "name": "build-perf-baseline",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/build-perf-baseline"
+    },
+    {
+      "name": "build-perf-diagnostics",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/build-perf-diagnostics"
+    },
+    {
+      "name": "check-bin-obj-clash",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/check-bin-obj-clash"
+    },
+    {
+      "name": "copy-to-output-directory",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/copy-to-output-directory"
+    },
+    {
+      "name": "directory-build-organization",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/directory-build-organization"
+    },
+    {
+      "name": "eliminate-redundant-restores",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/eliminate-redundant-restores"
+    },
+    {
+      "name": "eval-performance",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/eval-performance"
+    },
+    {
+      "name": "extension-points",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/extension-points"
+    },
+    {
+      "name": "including-generated-files",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/including-generated-files"
+    },
+    {
+      "name": "incremental-build",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/incremental-build"
+    },
+    {
+      "name": "item-management",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/item-management"
+    },
+    {
+      "name": "msbuild-antipatterns",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/msbuild-antipatterns"
+    },
+    {
+      "name": "msbuild-modernization",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/msbuild-modernization"
+    },
+    {
+      "name": "property-patterns",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/property-patterns"
+    },
+    {
+      "name": "resolve-project-references",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/resolve-project-references"
+    },
+    {
+      "name": "target-authoring",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/target-authoring"
+    },
+    {
+      "name": "troubleshoot-binlog-mcp",
+      "plugin": "dotnet-msbuild",
+      "path": "plugins/dotnet-msbuild/skills/troubleshoot-binlog-mcp"
+    },
+    {
+      "name": "convert-to-cpm",
+      "plugin": "dotnet-nuget",
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm"
+    },
+    {
+      "name": "template-authoring",
+      "plugin": "dotnet-template-engine",
+      "path": "plugins/dotnet-template-engine/skills/template-authoring"
+    },
+    {
+      "name": "template-comparison",
+      "plugin": "dotnet-template-engine",
+      "path": "plugins/dotnet-template-engine/skills/template-comparison"
+    },
+    {
+      "name": "template-discovery",
+      "plugin": "dotnet-template-engine",
+      "path": "plugins/dotnet-template-engine/skills/template-discovery"
+    },
+    {
+      "name": "template-instantiation",
+      "plugin": "dotnet-template-engine",
+      "path": "plugins/dotnet-template-engine/skills/template-instantiation"
+    },
+    {
+      "name": "template-smart-defaults",
+      "plugin": "dotnet-template-engine",
+      "path": "plugins/dotnet-template-engine/skills/template-smart-defaults"
+    },
+    {
+      "name": "template-validation",
+      "plugin": "dotnet-template-engine",
+      "path": "plugins/dotnet-template-engine/skills/template-validation"
+    },
+    {
+      "name": "assertion-quality",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/assertion-quality"
+    },
+    {
+      "name": "code-testing",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/code-testing"
+    },
+    {
+      "name": "code-testing-agent",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/code-testing-agent"
+    },
+    {
+      "name": "code-testing-extensions",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/code-testing-extensions"
+    },
+    {
+      "name": "coverage-analysis",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/coverage-analysis"
+    },
+    {
+      "name": "crap-score",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/crap-score"
+    },
+    {
+      "name": "detect-static-dependencies",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/detect-static-dependencies"
+    },
+    {
+      "name": "filter-syntax",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/filter-syntax"
+    },
+    {
+      "name": "find-untested-sources",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/find-untested-sources"
+    },
+    {
+      "name": "generate-testability-wrappers",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/generate-testability-wrappers"
+    },
+    {
+      "name": "grade-tests",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/grade-tests"
+    },
+    {
+      "name": "migrate-static-to-wrapper",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/migrate-static-to-wrapper"
+    },
+    {
+      "name": "mtp-hot-reload",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/mtp-hot-reload"
+    },
+    {
+      "name": "platform-detection",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/platform-detection"
+    },
+    {
+      "name": "run-tests",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/run-tests"
+    },
+    {
+      "name": "scaffold-dotnet-test-project",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/scaffold-dotnet-test-project"
+    },
+    {
+      "name": "test-analysis-extensions",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/test-analysis-extensions"
+    },
+    {
+      "name": "test-anti-patterns",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/test-anti-patterns"
+    },
+    {
+      "name": "test-gap-analysis",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/test-gap-analysis"
+    },
+    {
+      "name": "test-smell-detection",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/test-smell-detection"
+    },
+    {
+      "name": "test-tagging",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/test-tagging"
+    },
+    {
+      "name": "test-value-evidence",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/test-value-evidence"
+    },
+    {
+      "name": "testability-obstacle",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/testability-obstacle"
+    },
+    {
+      "name": "writing-mstest-tests",
+      "plugin": "dotnet-test",
+      "path": "plugins/dotnet-test/skills/writing-mstest-tests"
+    },
+    {
+      "name": "migrate-mstest-v1v2-to-v3",
+      "plugin": "dotnet-test-migration",
+      "path": "plugins/dotnet-test-migration/skills/migrate-mstest-v1v2-to-v3"
+    },
+    {
+      "name": "migrate-mstest-v3-to-v4",
+      "plugin": "dotnet-test-migration",
+      "path": "plugins/dotnet-test-migration/skills/migrate-mstest-v3-to-v4"
+    },
+    {
+      "name": "migrate-nunit-to-mstest",
+      "plugin": "dotnet-test-migration",
+      "path": "plugins/dotnet-test-migration/skills/migrate-nunit-to-mstest"
+    },
+    {
+      "name": "migrate-vstest-to-mtp",
+      "plugin": "dotnet-test-migration",
+      "path": "plugins/dotnet-test-migration/skills/migrate-vstest-to-mtp"
+    },
+    {
+      "name": "migrate-xunit-to-mstest",
+      "plugin": "dotnet-test-migration",
+      "path": "plugins/dotnet-test-migration/skills/migrate-xunit-to-mstest"
+    },
+    {
+      "name": "migrate-xunit-to-xunit-v3",
+      "plugin": "dotnet-test-migration",
+      "path": "plugins/dotnet-test-migration/skills/migrate-xunit-to-xunit-v3"
+    },
+    {
+      "name": "dotnet-aot-compat",
+      "plugin": "dotnet-upgrade",
+      "path": "plugins/dotnet-upgrade/skills/dotnet-aot-compat"
+    },
+    {
+      "name": "migrate-dotnet10-to-dotnet11",
+      "plugin": "dotnet-upgrade",
+      "path": "plugins/dotnet-upgrade/skills/migrate-dotnet10-to-dotnet11"
+    },
+    {
+      "name": "migrate-dotnet8-to-dotnet9",
+      "plugin": "dotnet-upgrade",
+      "path": "plugins/dotnet-upgrade/skills/migrate-dotnet8-to-dotnet9"
+    },
+    {
+      "name": "migrate-dotnet9-to-dotnet10",
+      "plugin": "dotnet-upgrade",
+      "path": "plugins/dotnet-upgrade/skills/migrate-dotnet9-to-dotnet10"
+    },
+    {
+      "name": "migrate-nullable-references",
+      "plugin": "dotnet-upgrade",
+      "path": "plugins/dotnet-upgrade/skills/migrate-nullable-references"
+    },
+    {
+      "name": "thread-abort-migration",
+      "plugin": "dotnet-upgrade",
+      "path": "plugins/dotnet-upgrade/skills/thread-abort-migration"
+    },
+    {
+      "name": "winforms-expert",
+      "plugin": "dotnet-winforms",
+      "path": "plugins/dotnet-winforms/skills/winforms-expert"
+    },
+    {
+      "name": "process-api-net11",
+      "plugin": "dotnet11",
+      "path": "plugins/dotnet11/skills/process-api-net11"
+    },
+    {
+      "name": "system-text-json-net11",
+      "plugin": "dotnet11",
+      "path": "plugins/dotnet11/skills/system-text-json-net11"
+    }
+  ]
+}

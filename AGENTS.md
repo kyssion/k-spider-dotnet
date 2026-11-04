@@ -20,6 +20,7 @@
 ## 项目结构
 
 - `src/`：crawler / process / admin 三个 .NET 服务；`web/`：前端项目（构建产物由 admin 托管）；
+- `.agents/skills/`：项目级通用 Agent Skills（模型/agent 无关），说明见 [docs/skills.md](docs/skills.md)；
 - `src/k-spider-test/`：v1 测试与夹具，门禁过渡，待新测试替换；
 - `src/k-spider-dotnet-old/`：v1 代码、部署单元与旧库导出的归档，仅作考古参照；生产代码不依赖，v1 测试过渡期临时引用；
 - 完整结构与模块状态以 [README.md](README.md) 为唯一来源；模块边界与依赖方向见 [docs/architecture.md](docs/architecture.md)。
@@ -39,6 +40,7 @@
 - 分布式契约（proto + 生成代码）放 `src/k-spider-grpc/`（待创建），admin / crawler 共同引用；各服务不共享实体项目；
 - 新增 NuGet 包：`Directory.Packages.props` 加 `PackageVersion` + 项目 csproj 加无版本 `PackageReference`；
 - 测试夹具用接口真实响应（不手搓 JSON），新增夹具登记来源与抓取时间；真实接口连通性用例标注 Live 分类，门禁排除；
+- 技能文件遵循 Agent Skills 格式；`.agents/skills/` 下由 `manifest.json` 记录的 .NET 技能由同步脚本维护，不直接手改，自定义技能另建目录；
 - 凭据红线：不向仓库提交真实凭据；环境相关值走配置/Options，部署方环境变量注入。
 
 ## 命令
@@ -48,6 +50,7 @@ dotnet build k-spider-dotnet.sln             # 构建（零警告零错误）
 ./scripts/verify.sh                          # 一键验证（CI 同款）
 dotnet run --project src/k-spider-crawler    # 抓取服务
 dotnet run --project src/k-spider-admin      # 调度与后台
+./scripts/sync-dotnet-skills.sh             # 同步 .NET Agent Skills 到 .agents/skills
 ```
 
 配置优先级（唯一说明）：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`。

@@ -23,6 +23,7 @@
 | process 设计 | [process.md](tech/process.md) | architecture 只链接 |
 | admin 服务实现结构、REST 管理 API、前端托管 | [admin.md](tech/admin.md) | 调度与认证分别以 [distributed.md](distributed.md) / [auth.md](auth.md) 为准 |
 | web 前端技术选型、目录、页面与交互 | [web.md](tech/web.md) | features 只列能力，接口以 [admin.md](tech/admin.md) 为准 |
+| 通用技能目录、同步与跨 agent 使用 | [skills.md](skills.md) | AGENTS / README 只链接 |
 | 功能与数据源清单 | [features.md](features.md) | 只写 what/status，不写规则细节 |
 | 文档索引与维护要求 | 本文 | README 只留入口 |
 
@@ -39,6 +40,7 @@
 | [web.md](tech/web.md) | k-spider web 技术文档（骨架） |
 | [distributed.md](distributed.md) | 分布式架构：admin 中央调度 + 节点执行（gRPC 双向流） |
 | [features.md](features.md) | 功能与数据源清单：能力、现状与缺口 |
+| [skills.md](skills.md) | 通用 Agent Skills 目录、跨 agent 发现与上游同步 |
 
 操作手册（命令、约定、扩展套路）在仓库根 [AGENTS.md](../AGENTS.md)。
 

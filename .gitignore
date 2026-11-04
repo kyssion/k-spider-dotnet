@@ -18,3 +18,7 @@ src/k-spider-admin/wwwroot/*
 
 # loot-drop 中文翻译数据产物 ( 14.5MB 数据导出 , 按需手动加回 )
 spider_lootdrop_startup_zh.csv
+
+# Python 缓存 ( 脚本工具 )
+__pycache__/
+*.pyc
