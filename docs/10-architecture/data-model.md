@@ -3,7 +3,7 @@
 > 业务表语义与规则唯一权威；物理结构唯一权威是 `db/001_business_tables.sql`（列/约束/索引/COMMENT）。
 > 系统设施表：sys_node / sys_task 语义见 [distributed.md](distributed.md)，物理结构落 `db/002_sys_tables.sql`；sys_user 行为见 [auth.md](auth.md)，物理结构落 `db/003_auth_tables.sql`。
 >
-> **状态**：已确认（最后核对：2026-11-04）。
+> **状态**：已确认（最后核对：2026-11-04）。术语见 [glossary.md](../00-overview/glossary.md)。
 
 ## 模型
 
@@ -17,17 +17,6 @@
 | data_source | 资源登记：每个要抓的资源连接一行 |
 | data_detail | 资源内容：资源产出的原始数据，source : detail = 1 : N；行存在 = 详情已抓取 |
 
-### 术语
-
-| 术语 | 含义 | 对应 |
-|---|---|---|
-| 源站 / 站点 | 外部数据站点 | `channel_category` 根节点 |
-| 渠道 | 一个可拉取的数据供给单元 | `channel` |
-| 适配器 | 列表 / 详情的抓取实现目录 | `crawler_adapter` |
-| 资源 / 列表条目 | 一条待抓取的资源连接 | `data_source` |
-| 详情内容 | 一个资源产出的原始内容 | `data_detail` |
-| 数据集 / 管线 | v1 概念；v2 不建独立实体 | 由 `channel` + adapter 表达 |
-
 ## 规则
 
 - 业务行只存数据语义；执行进度以 `exec_status` 显式表达，重试细节在 `extra` 约定键；执行引擎状态可重建、可重放；
@@ -40,7 +29,7 @@
 - 分发采用双键水位：消费方按 `(update_time, id)` 升序扫描；新行和更新行都通过 `update_time` 进入水位，id 用于同一时间戳内的稳定排序；
 - update_time 由写入方显式刷新；基线 DDL 不建触发器，overwrite / append / 状态更新都不得依赖 `DEFAULT now()` 代替更新；
 - 治理：按 create_time 范围分批归档 + 保留期声明（channel.retention_days）；首期不分区；
-- `channel.schedule` 与 `channel.extra` 的 JSON 键、类型、时区尚未定稿，分别见 [tech/admin.md](tech/admin.md) 调度章节与 [tech/crawler.md](tech/crawler.md) 配置章节；实现前确认；
+- `channel.schedule` 与 `channel.extra` 的 JSON 键、类型、时区尚未定稿，分别见 [admin.md](admin.md) 调度章节与 [crawler.md](crawler.md) 配置章节；实现前确认；
 - data_detail.channel_id 必须等于所属 data_source.channel_id；数据库不强制，由 repository 写入时保证；
 - data_detail 行存在 = 详情已抓取；失败尝试只记在 data_source.exec_status / extra。若未来允许失败 detail 行，须先修改本契约与 DDL CHECK；
 - adapter 列语义：`adapter` = 产出本行的适配器编码快照；`detail_adapter` = 详情抓取适配器编码；两者都存编码，不建外键；parser 隐式绑定 adapter（驱动抓取的最小解析），不单独配置；

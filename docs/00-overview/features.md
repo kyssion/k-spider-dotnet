@@ -1,10 +1,10 @@
 # 功能与数据源清单
 
-k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](data-model.md)、[crawler.md](tech/crawler.md)、[distributed.md](distributed.md)、[auth.md](auth.md) 为准。
+k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](../10-architecture/data-model.md)、[crawler.md](../10-architecture/crawler.md)、[distributed.md](../10-architecture/distributed.md)、[auth.md](../10-architecture/auth.md) 为准。
 
 > **状态**：目标设计（含 v1 历史参考）（最后核对：2026-11-04）。
 
-除特别标注外，本清单为平台目标能力；模块级落地状态以 [README.md](../README.md) 状态表为准。
+除特别标注外，本清单为平台目标能力；模块级落地状态以 [README.md](../../README.md) 状态表为准。
 
 ## 一、采集功能
 
@@ -35,7 +35,7 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 - **编码与解析**：JSON / HTML / GBK 等响应编码；
 - **条目级过滤**：广告/站外跳转/付费专享/非内容形态。
 
-机制、参数与边界见 [crawler.md](tech/crawler.md)。
+机制、参数与边界见 [crawler.md](../10-architecture/crawler.md)。
 
 ### 1.3 反爬验证
 
@@ -44,12 +44,12 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 - **会话与克制**：会话复用、同主机串行、失败冷却、按源策略；
 - **平台能力**：全局限流、代理池插件位、浏览器渲染服务。
 
-机制与实现见 [crawler.md](tech/crawler.md#五抓取内核)。
+机制与实现见 [crawler.md](../10-architecture/crawler.md#五抓取内核)。
 
 ## 二、存储能力
 
-- 业务表与写入规则：crawler_adapter + channel_category / channel / data_source / data_detail；完整定义见 [data-model.md](data-model.md)；
-- 原始载荷双侧留存、write_mode 三模式、source : detail = 1 : N、retention_days 保留期、双键水位分发；规则见 [data-model.md](data-model.md)，实现见 [crawler.md](tech/crawler.md#六数据访问)。
+- 业务表与写入规则：crawler_adapter + channel_category / channel / data_source / data_detail；完整定义见 [data-model.md](../10-architecture/data-model.md)；
+- 原始载荷双侧留存、write_mode 三模式、source : detail = 1 : N、retention_days 保留期、双键水位分发；规则见 [data-model.md](../10-architecture/data-model.md)，实现见 [crawler.md](../10-architecture/crawler.md#六数据访问)。
 
 ## 三、分析功能
 
@@ -63,12 +63,12 @@ v1 已实现基础分析（入库量趋势 / 分布 / 词频）；以下为完�
 
 ## 四、控制台功能
 
-v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代码已清理，仅作历史参考；v2 按以下目标重写，认证相关页面见 [auth.md](auth.md)。
+v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代码已清理，仅作历史参考；v2 按以下目标重写，认证相关页面见 [auth.md](../10-architecture/auth.md)。
 
 - 总览：任务状态、管线积压、快讯实时性、反爬告警、节点状态；
 - 源与渠道管理：源站分类、渠道与适配器清单、健康状态；
 - 数据浏览：schema 驱动的动态表格（筛选/分页/联查）；首期先做原始表只读浏览，schema 注册待分析层立项；
-- 任务控制：手动触发、取消；渠道暂停/恢复经 admin 调度接口受理（任务状态在 `sys_task`，见 [distributed.md](distributed.md)）；
+- 任务控制：手动触发、取消；渠道暂停/恢复经 admin 调度接口受理（任务状态在 `sys_task`，见 [distributed.md](../10-architecture/distributed.md)）；
 - 派生表管理：定义/血缘/刷新触发（依赖分析层）；
 - 分析看板：视图驱动的图表（依赖分析层）；
 - 数据重放：按原始响应重跑解析（依赖 process，引擎能力而非一次性工具）。
@@ -77,8 +77,8 @@ v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代�
 
 v1 有配置 / 部署 / 监控基础；以下为目标能力：
 
-- 配置：遵循 [AGENTS.md](../AGENTS.md) 的配置约定；各服务专属键见对应技术文档；
+- 配置：遵循 [AGENTS.md](../../AGENTS.md) 的配置约定；各服务专属键见对应技术文档；
 - 健康探测：注册即覆盖（接口可用性/新鲜度/积压/反爬冷却），阈值按数据节奏配置；
 - 告警：通道插件化（日志/飞书/Webhook），规则注册；
-- 部署：自包含发布（只带目标环境配置）、systemd 托管、进程优雅停机；集群不做 draining，见 [distributed.md](distributed.md)；
+- 部署：自包含发布（只带目标环境配置）、systemd 托管、进程优雅停机；集群不做 draining，见 [distributed.md](../10-architecture/distributed.md)；
 - 启动自检：库对象幂等补齐、批量 upsert 唯一约束自检。

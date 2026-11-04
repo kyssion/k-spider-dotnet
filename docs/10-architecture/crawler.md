@@ -1,6 +1,6 @@
 # k-spider-crawler 技术文档
 
-> 底层：原始数据抓取服务。数据模型规则见 [data-model.md](../data-model.md)，平台架构见 [architecture.md](../architecture.md)，任务调度见 [distributed.md](../distributed.md)。
+> 底层：原始数据抓取服务。数据模型规则见 [data-model.md](data-model.md)，平台架构见 [system-overview.md](system-overview.md)，任务调度见 [distributed.md](distributed.md)。
 
 > **状态**：目标设计（最后核对：2026-11-04）；尚未实现，当前仓库仅有骨架。
 
@@ -29,15 +29,15 @@
 - **详情回填轮**：按 `data_source.exec_status` 取待回填行；detail adapter 抓详情；repository 写入 `data_detail`；行存在即详情已抓取，`exec_status` 落 `success`；
 - **翻页控制**：自适应停止（翻到存量区间即停）、停机回补上限、每轮批量上限，参数来自渠道 `extra`；
 - **多栏目**：栏目号/频道参数/伪栏目由 adapter + `channel.extra` 表达，不新增表结构；
-- **异常**：按渠道粒度兜底，本轮失败由 admin 对账或下一轮任务包重派，见 [distributed.md](../distributed.md)；
+- **异常**：按渠道粒度兜底，本轮失败由 admin 对账或下一轮任务包重派，见 [distributed.md](distributed.md)；
 - **两段回填**：目标态只保留「列表 → 详情」两段；v1 的三段历史不再作为目标契约。
 
 ## 四、源适配器
 
 - **契约**：source adapter（渠道列表抓取）、detail adapter（资源详情抓取）、parser（最小解析）；线程安全与无状态要求见 [AGENTS.md](../../AGENTS.md)；
-- **注册**：代码注册表按编码取用，未知编码加载即抛（fail-fast）；渠道行存 `source_adapter` / `detail_adapter` 编码；目录登记规则见 [data-model.md](../data-model.md)；
+- **注册**：代码注册表按编码取用，未知编码加载即抛（fail-fast）；渠道行存 `source_adapter` / `detail_adapter` 编码；目录登记规则见 [data-model.md](data-model.md)；
 - **列表即全文**：详情与列表同源的场景，`detail_adapter` 与 `source_adapter` 同值；
-- **数据源**：能力清单见 [features.md](../features.md#11-数据源清单)（v1 已实现源；v2 按适配器逐个迁移），本文不重复维护源清单。
+- **数据源**：能力清单见 [features.md](../00-overview/features.md#11-数据源清单)（v1 已实现源；v2 按适配器逐个迁移），本文不重复维护源清单。
 
 ## 五、抓取内核
 
@@ -51,7 +51,7 @@
 
 ## 六、数据访问
 
-- 连接管理、DDL / migration 幂等执行、按 write_mode 三模式入库、批量写入集中在 repository；规则唯一权威见 [data-model.md](../data-model.md)，实现约定见 [AGENTS.md](../../AGENTS.md)；
+- 连接管理、DDL / migration 幂等执行、按 write_mode 三模式入库、批量写入集中在 repository；规则唯一权威见 [data-model.md](data-model.md)，实现约定见 [AGENTS.md](../../AGENTS.md)；
 - 双键水位的消费侧归 process（设计待定）；crawler repository 只负责写入并正确刷新 `update_time`，不得依赖数据库默认值替代更新；
 - 数据访问异常（`KDbException`）与数据本身失败分开：前者不消耗重试计数。
 

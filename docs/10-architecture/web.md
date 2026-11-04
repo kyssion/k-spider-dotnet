@@ -1,6 +1,6 @@
 # k-spider web 技术文档
 
-> 顶层：展示与操作界面——通过同源 admin REST API 获取数据与执行操作。平台架构见 [architecture.md](../architecture.md)，功能与数据源清单见 [features.md](../features.md)，认证接口见 [auth.md](../auth.md)，数据语义见 [data-model.md](../data-model.md)。
+> 顶层：展示与操作界面——通过同源 admin REST API 获取数据与执行操作。平台架构见 [system-overview.md](system-overview.md)，功能与数据源清单见 [features.md](../00-overview/features.md)，认证接口见 [auth.md](auth.md)，数据语义见 [data-model.md](data-model.md)。
 
 > **状态**：骨架（最后核对：2026-11-04）；实施细节待补充，当前仓库只有最小可运行骨架，业务页面待实现。
 
@@ -14,7 +14,7 @@
 
 ## 三、目录结构
 
-（待补充：`src/api` / `src/components` / `src/pages` / `src/stores` / `src/lib` 等目录与职责；当前只保留最小入口）
+（待补充：`web/src/api` / `web/src/components` / `web/src/pages` / `web/src/stores` / `web/src/lib` 等目录与职责；当前只保留最小入口）
 
 ## 四、页面与路由
 

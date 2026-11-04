@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> 文档检查"
-node scripts/check-docs.mjs
+node scripts/check-doc-references.mjs
 
 # 前端构建 ( 产物进 k-spider-admin/wwwroot ) : 无 pnpm 环境时跳过 ( CI 与前端开发必跑 )
 if command -v pnpm >/dev/null 2>&1; then

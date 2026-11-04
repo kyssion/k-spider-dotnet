@@ -1,6 +1,6 @@
 # k-spider-process 技术文档
 
-> 中间层：数据处理服务——消费 crawler 留存的原始载荷，提取加工为结构化/格式化数据。数据模型见 [data-model.md](../data-model.md)，平台架构见 [architecture.md](../architecture.md)，节点接入方式见 [distributed.md](../distributed.md)。
+> 中间层：数据处理服务——消费 crawler 留存的原始载荷，提取加工为结构化/格式化数据。数据模型见 [data-model.md](data-model.md)，平台架构见 [system-overview.md](system-overview.md)，节点接入方式见 [distributed.md](distributed.md)。
 
 > **状态**：未开始（最后核对：2026-11-04）；本文仅为骨架。
 

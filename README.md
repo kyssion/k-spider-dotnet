@@ -11,7 +11,7 @@
 
 状态口径：**未开始 / 骨架 / 实现中 / 可用**。
 
-模块职责与依赖见 [docs/architecture.md](docs/architecture.md)；数据模型见 [docs/data-model.md](docs/data-model.md)；功能清单见 [docs/features.md](docs/features.md)。
+模块职责与依赖见 [docs/10-architecture/system-overview.md](docs/10-architecture/system-overview.md)；数据模型见 [docs/10-architecture/data-model.md](docs/10-architecture/data-model.md)；功能清单见 [docs/00-overview/features.md](docs/00-overview/features.md)。
 
 ## 项目结构
 
@@ -20,7 +20,8 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 ├── k-spider-dotnet.sln
 ├── db/                             现行 DDL 基线（001 业务 / 002 系统 / 003 认证，均幂等）
 ├── deploy/                         部署单元（现行服务待补齐；v1 单元已归档）
-├── docs/ scripts/
+├── docs/                           唯一权威知识源（overview / architecture / adr / guides / specs / ai）
+├── scripts/
 ├── .agents/skills/                 Agent Skills 标准技能（跨 agent / 模型共享）
 ├── web/                            前端项目（Node/pnpm，构建产物目标由 admin 托管，当前未接入）
 └── src/
@@ -35,9 +36,9 @@ v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试�
 
 ## 技能
 
-通用 Agent Skills 放在 `.agents/skills/`，遵循 [Agent Skills](https://agentskills.io) 开放格式；opencode、Codex 直接读取，Claude Code 可按需在本地建立 `.claude/skills` 链接。目录、跨 agent 发现方式与上游同步见 [docs/skills.md](docs/skills.md)。
+通用 Agent Skills 放在 `.agents/skills/`，遵循 [Agent Skills](https://agentskills.io) 开放格式；opencode、Codex 直接读取，Claude Code 可按需在本地建立 `.claude/skills` 链接。目录、跨 agent 发现方式与上游同步见 [docs/50-ai/skills.md](docs/50-ai/skills.md)。
 
-数据链路与 admin 调度方案见 [docs/architecture.md](docs/architecture.md) 与 [docs/distributed.md](docs/distributed.md)。
+数据链路与 admin 调度方案见 [docs/10-architecture/system-overview.md](docs/10-architecture/system-overview.md) 与 [docs/10-architecture/distributed.md](docs/10-architecture/distributed.md)。
 
 ## 快速开始
 

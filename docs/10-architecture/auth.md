@@ -2,17 +2,17 @@
 
 > 本文为认证与账号行为、接口与配置要求的唯一权威；表结构见 2.1。
 > **状态**：已确认（最后核对：2026-11-04）。
-> 关联：[architecture.md](architecture.md)、[data-model.md](data-model.md)、[distributed.md](distributed.md)。
+> 关联：[system-overview.md](system-overview.md)、[data-model.md](data-model.md)、[distributed.md](distributed.md)。
 
 ## 一、落点
 
-认证与账号由 `k-spider-admin` 承载，前端页面在 `web/`，账号表为 `sys_user`；模块职责见 [architecture.md](architecture.md)。目标同源部署（admin 托管 `web/dist`），当前 web 托管尚未接入。
+认证与账号由 `k-spider-admin` 承载，前端页面在 `web/`，账号表为 `sys_user`；模块职责见 [system-overview.md](system-overview.md)。目标同源部署（admin 托管 `web/dist`），当前 web 托管尚未接入。
 
 ## 二、账号
 
 ### 2.1 账号表
 
-`sys_user` 表结构、索引与字段注释以 [db/003_auth_tables.sql](../db/003_auth_tables.sql) 为唯一权威；默认账号要求见 2.3。
+`sys_user` 表结构、索引与字段注释以 [db/003_auth_tables.sql](../../db/003_auth_tables.sql) 为唯一权威；默认账号要求见 2.3。
 
 ### 2.2 密码
 
