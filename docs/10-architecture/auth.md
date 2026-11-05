@@ -1,7 +1,7 @@
 # k-spider 认证与账号方案
 
 > 本文为认证与账号行为、接口与配置要求的唯一权威；表结构见 2.1。
-> **状态**：已确认（最后核对：2026-11-04）。
+> **状态**：已确认（最后核对：2026-11-05）。
 > 关联：[system-overview.md](system-overview.md)、[data-model.md](data-model.md)、[distributed.md](distributed.md)。
 
 ## 一、落点

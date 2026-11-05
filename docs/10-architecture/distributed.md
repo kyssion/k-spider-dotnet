@@ -2,7 +2,7 @@
 
 > admin 中央调度 + crawler 节点执行。本文为 sys_node / sys_task 语义、状态机与调度机制的唯一权威；物理结构落 `db/002_sys_tables.sql`。业务表见 [data-model.md](data-model.md)，平台架构见 [system-overview.md](system-overview.md)。
 
-> **状态**：已确认（最后核对：2026-11-04）；机制已由项目所有者逐项确认，协议为 **gRPC 双向流**。标注【待定】的为实现期再定事项，未定稿前不落代码。
+> **状态**：已确认（最后核对：2026-11-05）；机制已由项目所有者逐项确认，协议为 **gRPC 双向流**。标注【待确认】的为实现期再定事项，未定稿前不落代码。
 
 ## 一、设计目标与形态
 
@@ -66,8 +66,8 @@ WHERE id=@task
 - **下行**：`register_ack` / `task_dispatch` / `task_cancel` / `probe_request`；
 - **监听**：REST 管理 API 与 gRPC 使用**分离的监听端点**——REST 走 HTTP/1.1，gRPC 端点只承载 HTTP/2。明文单端口 `Http1AndHttp2` 无法同时协商 h2c gRPC，不能作为实现方案；内网 gRPC 默认 h2c 明文，TLS 按端点预留；每连接写操作加锁序列化下行；
 - **重连**：节点断线后指数退避重连（1/2/5/10/30s），重连成功即重新绑定 `node_id`；
-- **信任边界【待定】**：节点 gRPC 连接认证尚未定稿；实现前须确认 mTLS、共享 token 或网络隔离中的一种，并确保 admin gRPC 端点只对内网开放；节点直写数据库，数据库凭证也属于同一信任边界；
-- 接口路径、proto 字段与 `task_detail` / `extra` 的 JSON 键细节【待定：实现时定】。
+- **信任边界【待确认】**：节点 gRPC 连接认证尚未定稿；实现前须确认 mTLS、共享 token 或网络隔离中的一种，并确保 admin gRPC 端点只对内网开放；节点直写数据库，数据库凭证也属于同一信任边界；
+- 接口路径、proto 字段与 `task_detail` / `extra` 的 JSON 键细节【待确认：实现时定】。
 
 ## 五、调度规则
 
@@ -107,13 +107,13 @@ admin 改状态为 `cancelled` + 流上发 `task_cancel`（快路径）；节点
 
 admin 定期 DELETE 终态且 update_time 超过 N 天（默认 7 天，配置）的行；**非终态行永不清**（对账对象）。量级 = 渠道数 × 轮次频率，撑不起按天分区，普通 DELETE 够用。
 
-## 十一、待定事项
+## 十一、待确认事项
 
 | 事项 | 说明 |
 |---|---|
 | proto 契约 | 消息字段、错误码与流控细节（实现时定） |
 | `task_detail` / `extra` JSON 契约 | 键名、类型、枚举与 casing；`dispatch_token` 键名先随 proto 定稿 |
-| TLS 与端口 | REST / gRPC 分离监听；gRPC 内网 h2c，TLS 按端点预留 |
+| 端口号与 TLS 配置 | 具体监听端口号、证书/密钥来源；协议分离已由 ADR 0002 确认 |
 | 节点认证 | mTLS / 共享 token / 网络隔离的选型（实现前确认） |
 | 同渠道互斥持久化 | `channel_id` 在 `task_detail` JSONB 中；恢复映射需解析 JSONB，是否提升为独立列并加索引（实现时定） |
 | 对账参数默认值 | K/T、无活动超时、对账周期、重派上限（admin 配置落地时定） |

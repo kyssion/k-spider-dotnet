@@ -2,7 +2,7 @@
 
 k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](../10-architecture/data-model.md)、[crawler.md](../10-architecture/crawler.md)、[distributed.md](../10-architecture/distributed.md)、[auth.md](../10-architecture/auth.md) 为准。
 
-> **状态**：目标设计（含 v1 历史参考）（最后核对：2026-11-04）。
+> **状态**：目标设计（含 v1 历史参考）（最后核对：2026-11-05）。
 
 除特别标注外，本清单为平台目标能力；模块级落地状态以 [README.md](../../README.md) 状态表为准。
 
@@ -39,17 +39,14 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 
 ### 1.3 反爬验证
 
-- **识别**：HTTP 门禁、JS 挑战、cookie 门禁、浏览器检查、验证码、载荷级风控；
-- **通过**：浏览器挑战回放、滑块按源放开、图形/短信升级告警；
-- **会话与克制**：会话复用、同主机串行、失败冷却、按源策略；
-- **平台能力**：全局限流、代理池插件位、浏览器渲染服务。
+- 能力范围：HTTP 门禁、JS / cookie 挑战、浏览器检查、验证码、载荷级风控的识别与处理；会话复用、同主机串行、失败冷却、按源策略；全局限流、代理池插件位、浏览器渲染服务。
 
 机制与实现见 [crawler.md](../10-architecture/crawler.md#五抓取内核)。
 
 ## 二、存储能力
 
 - 业务表与写入规则：crawler_adapter + channel_category / channel / data_source / data_detail；完整定义见 [data-model.md](../10-architecture/data-model.md)；
-- 原始载荷双侧留存、write_mode 三模式、source : detail = 1 : N、retention_days 保留期、双键水位分发；规则见 [data-model.md](../10-architecture/data-model.md)，实现见 [crawler.md](../10-architecture/crawler.md#六数据访问)。
+- 存储能力：原始载荷双侧留存、write_mode 三模式、retention_days 保留期、双键水位；规则见 [data-model.md](../10-architecture/data-model.md)，实现见 [crawler.md](../10-architecture/crawler.md#六数据访问)。
 
 ## 三、分析功能
 
@@ -80,5 +77,5 @@ v1 有配置 / 部署 / 监控基础；以下为目标能力：
 - 配置：遵循 [AGENTS.md](../../AGENTS.md) 的配置约定；各服务专属键见对应技术文档；
 - 健康探测：注册即覆盖（接口可用性/新鲜度/积压/反爬冷却），阈值按数据节奏配置；
 - 告警：通道插件化（日志/飞书/Webhook），规则注册；
-- 部署：自包含发布（只带目标环境配置）、systemd 托管、进程优雅停机；集群不做 draining，见 [distributed.md](../10-architecture/distributed.md)；
+- 部署：自包含发布、systemd 托管、进程优雅停机；集群行为见 [distributed.md](../10-architecture/distributed.md)；
 - 启动自检：库对象幂等补齐、批量 upsert 唯一约束自检。

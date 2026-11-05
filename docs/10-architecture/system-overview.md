@@ -2,7 +2,7 @@
 
 抓取 → 处理 → 展示三层数据链路，admin 旁路中央调度；平台定位见 [README.md](../../README.md)。
 
-> **状态**：目标设计（最后核对：2026-11-04）；模块落地状态以 [README.md](../../README.md) 为准。
+> **状态**：目标设计（最后核对：2026-11-05）；模块落地状态以 [README.md](../../README.md) 为准。
 
 **数据链路**：crawler 抓取 → 原始载荷入库（data_source.raw / data_detail.raw）→ process 加工为结构化/格式化数据 → web 前端展示。admin 为旁路控制面：中央调度（任务分发与对账）+ 集群维护（心跳、状态、web 后台），不在数据链路上。
 
@@ -17,11 +17,9 @@
 | 旁路 | 管理 | k-spider-admin | 中央调度器：任务分发与对账、节点心跳与集群维护；托管 web 前端并承载后台 API |
 | 顶层 | 展示 | web/ | 前端页面（Node/pnpm，非 .NET）：展示与操作界面 |
 
-模块状态与待实现项见 [README.md](../../README.md) 状态表，本文不重复。
-
 ## 二、核心机制
 
-每条机制只在对应主题文档定义，这里只做索引；除 data-model / distributed / auth 的已确认契约外，其余均为目标设计，模块状态以 [README.md](../../README.md) 为准。
+每条机制只在对应主题文档定义，这里只做索引；除 data-model / distributed / auth 的已确认契约外，其余为目标设计或骨架，具体状态见各文档；模块状态以 [README.md](../../README.md) 为准。
 
 - **数据模型**：分类 → 渠道 → 资源 → 内容四张业务表 + 适配器注册表；语义与规则见 [data-model.md](data-model.md)，物理结构见 `db/001_business_tables.sql`；
 - **抓取**：crawler 的 hosting / channel / engine / adapter / parser / kernel / common / repository 分层，以及 HttpGateway、反爬验证、write_mode 入库、双键水位，见 [crawler.md](crawler.md)；
@@ -36,6 +34,6 @@
 
 测试夹具、Live 用例与门禁约定见 [AGENTS.md](../../AGENTS.md)；crawler 的测试分层见 [crawler.md](crawler.md)。
 
-## 四、状态与待定
+## 四、状态与待确认
 
-设计状态与待实现项以 [README.md](../../README.md) 状态表为准；待定事项见各主题文档的“待定”章节。
+设计状态与待实现项以 [README.md](../../README.md) 状态表为准；待确认事项见各主题文档的“待确认”章节。

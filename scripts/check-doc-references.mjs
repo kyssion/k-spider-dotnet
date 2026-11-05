@@ -261,10 +261,19 @@ for (const file of docsFiles) {
 }
 
 const adrIndex = linkTargets('docs/20-adr/README.md');
-for (const file of docsFiles) {
-  if (!file.startsWith('docs/20-adr/')) continue;
-  if (file === 'docs/20-adr/README.md' || file === 'docs/20-adr/0000-template.md') continue;
+for (const name of adrFileNames) {
+  if (name === 'README.md' || name === '0000-template.md') continue;
+  const file = `docs/20-adr/${name}`;
   if (!adrIndex.has(file)) structuralFailures.push(`${file} 未在 docs/20-adr/README.md 索引`);
+}
+
+for (const file of [...docsFiles, 'AGENTS.md']) {
+  if (!file.startsWith('docs/10-architecture/') && file !== 'AGENTS.md') continue;
+  const text = readFileSync(join(ROOT_DIR, file), 'utf8');
+  if (!/【待确认/.test(text) && !/^## .*待确认事项/m.test(text)) continue;
+  if (!adrIndex.has(file)) {
+    structuralFailures.push(`${file} 有待确认内容但未在 docs/20-adr/README.md 索引`);
+  }
 }
 
 for (const file of docsFiles) {
@@ -276,6 +285,22 @@ for (const file of docsFiles) {
     structuralFailures.push(`${file} 缺少状态块（> **状态**：...）`);
   } else if (!/最后核对：\d{4}-\d{2}-\d{2}/.test(text)) {
     structuralFailures.push(`${file} 状态缺少最后核对日期`);
+  }
+}
+
+const paragraphOwners = new Map();
+for (const file of files) {
+  const text = readFileSync(join(ROOT_DIR, file), 'utf8').replace(/```[\s\S]*?```/g, '');
+  for (const block of text.split(/\n\s*\n/)) {
+    const normalized = block.trim().split(/\s+/).join(' ');
+    if (normalized.length < 60) continue;
+    if (/^(#|\||>|- \[)/.test(normalized)) continue;
+    const owner = paragraphOwners.get(normalized);
+    if (owner && owner !== file) {
+      structuralFailures.push(`疑似复制段落: ${file} 与 ${owner}: ${normalized.slice(0, 80)}…`);
+    } else if (!owner) {
+      paragraphOwners.set(normalized, file);
+    }
   }
 }
 

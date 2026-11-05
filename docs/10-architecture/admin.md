@@ -2,7 +2,7 @@
 
 > 旁路：管理控制服务——中央调度、集群维护、REST 管理 API、认证与账号、web 前端托管。平台架构见 [system-overview.md](system-overview.md)；调度机制与状态机见 [distributed.md](distributed.md)；认证行为见 [auth.md](auth.md)；业务数据语义见 [data-model.md](data-model.md)。
 
-> **状态**：骨架（最后核对：2026-11-04）；实施细节待补充，已确认的分布式与认证规则不在本文重复定义。
+> **状态**：骨架（最后核对：2026-11-05）；实施细节待补充，已确认的分布式与认证规则不在本文重复定义。
 
 ## 一、定位与职责
 
@@ -52,6 +52,6 @@
 
 （待补充：调度状态机、对账与重派、REST API、认证、gRPC 契约、Live 分层）
 
-## 十三、待定事项
+## 十三、待确认事项
 
-（待补充：proto 字段与错误码、`task_detail` / `extra` JSON 契约、节点认证、REST / gRPC 端口与 TLS、对账参数默认值、后台页面范围等；与 [distributed.md](distributed.md) 的待定章节保持一致）
+统一见 [20-adr/README.md](../20-adr/README.md) 的待确认索引；admin 实现直接相关的协议、调度与对账参数以 [distributed.md](distributed.md) 的待确认章节为准。admin REST 首期端点/DTO 与后台页面范围待 web 首期页面确定后设计，web 侧见 [web.md](web.md) 待确认章节。

@@ -2,7 +2,7 @@
 
 > 底层：原始数据抓取服务。数据模型规则见 [data-model.md](data-model.md)，平台架构见 [system-overview.md](system-overview.md)，任务调度见 [distributed.md](distributed.md)。
 
-> **状态**：目标设计（最后核对：2026-11-04）；尚未实现，当前仓库仅有骨架。
+> **状态**：目标设计（最后核对：2026-11-05）；尚未实现，当前仓库仅有骨架。
 
 ## 一、定位与职责
 
@@ -52,7 +52,7 @@
 ## 六、数据访问
 
 - 连接管理、DDL / migration 幂等执行、按 write_mode 三模式入库、批量写入集中在 repository；规则唯一权威见 [data-model.md](data-model.md)，实现约定见 [AGENTS.md](../../AGENTS.md)；
-- 双键水位的消费侧归 process（设计待定）；crawler repository 只负责写入并正确刷新 `update_time`，不得依赖数据库默认值替代更新；
+- 双键水位的消费侧归 process（设计待确认）；crawler repository 只负责写入并正确刷新 `update_time`，不得依赖数据库默认值替代更新；
 - 数据访问异常（`KDbException`）与数据本身失败分开：前者不消耗重试计数。
 
 ## 七、配置
@@ -67,7 +67,7 @@
 - 本服务分层：契约测试（离线）/ 夹具回归（真实响应）/ Live 连通性（门禁排除）；
 - 当前门禁暂跑 v1 测试（`src/k-spider-test`，随 v1 代码）；新 crawler 测试落地后替换。
 
-## 九、待定事项
+## 九、待确认事项
 
 | 事项 | 说明 |
 |---|---|

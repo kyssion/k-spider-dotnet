@@ -36,7 +36,7 @@ v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试�
 
 ## 技能
 
-通用 Agent Skills 放在 `.agents/skills/`，遵循 [Agent Skills](https://agentskills.io) 开放格式；opencode、Codex 直接读取，Claude Code 可按需在本地建立 `.claude/skills` 链接。目录、跨 agent 发现方式与上游同步见 [docs/50-ai/skills.md](docs/50-ai/skills.md)。
+通用 Agent Skills 放在 `.agents/skills/`；目录、跨 agent 发现方式与上游同步见 [docs/50-ai/skills.md](docs/50-ai/skills.md)。
 
 数据链路与 admin 调度方案见 [docs/10-architecture/system-overview.md](docs/10-architecture/system-overview.md) 与 [docs/10-architecture/distributed.md](docs/10-architecture/distributed.md)。
 
