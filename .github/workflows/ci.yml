@@ -66,7 +66,8 @@ jobs:
       # ── 后端（Release 与本地 verify 对齐）────────────────────────────────
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          # 版本由仓库根的 global.json 锁定，不在 workflow 里重复声明
+          global-json-file: global.json
 
       - name: 构建（Release）
         run: dotnet build k-spider-dotnet.sln --configuration Release

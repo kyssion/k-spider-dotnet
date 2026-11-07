@@ -18,7 +18,9 @@
 
 当前 `.agents/skills/` 下有来自 [dotnet/skills](https://github.com/dotnet/skills) 的技能（数量以 `.agents/dotnet-skills/manifest.json` 为准）；它们只是技能文件，不是某个 agent 的插件。
 
-清单与磁盘的一致性（每个受管目录存在且含 `SKILL.md`，自有技能也必须可被发现）由 `scripts/check-skills-manifest.mjs` 在 verify 中离线校验；同步脚本的 `--check` 需要联网，平时跑不到。
+清单与磁盘的一致性（每个受管目录存在且含 `SKILL.md`，自有技能也必须可被发现）由
+`scripts/check-skills-manifest.mjs` 在 verify 中离线校验；同步脚本的 `--check` 需要联网，平时跑不到。
+清单路径与 schema 统一由 `scripts/lib/skills-manifest.mjs` 定义，检查与同步共用。
 
 ## 各 agent 如何发现
 

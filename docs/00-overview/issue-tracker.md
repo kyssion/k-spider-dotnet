@@ -20,6 +20,7 @@
 | 6 | 待确认事项较多且分散在架构文档 | 实现前需要逐项确认，容易漏 | 集中索引见 [20-adr/README.md](../20-adr/README.md)「待确认」 | 实现对应模块前先关闭该模块的待确认项 |
 | 7 | `src/k-spider-dotnet-old/` 归档仍在仓库 | 全仓检索、依赖扫描与新手阅读会命中历史代码 | 根 [README.md](../../README.md) 项目结构 | 新测试替换 v1 后评估移出仓库或保持只读归档 |
 | 8 | 没有本地 `stop.sh` / `dev.sh` | 后台进程收尾靠手工按端口检查，容易遗漏 | 见 [dev-workflow.md](../30-guides/dev-workflow.md)「后台进程收尾」 | 出现重复手工操作或端口冲突时再补脚本，规则先留在文档 |
+| 9 | HTTPS 推送在修改 `.github/workflows/` 时被拒绝 | PAT 缺 `workflow` 权限时，CI 相关提交无法通过 HTTPS 推送 | `remote rejected ... without 'workflow' scope` | 改用 SSH 远端（`git@github.com:kyssion/k-spider-dotnet.git`，本次已通过 SSH 推送），或给 PAT 补 `workflow` 权限 |
 
 ## 已处理
 
@@ -30,3 +31,5 @@
 | C | 目录索引、状态块、ADR 章节、代码块语言只有约定没有守卫 | 已加 [check-doc-structure.mjs](../../scripts/check-doc-structure.mjs)，覆盖状态块/日期、目录索引、ADR 必备章节、架构骨架、标题编号与代码块语言 |
 | D | 状态词表多处、索引状态与正文状态可能不一致 | 已统一到 [docs/README.md](../README.md)「文档状态」，并加 [check-doc-status.mjs](../../scripts/check-doc-status.mjs) 从示例行读取词表、校验索引与分组 |
 | E | 文档检查脚本单文件过大，解析规则会在新检查项之间漂移 | 已拆为引用/重复/结构/状态四个脚本，共用 `scripts/lib/` 的扫描范围、引用解析与文档模型 |
+| F | `30-guides/` 沿用了架构文档的七段骨架，指南出现「数据与接口」「配置」等不自然章节 | 已改为指南自己的结构（环境/命令/端口/步骤/门禁/相关文档）；八段骨架只约束 `10-architecture/` |
+| G | 技能清单路径与 schema 在检查脚本和同步脚本里各写一份 | 已抽到 `scripts/lib/skills-manifest.mjs`，检查与同步共用 |

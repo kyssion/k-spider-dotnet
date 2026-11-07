@@ -43,11 +43,17 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  MANIFEST_FILE as MANIFEST_FILE_REL,
+  META_DIR as META_DIR_REL,
+  SKILL_ENTRY,
+  SKILLS_DIR as SKILLS_DIR_REL,
+} from './lib/skills-manifest.mjs';
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SKILLS_DIR = join(ROOT_DIR, '.agents', 'skills');
-const META_DIR = join(ROOT_DIR, '.agents', 'dotnet-skills');
-const MANIFEST_FILE = join(META_DIR, 'manifest.json');
+const SKILLS_DIR = join(ROOT_DIR, SKILLS_DIR_REL);
+const META_DIR = join(ROOT_DIR, META_DIR_REL);
+const MANIFEST_FILE = join(ROOT_DIR, MANIFEST_FILE_REL);
 const SOURCE_URL = 'https://github.com/dotnet/skills';
 
 const MARKETPLACE_CANDIDATES = ['.claude-plugin/marketplace.json', '.agents/plugins/marketplace.json'];
@@ -270,10 +276,10 @@ function discoverSkillDirs(upstream, plugin, skillsPath) {
     fail(`插件 ${plugin.name} 声明的技能路径不存在：${toPosix(relative(upstream, skillsPath))}`);
   }
 
-  if (existsSync(join(skillsPath, 'SKILL.md'))) return [skillsPath];
+  if (existsSync(join(skillsPath, SKILL_ENTRY))) return [skillsPath];
 
   const found = readdirSync(skillsPath, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && existsSync(join(skillsPath, entry.name, 'SKILL.md')))
+    .filter((entry) => entry.isDirectory() && existsSync(join(skillsPath, entry.name, SKILL_ENTRY)))
     .map((entry) => join(skillsPath, entry.name));
 
   if (found.length === 0) {
@@ -288,7 +294,7 @@ function discoverSkillDirs(upstream, plugin, skillsPath) {
 
 /** 只取 frontmatter 里的顶层标量，够用且不需要引入 YAML 依赖。 */
 function readFrontmatter(skillDir) {
-  const text = readFileSync(join(skillDir, 'SKILL.md'), 'utf8');
+  const text = readFileSync(join(skillDir, SKILL_ENTRY), 'utf8');
   const block = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
 
   if (!block) fail(`${skillDir}/SKILL.md 缺少 YAML frontmatter`);

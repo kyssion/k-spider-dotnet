@@ -54,4 +54,7 @@
 - 变更分类与同步矩阵：[change-protocol.md](change-protocol.md)；
 - 完成清单：[definition-of-done.md](definition-of-done.md)；
 - 命令、端口与脚本：[dev-workflow.md](../30-guides/dev-workflow.md)；
+- 项目定位与里程碑：[vision.md](../00-overview/vision.md)、[roadmap.md](../00-overview/roadmap.md)；
+- 已知问题：[issue-tracker.md](../00-overview/issue-tracker.md)；
+- 贡献与安全入口：[CONTRIBUTING.md](../../CONTRIBUTING.md)、[SECURITY.md](../../SECURITY.md)；
 - 红线、代码约定与配置优先级：[AGENTS.md](../../AGENTS.md)。

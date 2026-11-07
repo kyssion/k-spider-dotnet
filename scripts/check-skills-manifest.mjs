@@ -17,14 +17,18 @@
  * 退出码：0 = 一致；1 = 不一致（逐条列出）。
  */
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  MANIFEST_FILE,
+  SKILL_ENTRY,
+  SKILLS_DIR,
+  declaredSkillNames,
+  readManifest,
+} from './lib/skills-manifest.mjs';
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SKILLS_DIR = '.agents/skills';
-const MANIFEST_FILE = '.agents/dotnet-skills/manifest.json';
-const SKILL_ENTRY = 'SKILL.md';
 
 const skillsPath = join(ROOT_DIR, SKILLS_DIR);
 const manifestPath = join(ROOT_DIR, MANIFEST_FILE);
@@ -39,12 +43,12 @@ if (!existsSync(manifestPath)) {
 } else {
   let manifest = null;
   try {
-    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    manifest = readManifest(ROOT_DIR);
   } catch (error) {
     failures.push(`${MANIFEST_FILE} 不是合法 JSON：${error.message}`);
   }
 
-  declared = (manifest?.skills ?? []).map((skill) => skill?.name).filter(Boolean);
+  declared = declaredSkillNames(manifest);
   if (declared.length === 0) {
     failures.push(`${MANIFEST_FILE} 没有声明任何技能（文件损坏或被清空）`);
   }

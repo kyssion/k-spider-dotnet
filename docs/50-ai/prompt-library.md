@@ -45,7 +45,7 @@
 目标：<要修正/新增的事实>。
 请先查 docs/README.md 的“唯一权威分工”，确定唯一来源；其他位置只加链接，不复制正文。
 同步目录索引、状态块、待确认清单；新增架构文档按 docs/30-guides/tech-doc-template.md 的骨架写。
-完成后运行 node scripts/check-doc-references.mjs，并给出实际输出。
+完成后运行 ./scripts/verify.sh（或至少四个文档检查脚本），并给出实际输出。
 ```
 
 ## 代码审查
