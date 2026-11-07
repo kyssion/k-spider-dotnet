@@ -1,8 +1,9 @@
 # 通用 Agent Skills
 
-项目使用 [Agent Skills](https://agentskills.io) 开放格式管理技能，不绑定某个 agent 实现。技能是模型无关的目录：一个 `SKILL.md`（YAML frontmatter + Markdown 指令）+ 可选的 `references/`、`scripts/`、`assets/`。
+> 状态：持续更新
+> 最后更新：2026-11-08
 
-> **状态**：现状（最后核对：2026-11-05）。
+项目使用 [Agent Skills](https://agentskills.io) 开放格式管理技能，不绑定某个 agent 实现。技能是模型无关的目录：一个 `SKILL.md`（YAML frontmatter + Markdown 指令）+ 可选的 `references/`、`scripts/`、`assets/`。
 
 > `SKILL.md` 格式遵循 Agent Skills 开放标准；`.agents/skills/` 是仓库约定，宿主是否自动发现取决于客户端。opencode 通过 `opencode.json` 适配。
 
@@ -16,6 +17,8 @@
 | `opencode.json` | opencode 的 `skills.paths` 指向 `.agents/skills` |
 
 当前 `.agents/skills/` 下有来自 [dotnet/skills](https://github.com/dotnet/skills) 的技能（数量以 `.agents/dotnet-skills/manifest.json` 为准）；它们只是技能文件，不是某个 agent 的插件。
+
+清单与磁盘的一致性（每个受管目录存在且含 `SKILL.md`，自有技能也必须可被发现）由 `scripts/check-skills-manifest.mjs` 在 verify 中离线校验；同步脚本的 `--check` 需要联网，平时跑不到。
 
 ## 各 agent 如何发现
 

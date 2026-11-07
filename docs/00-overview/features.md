@@ -1,14 +1,15 @@
 # 功能与数据源清单
 
-k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](../10-architecture/data-model.md)、[crawler.md](../10-architecture/crawler.md)、[distributed.md](../10-architecture/distributed.md)、[auth.md](../10-architecture/auth.md) 为准。
+> 状态：持续更新
+> 最后更新：2026-11-08
 
-> **状态**：目标设计（含 v1 历史参考）（最后核对：2026-11-05）。
+k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](../10-architecture/data-model.md)、[crawler.md](../10-architecture/crawler.md)、[distributed.md](../10-architecture/distributed.md)、[auth.md](../10-architecture/auth.md) 为准。
 
 除特别标注外，本清单为平台目标能力；模块级落地状态以 [README.md](../../README.md) 状态表为准。
 
-## 一、采集功能
+## 采集功能
 
-### 1.1 数据源清单
+### 数据源清单
 
 下表是 v1 已实现过的源，v2 按适配器逐步迁移；不代表当前 crawler 已全部接通。
 
@@ -26,7 +27,7 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 | 国家统计局 / 中国证监会 | 政务 | 官方文件（正文全文抓取） | 列表 → 详情两段 |
 | loot-drop.io | 创业案例 | 倒闭创业公司案例库（有界集合，行会修订） | 全量对账（哈希变更检测） |
 
-### 1.2 抓取能力
+### 抓取能力
 
 - **抓取策略**：游标翻页、全量对账、窗口快照、键增量；
 - **多段回填**：列表 → 详情；
@@ -37,18 +38,18 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 
 机制、参数与边界见 [crawler.md](../10-architecture/crawler.md)。
 
-### 1.3 反爬验证
+### 反爬验证
 
 - 能力范围：HTTP 门禁、JS / cookie 挑战、浏览器检查、验证码、载荷级风控的识别与处理；会话复用、同主机串行、失败冷却、按源策略；全局限流、代理池插件位、浏览器渲染服务。
 
-机制与实现见 [crawler.md](../10-architecture/crawler.md#五抓取内核)。
+机制与实现见 [crawler.md](../10-architecture/crawler.md)「抓取内核」。
 
-## 二、存储能力
+## 存储能力
 
 - 业务表与写入规则：crawler_adapter + channel_category / channel / data_source / data_detail；完整定义见 [data-model.md](../10-architecture/data-model.md)；
-- 存储能力：原始载荷双侧留存、write_mode 三模式、retention_days 保留期、双键水位；规则见 [data-model.md](../10-architecture/data-model.md)，实现见 [crawler.md](../10-architecture/crawler.md#六数据访问)。
+- 存储能力：原始载荷双侧留存、write_mode 三模式、retention_days 保留期、双键水位；规则见 [data-model.md](../10-architecture/data-model.md)，实现见 [crawler.md](../10-architecture/crawler.md)「数据访问」。
 
-## 三、分析功能
+## 分析功能
 
 v1 已实现基础分析（入库量趋势 / 分布 / 词频）；以下为完整目标能力：
 
@@ -58,7 +59,7 @@ v1 已实现基础分析（入库量趋势 / 分布 / 词频）；以下为完�
 - 分析 API + 前端图表（趋势/分布/词频/排行）；
 - 洞察插件位（远期）：NLP、AI 摘要/RAG 作为派生表生产者。
 
-## 四、控制台功能
+## 控制台功能
 
 v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代码已清理，仅作历史参考；v2 按以下目标重写，认证相关页面见 [auth.md](../10-architecture/auth.md)。
 
@@ -70,7 +71,7 @@ v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代�
 - 分析看板：视图驱动的图表（依赖分析层）；
 - 数据重放：按原始响应重跑解析（依赖 process，引擎能力而非一次性工具）。
 
-## 五、运维功能
+## 运维功能
 
 v1 有配置 / 部署 / 监控基础；以下为目标能力：
 

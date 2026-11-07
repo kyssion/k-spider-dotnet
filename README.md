@@ -1,6 +1,6 @@
 # k-spider
 
-通用爬虫数据抓取和分析平台：**抓取 → 处理 → 展示**，一条数据链路——原始载荷原样入库，提取加工产出结构化数据，web 前端展示。
+通用爬虫数据抓取和分析平台：**抓取 → 处理 → 展示**，一条数据链路——原始载荷原样入库，提取加工产出结构化数据，web 前端展示。定位、目标与非目标见 [vision.md](docs/00-overview/vision.md)。
 
 | 职责 | 项目 | 状态 |
 |---|---|---|
@@ -9,9 +9,26 @@
 | 管理（旁路） | `k-spider-admin` | 骨架 |
 | 展示（顶层） | `web/`（前端项目） | 骨架 |
 
-状态口径：**未开始 / 骨架 / 实现中 / 可用**。
+状态口径：**未开始 / 骨架 / 实现中 / 可用**。模块职责与依赖见 [system-overview.md](docs/10-architecture/system-overview.md)；数据模型见 [data-model.md](docs/10-architecture/data-model.md)；功能清单见 [features.md](docs/00-overview/features.md)；里程碑与下一步见 [roadmap.md](docs/00-overview/roadmap.md)；已知问题见 [issue-tracker.md](docs/00-overview/issue-tracker.md)。
 
-模块职责与依赖见 [docs/10-architecture/system-overview.md](docs/10-architecture/system-overview.md)；数据模型见 [docs/10-architecture/data-model.md](docs/10-architecture/data-model.md)；功能清单见 [docs/00-overview/features.md](docs/00-overview/features.md)。
+## 常用入口
+
+| 我想知道 | 去看 |
+|---|---|
+| 项目定位、目标与非目标 | [vision.md](docs/00-overview/vision.md) |
+| 里程碑、下一步与暂不考虑事项 | [roadmap.md](docs/00-overview/roadmap.md) |
+| 已知问题与处理结论 | [issue-tracker.md](docs/00-overview/issue-tracker.md) |
+| 第一次跑通：环境、数据库、启动、验证 | [getting-started.md](docs/30-guides/getting-started.md) |
+| 常用命令、端口、脚本、进程收尾、排错 | [dev-workflow.md](docs/30-guides/dev-workflow.md) |
+| 测试分层、Live 用例、门禁 | [testing.md](docs/30-guides/testing.md) |
+| 新增一个完整特性 | [add-a-feature.md](docs/30-guides/add-a-feature.md) |
+| 平台能力与数据源 | [features.md](docs/00-overview/features.md) |
+| 系统架构、调度、认证 | [10-architecture/README.md](docs/10-architecture/README.md) |
+| 历史决策与待确认事项 | [20-adr/README.md](docs/20-adr/README.md) |
+| 贡献流程与提交前检查 | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 安全报告渠道与已知限制 | [SECURITY.md](SECURITY.md) |
+| AI 协作红线与代码约定 | [AGENTS.md](AGENTS.md) |
+| 文档索引与写作规则 | [docs/README.md](docs/README.md) |
 
 ## 项目结构
 
@@ -34,28 +51,14 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 
 v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试落地后移除。
 
-## 技能
-
-通用 Agent Skills 放在 `.agents/skills/`；目录、跨 agent 发现方式与上游同步见 [docs/50-ai/skills.md](docs/50-ai/skills.md)。
-
-数据链路与 admin 调度方案见 [docs/10-architecture/system-overview.md](docs/10-architecture/system-overview.md) 与 [docs/10-architecture/distributed.md](docs/10-architecture/distributed.md)。
-
 ## 快速开始
 
-环境要求：.NET 10、PostgreSQL 15+、Node 20+ / pnpm（web 前端）。
+完整步骤（环境要求、数据库初始化、启动、验证）见 [getting-started.md](docs/30-guides/getting-started.md)。配置约定（含优先级）与凭据注入规则见 [AGENTS.md](AGENTS.md)。
 
-```bash
-dotnet build k-spider-dotnet.sln                 # 构建（零警告零错误）
-./scripts/verify.sh                              # 一键验证（CI 同款）
-psql -d k_spider -f db/001_business_tables.sql   # 初始化业务表（幂等）
-psql -d k_spider -f db/002_sys_tables.sql        # 初始化系统设施表
-psql -d k_spider -f db/003_auth_tables.sql       # 初始化认证表
-dotnet run --project src/k-spider-crawler        # 抓取服务
-dotnet run --project src/k-spider-admin          # 调度与后台
-```
+## 技能
 
-配置约定（含优先级）与凭据注入规则见 [AGENTS.md](AGENTS.md)。
+通用 Agent Skills 放在 `.agents/skills/`；目录、跨 agent 发现方式与上游同步见 [skills.md](docs/50-ai/skills.md)。
 
 ## 文档
 
-文档索引、各主题唯一权威与维护要求见 [docs/README.md](docs/README.md)。
+文档索引、目录级索引、各主题唯一权威与维护要求见 [docs/README.md](docs/README.md)。

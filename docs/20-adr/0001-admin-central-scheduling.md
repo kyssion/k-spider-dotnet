@@ -1,8 +1,9 @@
 # 0001 admin 中央调度
 
-> **状态**：已确认（2026-11-04）
-> **关联**：[distributed.md](../10-architecture/distributed.md)
-> **影响**：admin 调度循环、crawler 节点职责、任务表
+> 状态：已确认
+> 最后更新：2026-11-04
+> 关联：[distributed.md](../10-architecture/distributed.md)
+> 影响：admin 调度循环、crawler 节点职责、任务表
 
 ## 背景
 

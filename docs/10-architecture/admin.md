@@ -1,57 +1,92 @@
 # k-spider-admin 技术文档
 
-> 旁路：管理控制服务——中央调度、集群维护、REST 管理 API、认证与账号、web 前端托管。平台架构见 [system-overview.md](system-overview.md)；调度机制与状态机见 [distributed.md](distributed.md)；认证行为见 [auth.md](auth.md)；业务数据语义见 [data-model.md](data-model.md)。
+> 状态：草案
+> 最后更新：2026-11-08
+> 权威范围：admin 服务的实现落点与模块结构；调度机制与状态机以 [distributed.md](distributed.md) 为准，认证行为以 [auth.md](auth.md) 为准，业务数据语义以 [data-model.md](data-model.md) 为准。
+> 实现状态：骨架，当前只有最小可运行入口，业务实现待补。
+> 平台架构见 [system-overview.md](system-overview.md)。
 
-> **状态**：骨架（最后核对：2026-11-05）；实施细节待补充，已确认的分布式与认证规则不在本文重复定义。
+## 定位与职责
 
-## 一、定位与职责
+旁路管理控制服务：中央调度、集群维护、REST 管理 API、认证与账号、web 前端托管。admin 不在数据链路上，不抓取、不加工业务数据；它负责决定“谁在什么时候执行哪个渠道轮”，并把执行结果收敛回任务状态。
 
-（待补充：服务边界；与 crawler/process 的调度关系；与 web 的同源部署关系；明确 admin 不在数据链路上）
+当前仓库的 admin 只有 `Program.cs` 的最小入口（`GET /` 返回服务名）；以下结构与流程是目标设计，落地时以本节为落点、以 distributed/auth 为规则。
 
-## 二、模块设计
+## 结构与约定
 
-（待补充：hosting / scheduler / reconciliation / grpc / api / auth / web-hosting / repository / common 等目录与职责；机制与领域知识的边界）
+计划中的目录与职责（待实现）：
 
-## 三、启动与运行
+| 目录 | 职责 |
+|---|---|
+| `Hosting/` | 启动、配置加载、日志、健康检查、优雅停机 |
+| `Scheduler/` | 读 `channel.schedule` 生成任务包、派发互斥、节点选择 |
+| `Reconciliation/` | 对账循环、探测、重派、取消与任务表治理 |
+| `Grpc/` | `Connect` 双向流、上行/下行消息、写流串行化 |
+| `Api/` | REST 管理 API、DTO、分页筛选、错误处理 |
+| `Auth/` | 登录、会话、账号管理、CSRF 与安全头 |
+| `WebHosting/` | `wwwroot` 静态文件、SPA fallback、缓存策略 |
+| `Repository/` | `sys_node` / `sys_task` / `channel` 读写与事务边界 |
+| `Common/` | 无业务语义的通用工具 |
 
-（待补充：配置加载顺序、日志、REST / gRPC 分离监听端点、健康检查、优雅停机、admin 单机约束；gRPC 明文 h2c，TLS 按端点预留）
+边界：调度规则不写在 admin 的端点里，统一放 `Scheduler/` 与 `Reconciliation/`；认证规则不在 admin 重复定义，按 [auth.md](auth.md) 实现；`sys_node` / `sys_task` 的语义与状态机不在 admin 重复定义，按 [distributed.md](distributed.md) 实现。
 
-## 四、调度与对账
+## 核心流程
 
-（待补充：读 `channel.schedule` 生成任务包、节点选择、派发互斥、对账循环、重派与取消的实现落点；机制唯一权威见 [distributed.md](distributed.md)。`channel.schedule` 的 JSON 键、时区与错过轮次语义尚未定稿，实现前先确认）
+### 启动与监听
 
-## 五、gRPC 节点服务
+启动时加载配置与日志，恢复非终态任务的互斥映射；REST 与 gRPC 使用分离的监听端点（REST HTTP/1.1，gRPC HTTP/2；明文单端口 `Http1AndHttp2` 不作为方案）。健康检查、优雅停机与 admin 单机约束随实现补齐。
 
-（待补充：proto 位置、`Connect` 双向流生命周期、上行/下行消息处理、写流串行化、重连与探测；协议机制见 [distributed.md](distributed.md)）
+### 调度与对账
 
-## 六、REST 管理 API
+`scheduler` 读 `channel.schedule` 生成渠道轮任务包，按节点负载派发；同一渠道同一时刻只派发一个任务。`reconciliation` 周期扫描非终态任务，按“无活动超时 + 探测”判死并重派；重派达上限转 `abandoned`。机制与参数见 [distributed.md](distributed.md)。
 
-（待补充：`/api` 端点清单、请求/响应 DTO、分页与筛选、错误码、幂等约定；认证相关接口以 [auth.md](auth.md) 为准）
+### gRPC 节点服务
 
-## 七、认证与账号
+处理 `Connect` 双向流的生命周期、注册/复活、心跳、任务下发、取消、探测与终态回报；每连接写操作串行化。proto 与生成代码计划放 `src/k-spider-grpc/`（待创建）。
 
-（待补充：认证中间件、Cookie 与 Data Protection、Antiforgery、登录/账号管理端点、默认账号处理；行为唯一权威见 [auth.md](auth.md)）
+### REST 管理 API
 
-## 八、前端托管
+承载 web 的管理与查询接口；端点清单、DTO、分页与筛选、错误码在首期范围确定后补入本文。认证相关接口以 [auth.md](auth.md) 为准，不在此重复。
 
-（待补充：`wwwroot` 静态文件、SPA fallback、构建产物来源、同源部署、缓存策略）
+### 认证与账号
 
-## 九、数据访问
+按 [auth.md](auth.md) 接入 Cookie 会话、Data Protection、Antiforgery、登录/账号管理端点与默认账号处理；admin 只负责落点，不重新定义行为。
 
-（待补充：`sys_node` / `sys_task` 读写、`channel` 读取、管理查询、事务边界、`KDbException`；业务表规则见 [data-model.md](data-model.md)，物理结构见 `db/002_sys_tables.sql`）
+### 前端托管
 
-## 十、配置
+`wwwroot` 提供 web 构建产物，SPA fallback 到 `index.html`；构建产物由 [dev-workflow.md](../30-guides/dev-workflow.md) 的 `build-web.sh` 复制，缓存策略与同源部署随实现补齐。
 
-（待补充：`appsettings` 键、`K_SPIDER__` 环境变量、监听端口、数据库、认证、调度与对账参数）
+## 数据与接口
 
-## 十一、部署与运维
+- 读取 `channel` / `channel_category` 生成调度任务；读写 `sys_node` / `sys_task` 维护节点与任务状态；
+- 业务数据查询按 web 首期需求与 [data-model.md](data-model.md) 的语义设计，不在 admin 另建一套数据定义；
+- 事务边界、`KDbException` 与批量写入按 [AGENTS.md](../../AGENTS.md) 与数据访问约定实现；
+- REST API 的认证、CSRF 与错误响应以 [auth.md](auth.md) 与首期 API 契约为准；当前尚无独立 API 契约文档，首期端点确定后补。
 
-（待补充：发布方式、systemd 托管、日志与告警、升级与回滚、REST / gRPC 端口与 TLS 配置）
+## 配置
 
-## 十二、测试
+- `appsettings.json` / `appsettings.{环境}.json` / `K_SPIDER__` 前缀环境变量，优先级见 [AGENTS.md](../../AGENTS.md)；
+- 计划配置项：监听端口（REST / gRPC）、数据库连接、认证（`Auth:CookieName`、`DataProtection:KeysPath`）、调度与对账参数（K/T、无活动超时、对账周期、重派上限、任务保留天数）；
+- 当前 `appsettings.json` 只有日志与 `AllowedHosts`；业务配置随实现补齐，未定项标【待确认】；
+- `channel.schedule` 的 JSON 键、时区与错过轮次语义尚未定稿，实现前确认。
 
-（待补充：调度状态机、对账与重派、REST API、认证、gRPC 契约、Live 分层）
+## 测试与守门
 
-## 十三、待确认事项
+- 调度状态机、派发互斥、对账重派、取消检查点、条件更新必须有测试；
+- REST API、认证、gRPC 契约测试在实现后补；
+- Live 用例与门禁分层见 [testing.md](../30-guides/testing.md)「测试分层」；
+- 当前 admin 只有最小入口，尚无业务测试；不能把骨架可运行当作功能已验证。
 
-统一见 [20-adr/README.md](../20-adr/README.md) 的待确认索引；admin 实现直接相关的协议、调度与对账参数以 [distributed.md](distributed.md) 的待确认章节为准。admin REST 首期端点/DTO 与后台页面范围待 web 首期页面确定后设计，web 侧见 [web.md](web.md) 待确认章节。
+## 待确认事项
+
+- 调度、对账、gRPC、端口与 TLS 的待确认项以 [distributed.md](distributed.md) 的“待确认事项”为准；
+- 认证与账号的待确认项以 [auth.md](auth.md) 的“待确认事项”为准；
+- admin REST 首期端点/DTO 与后台页面范围待 web 首期页面确定后设计，见 [web.md](web.md)；
+- admin 目录结构与模块拆分在实现前确认，避免先建空目录；
+- 部署方式、systemd 托管、日志与回滚方案待补。
+
+## 相关文档
+
+- [system-overview.md](system-overview.md)、[distributed.md](distributed.md)、[auth.md](auth.md)、[web.md](web.md)：admin 的上游规则与下游调用方；
+- [dev-workflow.md](../30-guides/dev-workflow.md)：启动命令、端口与前端构建；
+- [roadmap.md](../00-overview/roadmap.md)：M2 / M5 里程碑。

@@ -5,13 +5,35 @@ on:
     branches: [main]
   pull_request:
 
+# 与 scripts/verify.sh 步骤同源：同一顺序、同一质量口径（构建 / 格式 / 测试都用 Release）。
+# 唯一允许的本地差异是 verify.sh --skip-tests（本地冒烟），CI 永远跑完整测试。
 jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # 前端构建 : pnpm + Node , 产物进 k-spider-admin/wwwroot ( 目标由 admin 托管 )
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # ── 文档与技能（零依赖，先用 Node 跑）──────────────────────────────
+      - name: 文档引用检查
+        run: node scripts/check-doc-references.mjs
+
+      - name: 文档重复检查
+        run: node scripts/check-doc-duplication.mjs
+
+      - name: 文档结构检查
+        run: node scripts/check-doc-structure.mjs
+
+      - name: 文档状态检查
+        run: node scripts/check-doc-status.mjs
+
+      - name: 技能清单检查
+        run: node scripts/check-skills-manifest.mjs
+
+      # ── 前端（pnpm + Node，产物进 k-spider-admin/wwwroot）─────────────────
       - uses: pnpm/action-setup@v4
         with:
           version: 12
@@ -25,9 +47,8 @@ jobs:
       - name: 前端构建
         run: bash scripts/build-web.sh
 
-      # 前端 E2E : 当前为骨架冒烟用例 ( 离线确定 ) ; 业务 mock 夹具与 live 用例后续补齐
-      # playwright 浏览器缓存 : 命中时跳过下载 ; 安装与跑测拆成两步 , 挂起时能直接看出卡在哪 ;
-      # 不用 --with-deps ( ubuntu runner 镜像自带依赖 , apt 安装会与镜像维护进程抢锁 )
+      # playwright 浏览器缓存：命中时跳过下载；安装与跑测拆成两步，挂起时能直接看出卡在哪；
+      # 不用 --with-deps（ubuntu runner 镜像自带依赖，apt 安装会与镜像维护进程抢锁）
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -36,23 +57,24 @@ jobs:
       - name: 安装 Playwright 浏览器
         run: pnpm --dir web exec playwright install chromium
         env:
-          # 官方 CDN 在 runner 上偶发停滞且安装命令无下载超时 , 换 npmmirror 镜像
+          # 官方 CDN 在 runner 上偶发停滞且安装命令无下载超时，换 npmmirror 镜像
           PLAYWRIGHT_DOWNLOAD_HOST: https://cdn.npmmirror.com/binaries/playwright
 
       - name: 前端 E2E 测试
         run: pnpm --dir web test:e2e
 
+      # ── 后端（Release 与本地 verify 对齐）────────────────────────────────
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
-      - name: 文档检查
-        run: node scripts/check-doc-references.mjs
+      - name: 构建（Release）
+        run: dotnet build k-spider-dotnet.sln --configuration Release
 
-      - name: 构建
-        run: dotnet build k-spider-dotnet.sln
+      - name: 格式校验
+        run: dotnet format k-spider-dotnet.sln --no-restore --verify-no-changes
 
-      # 排除 Live 分类 : 真实接口连通性用例依赖线上可达 , 不放进门禁 ( 本地手动跑 dotnet test 即可 )
-      # 测试项目暂未加入 sln , 不能用 --no-build ; v1 测试替换后再调整门禁
-      - name: 测试 ( 离线 )
-        run: dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"
+      # 排除 Live 分类：真实接口连通性用例依赖线上可达，不放进门禁（本地手动跑 dotnet test 即可）
+      # 测试项目暂未加入 sln，不能用 --no-build；v1 测试替换后再调整门禁
+      - name: 测试（Release，离线）
+        run: dotnet test src/k-spider-test/k-spider-test.csproj --configuration Release --filter "TestCategory!=Live"

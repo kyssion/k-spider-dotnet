@@ -1,8 +1,9 @@
 # 0002 gRPC 传输与端口拆分
 
-> **状态**：已确认（2026-11-04）
-> **关联**：[distributed.md](../10-architecture/distributed.md)
-> **影响**：admin 监听配置、节点连接、部署端口
+> 状态：已确认
+> 最后更新：2026-11-04
+> 关联：[distributed.md](../10-architecture/distributed.md)
+> 影响：admin 监听配置、节点连接、部署端口
 
 ## 背景
 

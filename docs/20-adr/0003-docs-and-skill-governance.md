@@ -1,8 +1,9 @@
 # 0003 文档与技能治理
 
-> **状态**：已确认（2026-11-04）
-> **关联**：[docs/README.md](../README.md)、[skills.md](../50-ai/skills.md)
-> **影响**：文档目录、ADR、技能同步与检查脚本
+> 状态：已确认
+> 最后更新：2026-11-04
+> 关联：[docs/README.md](../README.md)、[skills.md](../50-ai/skills.md)
+> 影响：文档目录、ADR、技能同步与检查脚本
 
 ## 背景
 
