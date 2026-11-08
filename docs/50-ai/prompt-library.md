@@ -2,7 +2,8 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
-> 权威范围：可直接复制的任务提示模板。流程与门禁见 [change-protocol.md](change-protocol.md) 与 [definition-of-done.md](definition-of-done.md)。
+本文范围：可直接复制的任务提示模板。流程与门禁见 [change-protocol.md](change-protocol.md) 与
+[definition-of-done.md](definition-of-done.md)。
 
 ## 使用方式
 
@@ -44,7 +45,7 @@
 ```text
 目标：<要修正/新增的事实>。
 请先查 docs/README.md 的“唯一权威分工”，确定唯一来源；其他位置只加链接，不复制正文。
-同步目录索引、状态块、待确认清单；新增架构文档按 docs/30-guides/tech-doc-template.md 的骨架写。
+同步目录索引、状态块、待确认清单；新增架构文档按 docs/10-architecture/README.md 的骨架写。
 完成后运行 ./scripts/verify.sh（或至少四个文档检查脚本），并给出实际输出。
 ```
 

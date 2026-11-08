@@ -2,8 +2,9 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
-> 权威范围：业务表语义与规则；物理结构唯一权威是 [001_business_tables.sql](../../db/001_business_tables.sql)（列、约束、索引、COMMENT）。
-> 系统设施表语义见 [distributed.md](distributed.md)（物理结构 [002_sys_tables.sql](../../db/002_sys_tables.sql)）；认证表行为见 [auth.md](auth.md)（物理结构 [003_auth_tables.sql](../../db/003_auth_tables.sql)）。术语见 [glossary.md](../00-overview/glossary.md)。
+
+本文定义业务表语义与规则；物理结构以 [001_business_tables.sql](../../db/001_business_tables.sql)
+为唯一权威（列、约束、索引、COMMENT）。系统设施表、认证表与术语见本文「相关文档」。
 
 ## 定位与职责
 
@@ -103,7 +104,7 @@ process（以及任何按增量消费的读取方）按 `(update_time, id)` 升�
 ## 配置
 
 - `channel.retention_days`：原始载荷保留期；
-- `channel.schedule`：调度参数，JSON 键、类型与时区尚未定稿，见 [admin.md](admin.md) 与 [distributed.md](distributed.md)；
+- `channel.schedule`：调度参数，JSON 键、类型与时区尚未定稿，见 [distributed.md](distributed.md)「配置」；
 - `channel.extra`：渠道实例参数与适配器参数，键表见 [crawler.md](crawler.md)；
 - 写入模式是渠道配置，source/detail 行级快照；detail 快照来源待确认。
 

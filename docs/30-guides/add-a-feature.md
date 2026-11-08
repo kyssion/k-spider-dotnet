@@ -2,8 +2,8 @@
 
 > 状态：持续更新
 > 最后更新：2026-11-08
-> 权威范围：从一个需求到可交付改动的分步做法。变更分类与文档同步矩阵以
-> [change-protocol.md](../50-ai/change-protocol.md) 为准。
+本文范围：从一个需求到可交付改动的分步做法。变更分类与文档同步矩阵以
+[change-protocol.md](../50-ai/change-protocol.md) 为准。
 
 把「先契约、后实现、同一次提交同步文档」的顺序写成可执行步骤，避免先写代码再补契约，
 或把目标设计写成现状。
@@ -28,7 +28,7 @@
 4. **确认**：不可逆或影响公共契约的决策，先向项目所有者确认，不自行拍板；
 5. **实现**：契约 → 数据访问 → 服务 → 接口/前端；保持小步，不顺手重构无关代码；
 6. **同步文档**：更新权威文档、状态、目录索引和待确认清单；新增架构文档按
-   [tech-doc-template.md](tech-doc-template.md) 的骨架写；
+   [10-architecture/README.md](../10-architecture/README.md)「技术文档骨架」写；
 7. **补测试**：按 [testing.md](testing.md) 的分层补测试；修复必须带回归用例；
 8. **验证**：跑 `./scripts/verify.sh`，记录实际输出；
 9. **交付**：按 [collaboration-model.md](../50-ai/collaboration-model.md) 的四段式汇报，
@@ -65,5 +65,5 @@
 
 - [change-protocol.md](../50-ai/change-protocol.md)：变更分类、产物与同步矩阵；
 - [testing.md](testing.md)：测试分层与验证闭环；
-- [tech-doc-template.md](tech-doc-template.md)：架构文档骨架；
+- [10-architecture/README.md](../10-architecture/README.md)：架构文档骨架与索引；
 - [definition-of-done.md](../50-ai/definition-of-done.md)：交付前自检。

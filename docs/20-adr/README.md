@@ -28,7 +28,7 @@ ADR 就是为了把「权衡过程」固化下来。
 
 - 新契约或契约变更：先在「待确认」区登记，向项目所有者确认后再写决策记录并同步权威文档；
 - 未确认事项不得写进代码或文档正文当作既定事实，只能以【待确认】标记或「待确认事项」章节形式存在；
-- 每份决策必须有状态、日期、关联权威文档；文件命名与文档状态见 [docs/README.md](../README.md)；
+- 每份决策必须有状态、日期、决策人与关联权威文档；文件命名与文档状态见 [docs/README.md](../README.md)；
 - 决策与权威文档冲突时，以最新已确认决策为准，并在同一次改动中修正权威文档；
 - ADR 只增不改；需要改变决策时新增一篇，并在新旧两篇中互相引用；仅允许更新状态行与索引；
 - 每篇必须包含「备选项」与「后果（含重新评估触发条件）」。没有备选项对比的 ADR 只是公告；
@@ -36,11 +36,51 @@ ADR 就是为了把「权衡过程」固化下来。
 - 新增 ADR 后必须更新本文底部的索引表；
 - 索引表是状态的**副本**：状态列必须与正文的状态行一致；分组也必须对应（「当前生效」只能是已确认，
   「历史」只能是已取代 / 已废弃）。由 [check-doc-status.mjs](../../scripts/check-doc-status.mjs) 校验，
-  冲突时改正文；
-- 模板见 [0000-template.md](0000-template.md)。
+  冲突时改正文。
 
-**历史说明**：0001–0003 写于 ADR 0004 之前，保留原文，不追溯补「备选项 / 后果」章节；
-新 ADR 一律按模板执行。
+**历史说明**：0001–0003 写于 ADR 0004 之前，保留原文（包括其中的旧脚本名与旧路径），
+不追溯补「决策人 / 备选项 / 后果」；新 ADR 一律按本文「模板」执行，现行文档守卫见
+[docs/README.md](../README.md)。
+
+## 模板
+
+```markdown
+# NNNN 决策标题
+
+> 状态：草案
+> 最后更新：YYYY-MM-DD
+> 决策人：（人或 AI 会话标识）
+> 关联：权威文档链接
+> 影响：受影响的服务、表、接口或脚本
+
+## 背景
+
+要解决什么问题，当前做法为什么不够，有哪些约束（团队规模、时间、现有技术栈）。
+
+## 备选项
+
+| 选项 | 优点 | 代价 |
+| --- | --- | --- |
+| A | | |
+| B | | |
+
+## 决策
+
+选择 A。用一两句话说明核心理由。只写结论，不重复权威文档的完整定义。
+
+## 后果
+
+- 正面：
+- 负面（需要接受的代价）：
+- 需要同步修改的位置：
+- 触发重新评估的条件：
+
+## 待办
+
+- [ ] 同步权威文档
+- [ ] 更新代码 / DDL / 配置
+- [ ] 更新测试与门禁
+```
 
 ## 待确认
 
@@ -50,7 +90,7 @@ ADR 就是为了把「权衡过程」固化下来。
 | --- | --- |
 | 跨模块架构待确认入口 | [system-overview.md](../10-architecture/system-overview.md) |
 | `record_key` 精确格式 | [data-model.md](../10-architecture/data-model.md) |
-| `channel.schedule` JSON | [admin.md](../10-architecture/admin.md) |
+| `channel.schedule` JSON | [distributed.md](../10-architecture/distributed.md) |
 | `channel.extra` 键表 | [crawler.md](../10-architecture/crawler.md) |
 | crawler 抓取配置键 | [crawler.md](../10-architecture/crawler.md) |
 | 反爬策略细节 | [crawler.md](../10-architecture/crawler.md) |
@@ -60,16 +100,28 @@ ADR 就是为了把「权衡过程」固化下来。
 | 同渠道互斥持久化 | [distributed.md](../10-architecture/distributed.md) |
 | 对账参数默认值 | [distributed.md](../10-architecture/distributed.md) |
 | 节点认证 | [distributed.md](../10-architecture/distributed.md) |
+| admin 重建 | [distributed.md](../10-architecture/distributed.md) |
 | 认证账号 PATCH 端点拆分 | [auth.md](../10-architecture/auth.md) |
+| 权限模型 | [auth.md](../10-architecture/auth.md) |
+| 账号恢复方式 | [auth.md](../10-architecture/auth.md) |
 | detail 写入快照来源 | [data-model.md](../10-architecture/data-model.md) |
 | `data_status` 是否跳过详情回填 | [data-model.md](../10-architecture/data-model.md) |
 | 双键水位消费侧 | [crawler.md](../10-architecture/crawler.md) / [process.md](../10-architecture/process.md) |
 | 数据访问选型 | [AGENTS.md](../../AGENTS.md) |
 | admin REST 首期端点/DTO | [admin.md](../10-architecture/admin.md) / [web.md](../10-architecture/web.md) |
 | admin 后台页面范围 | [admin.md](../10-architecture/admin.md) |
+| admin 目录结构与模块拆分 | [admin.md](../10-architecture/admin.md) |
+| 部署形态与运维 | [system-overview.md](../10-architecture/system-overview.md) / [admin.md](../10-architecture/admin.md) |
 | web 首期页面范围与交互 | [web.md](../10-architecture/web.md) |
+| 组件库与样式 | [web.md](../10-architecture/web.md) |
+| 图表交互 | [web.md](../10-architecture/web.md) |
+| 权限粒度 | [web.md](../10-architecture/web.md) |
+| 前端 i18n | [web.md](../10-architecture/web.md) |
+| 前端门禁 | [web.md](../10-architecture/web.md) |
 | process 结构化数据契约 | [process.md](../10-architecture/process.md) |
 | process 节点接入 | [process.md](../10-architecture/process.md) / [distributed.md](../10-architecture/distributed.md) |
+| 解析器注册与版本 | [process.md](../10-architecture/process.md) |
+| 原始载荷消费方式 | [process.md](../10-architecture/process.md) |
 | `data_detail` 失败行语义 | [data-model.md](../10-architecture/data-model.md) |
 | 列表即全文的 detail 行 | [crawler.md](../10-architecture/crawler.md) |
 

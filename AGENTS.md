@@ -27,10 +27,12 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
 7. **不得**在自己启动的后台进程未停止时交付（除非用户明确要求保持运行）；
 8. **不得**未经明确指示提交、推送或改写远端历史；
 9. **不得**声称验证通过而不给出实际命令结果；
-10. **不得**引入新依赖或框架而不先确认；
+10. **不得**引入新依赖或框架而不先确认并登记 ADR/待确认项；
 11. **不得**把同一个事实写成两份正文（约定、表格、清单、流程都必须只有一处），需要多处出现时只写引用 ——
     归属查 [docs/README.md](docs/README.md)「内容归属」，精确重复由
-    [check-doc-duplication.mjs](scripts/check-doc-duplication.mjs) 在 verify 中拦下。
+    [check-doc-duplication.mjs](scripts/check-doc-duplication.mjs) 在 verify 中拦下；
+12. **不得**在 `./scripts/verify.sh` 未通过时提交或推送；
+13. **不得**在页面组件直接 `fetch`；业务请求必须收敛到 `web/src/api/`（平台设施与静态资源除外）。
 
 ## 工作流
 
@@ -77,10 +79,6 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
 3. **无关技能不加载**：Blazor、MAUI、WinForms、.NET 11 等与本项目栈无关的技能默认不加载；
 4. **受管技能不要手改**：manifest 记录了它们，下次同步会覆盖；升级走同步脚本，自有技能另建目录。
 
-## 核心原则
-
-核心原则、非目标与成功标准见 [vision.md](docs/00-overview/vision.md)；本文不重复。
-
 ## 数据模型契约
 
 业务表语义与规则唯一权威是 [data-model.md](docs/10-architecture/data-model.md)，物理结构以
@@ -106,4 +104,4 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
 ## 归档与待确认
 
 - 待确认契约见 [20-adr/README.md](docs/20-adr/README.md)；各主题文档的「待确认事项」章节是补充；
-- v1 代码/部署/旧库导出归档在 `src/k-spider-dotnet-old/`，不作现行依据；v1 测试暂留 `src/k-spider-test/`。
+- v1 归档与 v1 过渡测试的边界见根 [README.md](README.md) 的项目结构说明。

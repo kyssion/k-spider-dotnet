@@ -43,7 +43,7 @@ const MIN_LENGTH = 24;
 const MIN_RESIDUAL_LENGTH = 8;
 
 /** 文档元数据：按约定每篇都有，内容天然相同。 */
-const METADATA_PATTERN = /^>\s*(状态|最后更新|日期)\s*[:：]/;
+const METADATA_PATTERN = /^>\s*(状态|最后更新|日期|决策人|关联)\s*[:：]/;
 
 /**
  * 有意的重复：每条 = 文本片段 + 理由。

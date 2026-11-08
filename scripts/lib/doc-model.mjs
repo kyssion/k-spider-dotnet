@@ -17,10 +17,8 @@ export const DOCS_DIR = 'docs/';
 export const DOCS_INDEX = 'docs/README.md';
 export const ADR_DIR = 'docs/20-adr';
 export const ADR_INDEX = `${ADR_DIR}/README.md`;
-export const ADR_TEMPLATE = `${ADR_DIR}/0000-template.md`;
 export const SPEC_DIR = 'docs/40-specs';
 export const SPEC_INDEX = `${SPEC_DIR}/README.md`;
-export const TECH_DOC_TEMPLATE = 'docs/30-guides/tech-doc-template.md';
 
 /** 「开头」的判定范围：状态块必须出现在前 N 行内，避免被埋到正文中段。 */
 export const HEAD_LINES = 10;
@@ -44,7 +42,7 @@ export function createDocModel(rootDir) {
   const files = collectMarkdownFiles(rootDir, { includeAdrBodies: true });
   const docsFiles = files.filter((file) => file.startsWith(DOCS_DIR));
   const adrFiles = files.filter(
-    (file) => file.startsWith(`${ADR_DIR}/`) && /\/\d{4}-/.test(file) && file !== ADR_TEMPLATE,
+    (file) => file.startsWith(`${ADR_DIR}/`) && /\/\d{4}-/.test(file),
   );
   const specFiles = files.filter((file) => file.startsWith(`${SPEC_DIR}/`) && /\/\d{4}-/.test(file));
 

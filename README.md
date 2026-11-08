@@ -25,14 +25,14 @@
 | 平台能力与数据源 | [features.md](docs/00-overview/features.md) |
 | 系统架构、调度、认证 | [10-architecture/README.md](docs/10-architecture/README.md) |
 | 历史决策与待确认事项 | [20-adr/README.md](docs/20-adr/README.md) |
-| 贡献流程与提交前检查 | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 贡献流程与提交前入口 | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | 安全报告渠道与已知限制 | [SECURITY.md](SECURITY.md) |
 | AI 协作红线与代码约定 | [AGENTS.md](AGENTS.md) |
 | 文档索引与写作规则 | [docs/README.md](docs/README.md) |
 
 ## 项目结构
 
-```
+```text
 k-spider-dotnet/                     仓库根 = 解决方案根
 ├── k-spider-dotnet.sln
 ├── db/                             现行 DDL 基线（001 业务 / 002 系统 / 003 认证，均幂等）

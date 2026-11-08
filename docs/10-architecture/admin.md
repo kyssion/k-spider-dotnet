@@ -2,9 +2,10 @@
 
 > 状态：草案
 > 最后更新：2026-11-08
-> 权威范围：admin 服务的实现落点与模块结构；调度机制与状态机以 [distributed.md](distributed.md) 为准，认证行为以 [auth.md](auth.md) 为准，业务数据语义以 [data-model.md](data-model.md) 为准。
-> 实现状态：骨架，当前只有最小可运行入口，业务实现待补。
-> 平台架构见 [system-overview.md](system-overview.md)。
+
+本文定义 admin 服务的实现落点与模块结构；调度、认证与业务数据语义分别以对应权威文档为准
+（见本文「相关文档」）。当前只有最小可运行入口，业务实现待补；模块状态见根
+[README.md](../../README.md) 状态表。
 
 ## 定位与职责
 
@@ -34,7 +35,8 @@
 
 ### 启动与监听
 
-启动时加载配置与日志，恢复非终态任务的互斥映射；REST 与 gRPC 使用分离的监听端点（REST HTTP/1.1，gRPC HTTP/2；明文单端口 `Http1AndHttp2` 不作为方案）。健康检查、优雅停机与 admin 单机约束随实现补齐。
+启动时加载配置与日志，恢复非终态任务的互斥映射；REST 与 gRPC 的监听端点按
+[distributed.md](distributed.md)「监听端点」配置。健康检查、优雅停机与 admin 单机约束随实现补齐。
 
 ### 调度与对账
 
@@ -65,10 +67,10 @@
 
 ## 配置
 
-- `appsettings.json` / `appsettings.{环境}.json` / `K_SPIDER__` 前缀环境变量，优先级见 [AGENTS.md](../../AGENTS.md)；
-- 计划配置项：监听端口（REST / gRPC）、数据库连接、认证（`Auth:CookieName`、`DataProtection:KeysPath`）、调度与对账参数（K/T、无活动超时、对账周期、重派上限、任务保留天数）；
-- 当前 `appsettings.json` 只有日志与 `AllowedHosts`；业务配置随实现补齐，未定项标【待确认】；
-- `channel.schedule` 的 JSON 键、时区与错过轮次语义尚未定稿，实现前确认。
+- admin 自身配置的来源与优先级见 [AGENTS.md](../../AGENTS.md)；
+- 监听端口（REST / gRPC）与数据库连接由 admin 自身配置；认证配置键见 [auth.md](auth.md)「配置」，
+  调度与对账参数见 [distributed.md](distributed.md)「配置」；
+- 当前 `appsettings.json` 只有日志与 `AllowedHosts`；业务配置随实现补齐，未定项标【待确认】。
 
 ## 测试与守门
 

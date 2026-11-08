@@ -21,8 +21,8 @@
 
 ## 技术文档骨架
 
-本目录**所有**文档按 [tech-doc-template.md](../30-guides/tech-doc-template.md) 的统一八段组织；
-顺序与完整性由 [check-doc-structure.mjs](../../scripts/check-doc-structure.mjs) 校验。
+本目录**所有**文档按下列八段组织；顺序与完整性由 [check-doc-structure.mjs](../../scripts/check-doc-structure.mjs)
+从本节的代码块读取骨架后校验。
 
 ```markdown
 # <模块> 技术文档

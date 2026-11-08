@@ -2,6 +2,7 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
+> 决策人：项目所有者 / AI 协作会话
 > 关联：[docs/README.md](../README.md)、[testing.md](../30-guides/testing.md)、[change-protocol.md](../50-ai/change-protocol.md)
 > 影响：文档目录、状态块、ADR 模板、目录索引、`scripts/check-doc-*.mjs`、`scripts/verify.sh`、CI
 
@@ -54,7 +55,7 @@ ADR 0003 建立了「文档唯一权威 + 状态标记 + 技能清单」的治�
 - 负面（需要接受的代价）：文档写法约束变多，新增文档需要同时更新所属目录 README；链接文字被固定为文件名，
   可读性略低；四个脚本与共用 lib 增加维护面；严格重复检查会迫使部分指针句改写。
 - 需要同步修改的位置：[docs/README.md](../README.md) 的写作规则与内容归属、各目录 README 的索引、
-  [docs/30-guides/tech-doc-template.md](../30-guides/tech-doc-template.md) 的八段骨架、
+  [10-architecture/README.md](../10-architecture/README.md)「技术文档骨架」的八段、
   `scripts/verify.sh`、`.github/workflows/ci.yml`、[AGENTS.md](../../AGENTS.md) 的红线与文档路由。
 - 触发重新评估的条件：文档数量或语言种类显著增长导致单仓库守卫明显变慢；出现误报率持续高于 5% 的检查项；
   或者引入正式的文档站点生成器需要另一套链接模型时，重新评估「四脚本 + 自研解析」的组合。

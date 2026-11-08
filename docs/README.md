@@ -5,7 +5,7 @@
 ## 目录职责
 
 每个目录的 `README.md` 是该目录的**文件索引**；本文只做目录级索引与事实归属，不重复各目录的清单。
-文档模板（ADR / 规格 / 架构骨架）内联在对应目录的 README 或模板文件里。
+文档模板（ADR / 规格 / 架构骨架）内联在对应目录的 README 里。
 
 | 目录索引 | 回答的问题 | 何时更新 |
 | --- | --- | --- |
@@ -16,13 +16,14 @@
 | [40-specs/README.md](40-specs/README.md) | 某个功能做到什么程度算完成？ | 开始做功能前写，完成后补验收结论 |
 | [50-ai/README.md](50-ai/README.md) | 人和 AI 如何分工、如何交接？ | 协作流程变化时 |
 
-仓库里还有几类**不属于 `docs/`** 的协作文档。它们只做入口与索引，**不复制 `docs/` 的内容**：
+仓库里还有几类**不属于 `docs/`** 的协作入口与机器守卫。它们只做入口/索引或机器检查，
+**不复制 `docs/` 的内容**：
 
 | 位置 | 作用 | 读者 / 加载方式 |
 | --- | --- | --- |
 | [README.md](../README.md) | 平台一句话定位、模块状态、仓库结构、最短入口 | 第一次接触项目的人 |
 | [AGENTS.md](../AGENTS.md) | AI 协作总入口：**红线**（唯一权威清单）+ 代码约定 + 阅读路由 + 技能索引 | AI 代理，每次任务开始必读 |
-| [CONTRIBUTING.md](../CONTRIBUTING.md) | 给人看的上手入口：验证要求、变更流程、提交检查清单 | 新贡献者，首次提交前 |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | 给人看的上手入口：验证要求、变更流程、提交与文档入口 | 新贡献者，首次提交前 |
 | [SECURITY.md](../SECURITY.md) | 漏洞报告渠道、已知限制、依赖与凭据处理方式 | 报告安全问题时 |
 | `.agents/skills/*/SKILL.md` | 任务触发的**领域知识**；受管上游技能归属见 [manifest.json](../.agents/dotnet-skills/manifest.json) | 按任务相关性加载 1~2 个 |
 | [check-doc-references.mjs](../scripts/check-doc-references.mjs)、[check-doc-duplication.mjs](../scripts/check-doc-duplication.mjs)、[check-doc-structure.mjs](../scripts/check-doc-structure.mjs)、[check-doc-status.mjs](../scripts/check-doc-status.mjs) | 文档引用、重复、结构、状态守卫 | `./scripts/verify.sh` 自动执行 |
@@ -50,7 +51,7 @@
   `README.md`）；所有链接文字一律是目标文件名。
 - **章节引用写成 `[文件](路径)「节名」`**：节名必须是目标文件某个标题的前缀；一处链接可以连续引用多节；
   同一文档内写 `见本文「节名」`。链接目标**不带 `#` 锚点**，不使用 `§`，不把节名塞进链接文字，
-  也不用「第 N 节」「第 N 条」指代（标题不编号，序号会随章节调整失效）；不写「见上文 / 见下文」。
+  也不用 `第 N 节`、`第 N 条` 指代（标题不编号，序号会随章节调整失效）；不写 `见上文` / `见下文`。
 - **同一对象只用一种称呼**：文档自称统一写「本文」，跨文档条目用 ID 或标题；不用序号指代、
   `§`、`见上文`、`见下文`。
 - **目录写成反引号**（如 `30-guides/`），入口是各目录的 `README.md`；不要用链接指向目录。
@@ -62,7 +63,7 @@
 
 ## 文档状态
 
-除索引自身与模板外，每篇文档开头必须声明状态，避免读者误以为已定稿：
+除索引自身外，每篇文档开头必须声明状态，避免读者误以为已定稿：
 
 ```markdown
 > 状态：草案 | 已确认 | 实现中 | 已实现 | 已过时（见 NNNN） | 已取代（见 NNNN） | 已废弃 | 已取消 | 持续更新
@@ -129,7 +130,6 @@
 | 常用命令、端口分配、脚本行为、进程收尾、提交与推送、环境排错 | [dev-workflow.md](30-guides/dev-workflow.md) |
 | 测试分层、验证闭环各环节、测试命名 | [testing.md](30-guides/testing.md) |
 | 新增特性的分步做法 | [add-a-feature.md](30-guides/add-a-feature.md) |
-| 技术文档骨架与写法 | [tech-doc-template.md](30-guides/tech-doc-template.md) |
 | 变更分类、强制顺序、文档同步矩阵、验证标准、回滚 | [change-protocol.md](50-ai/change-protocol.md) |
 | 角色分工、阶段门禁、上下文管理、交接格式、升级机制 | [collaboration-model.md](50-ai/collaboration-model.md) |
 | 完成清单（DoD） | [definition-of-done.md](50-ai/definition-of-done.md) |
@@ -138,8 +138,9 @@
 | ADR 的写法与待确认索引 | [20-adr/README.md](20-adr/README.md) |
 | 规格的写法与索引 | [40-specs/README.md](40-specs/README.md) |
 | 状态词表与语义 | 本文「文档状态」 |
+| 文档索引、写作规则与文件命名 | 本文 |
 | 红线（禁令集合）、代码约定、配置优先级、技能路由 | 根 [AGENTS.md](../AGENTS.md) |
-| 贡献流程与提交前检查 | [CONTRIBUTING.md](../CONTRIBUTING.md) |
+| 贡献流程与提交前入口 | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | 安全报告渠道与已知限制 | [SECURITY.md](../SECURITY.md) |
 
 ## 阅读路径推荐
@@ -151,6 +152,5 @@
 
 ## 归档
 
-v1 代码、部署单元与旧库导出归档在 `src/k-spider-dotnet-old/`，不作现行依据；v1 测试暂留
-`src/k-spider-test/`（门禁过渡）。归档目录整体不参与文档引用检查，见
-[check-doc-references.mjs](../scripts/check-doc-references.mjs) 的扫描范围说明。
+v1 归档与 v1 过渡测试的边界见根 [README.md](../README.md) 的项目结构说明；归档目录整体不参与
+文档引用检查，见 [check-doc-references.mjs](../scripts/check-doc-references.mjs) 的扫描范围说明。

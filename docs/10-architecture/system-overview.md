@@ -2,8 +2,9 @@
 
 > 状态：持续更新
 > 最后更新：2026-11-08
-> 权威范围：系统分层、模块边界与依赖方向；各机制的细节以对应主题文档为准。
-> 平台定位与模块状态见 [README.md](../../README.md)；数据模型见 [data-model.md](data-model.md)；调度见 [distributed.md](distributed.md)。
+
+本文定义系统分层、模块边界与依赖方向；各机制的细节以对应主题文档为准。平台定位、模块状态与
+主要契约见本文「相关文档」。
 
 ## 定位与职责
 
@@ -65,7 +66,8 @@ k-spider 是“抓取 → 处理 → 展示”的数据平台。crawler 把外�
 
 ## 测试与守门
 
-测试分层、Live 用例与门禁边界见 [testing.md](../30-guides/testing.md)；crawler 的测试分层见 [crawler.md](crawler.md)。文档引用、重复、结构与状态由 `scripts/check-doc-*.mjs` 四脚本检查，技能清单由 `scripts/check-skills-manifest.mjs` 检查。
+测试分层、Live 用例与门禁边界见 [testing.md](../30-guides/testing.md)；crawler 的测试分层见
+[crawler.md](crawler.md)。文档四检查与技能清单的环节见 [testing.md](../30-guides/testing.md)「测试分层」。
 
 ## 待确认事项
 

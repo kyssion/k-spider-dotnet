@@ -2,8 +2,8 @@
 
 > 状态：持续更新
 > 最后更新：2026-11-08
-> 权威范围：常用命令、端口、脚本行为、进程收尾、提交与推送、环境排错。首次环境准备见
-> [getting-started.md](getting-started.md)。
+本文范围：常用命令、端口、脚本行为、进程收尾、提交与推送、环境排错。首次环境准备见
+[getting-started.md](getting-started.md)。
 
 把日常开发中会反复用到的命令与约定集中到一处，避免 README、AGENTS 和各技术文档各写一份。
 其他文档需要命令时链接本文，不复制命令块。
@@ -60,6 +60,17 @@ Playwright 用 preview 伺服构建产物。
 - `scripts/check-skills-manifest.mjs`：检查 `.agents/dotnet-skills/manifest.json` 与 `.agents/skills/`
   的受管技能是否一致。
 
+## 脚本选型
+
+| 场景 | 用什么 | 现有例子 |
+| --- | --- | --- |
+| 流程编排：调用命令、串步骤、前置检查 | bash | [verify.sh](../../scripts/verify.sh)、[build-web.sh](../../scripts/build-web.sh) |
+| 数据处理：文本 / JSON / 文件树 | Node `.mjs`，仅标准库、零依赖 | [check-doc-references.mjs](../../scripts/check-doc-references.mjs)、[sync-dotnet-skills.mjs](../../scripts/sync-dotnet-skills.mjs) |
+| 机器守卫：代码 / 契约 / 分层的断言 | C# 测试，与 `dotnet test` 同跑 | `src/k-spider-test/`（v1 过渡；新服务的守卫测试待落地） |
+
+说明：Node 不是「前端专属」，它是构建期的既有依赖；`.mjs` 是 Node 的 ES Module 标准扩展名。
+bash 只做编排，递归目录、正则提取、路径解析这类逻辑交给 `.mjs`，避免 BSD / GNU 差异与中文引号问题。
+
 ## 提交与推送
 
 1. 交付前跑 `./scripts/verify.sh`，记录实际输出；
@@ -81,7 +92,7 @@ lsof -nP -iTCP:5173 -sTCP:LISTEN
 
 ## 配置与凭据
 
-- 配置优先级：`appsettings.json → appsettings.{环境}.json → K_SPIDER__ 前缀环境变量 → 代码默认值`；
+- 配置优先级与凭据注入规则见 [AGENTS.md](../../AGENTS.md)；
 - 仓库只保留配置键与默认值，不提交真实凭据；
 - 新增配置键时，同步所属技术文档的「配置」章节和 [getting-started.md](getting-started.md) 的必要说明。
 
@@ -96,6 +107,18 @@ lsof -nP -iTCP:5173 -sTCP:LISTEN
 - 测试分层与 Live 用例边界见 [testing.md](testing.md)；
 - 文档四检查、技能清单、前端构建/E2E、后端构建/格式/测试都已接入 `verify.sh` 与 CI；
 - 交付前必须给出实际命令与输出，不得只写「已通过」。
+
+## 环境排错
+
+| 现象 | 处理 |
+| --- | --- |
+| `dotnet test` 输出 NU1900（NuGet 缓存目录权限） | 本机缓存权限问题，不影响测试；必要时清理 `~/.local/share/NuGet/http-cache` 后重试 |
+| HTTPS 推送 `.github/workflows/` 被拒绝 | PAT 缺 `workflow` scope；改用 SSH 远端或补权限，见 [issue-tracker.md](../00-overview/issue-tracker.md) #9 |
+| 端口被占用 | 按本文「后台进程收尾」检查开发端口，确认后结束旧实例 |
+| Playwright 浏览器缺失 | 按本文「常用命令」安装 Playwright 浏览器 |
+| 前端构建失败 | 按本文「脚本行为」重跑 `build-web.sh`，仍失败按报错定位依赖或类型 |
+| 数据库连接失败 | 见 [getting-started.md](getting-started.md)「初始化数据库」 |
+| `dotnet format` 校验失败 | 按本文「常用命令」的后端格式修复命令处理 |
 
 ## 待确认事项
 

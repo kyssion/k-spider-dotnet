@@ -2,8 +2,9 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
-> 权威范围：认证与账号的行为、接口与配置要求；表结构以 [003_auth_tables.sql](../../db/003_auth_tables.sql) 为唯一权威。
-> 关联：[system-overview.md](system-overview.md)、[data-model.md](data-model.md)、[distributed.md](distributed.md)。
+
+本文定义认证与账号的行为、接口与配置要求；表结构以
+[003_auth_tables.sql](../../db/003_auth_tables.sql) 为唯一权威。相关模块与表结构见本文「相关文档」。
 
 ## 定位与职责
 
@@ -13,7 +14,7 @@
 
 ### 账号表
 
-`sys_user` 表结构、索引与字段注释以 [003_auth_tables.sql](../../db/003_auth_tables.sql) 为唯一权威；默认账号要求见下文“默认账号”。
+`sys_user` 表结构、索引与字段注释以 [003_auth_tables.sql](../../db/003_auth_tables.sql) 为唯一权威；默认账号要求见本文「默认账号」。
 
 ### 密码
 
@@ -32,7 +33,7 @@
 
 | 项 | 约定 |
 |---|---|
-| Cookie 名 | 见“配置”中的 `Auth:CookieName` |
+| Cookie 名 | 见本文「配置」中的 `Auth:CookieName` |
 | HttpOnly | `true` |
 | Secure | 按“安全”中的 HTTPS 要求 |
 | SameSite | `Strict` |
@@ -68,7 +69,7 @@ Cookie 票据声明：
 
 ### 修改密码与登出
 
-- `POST /api/auth/change-password` 需要当前密码 + 新密码；成功后更新 `password_hash`，密码规则见“密码”；
+- `POST /api/auth/change-password` 需要当前密码 + 新密码；成功后更新 `password_hash`，密码规则见本文「密码」；
 - `POST /api/auth/logout` 清除 Cookie，返回 `204`；前端布局提供登出入口。
 
 ### 未登录行为

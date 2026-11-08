@@ -10,10 +10,10 @@
  * 七条规则（判据仍以文档为准，本脚本只做判定，不复述条款）：
  *   1. 状态块：`docs/` 下每篇文档开头必须有 `> 状态：` 与 `> 最后更新：YYYY-MM-DD`；
  *   2. 目录索引：`docs/README.md` 必须列出每个目录的 README；每个目录 README 必须列出
- *      本目录下的每篇文档（ADR 模板除外）—— 索引是唯一入口，孤儿文档即缺索引；
+ *      本目录下的每篇文档 —— 索引是唯一入口，孤儿文档即缺索引；
  *   3. ADR 必备章节：`## 备选项`、`## 后果`、以及「重新评估」触发条件（历史 ADR 豁免）；
  *   4. 标题不编号：`docs/` 与 `AGENTS.md` 的正文标题不得用 `## 1.` / `## 一、` / `## 第 N 步：`；
- *   5. 架构文档骨架：`docs/10-architecture/` 下每篇文档的 H2 必须与 `tech-doc-template.md`
+ *   5. 架构文档骨架：`docs/10-architecture/` 下每篇文档的 H2 必须与 README 代码块里的八段
  *      完全一致（顺序与完整性），不适用的章节写「不适用」而不是删段；
  *   6. 代码块语言：开围栏必须带语言标记（纯文本用 `text`）；
  *   7. k-spider 专属：含待确认内容的架构文档必须登记到 `20-adr/README.md`；
@@ -23,8 +23,7 @@
  * 索引是否与正文对应、已实现规格是否补了验收结论，归 `check-doc-status.mjs`。
  *
  * 明确排除（不是漏检，是「不该判」）：
- *   - `docs/README.md` 是索引本身，不要求状态块；`0000-template.md` 与
- *     `tech-doc-template.md` 是模板，没有真实状态；
+ *   - `docs/README.md` 是索引本身，不要求状态块；
  *   - `src/k-spider-dotnet-old/` 历史归档与 manifest 登记的上游技能不参与。
  *
  * 用法：
@@ -39,20 +38,18 @@ import { fileURLToPath } from 'node:url';
 import {
   ADR_DIR,
   ADR_INDEX,
-  ADR_TEMPLATE,
   DATE_PATTERN,
   DOCS_INDEX,
   HEAD_LINES,
   STATUS_PATTERN,
-  TECH_DOC_TEMPLATE,
   createDocModel,
 } from './lib/doc-model.mjs';
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const { docsFiles, adrFiles, toAbs, referencesOf } = createDocModel(ROOT_DIR);
 
-/** 状态块豁免：索引自身与两份模板。 */
-const STATUS_EXEMPT = new Set([DOCS_INDEX, ADR_TEMPLATE, TECH_DOC_TEMPLATE]);
+/** 状态块豁免：索引自身。 */
+const STATUS_EXEMPT = new Set([DOCS_INDEX]);
 
 /** 早于 ADR 0004 格式要求的决策记录：保留原文，不追溯补章节。 */
 const LEGACY_ADRS = new Set([
@@ -70,7 +67,7 @@ const INDEXED_DIRS = [
   ),
 ].sort();
 
-/** 架构文档骨架：与 tech-doc-template.md 的 H2 逐字一致，顺序即阅读顺序。 */
+/** 文档正文的 H2（代码块外），用于校验架构文档的实际章节。 */
 const headingsOf = (file) => {
   const headings = [];
   let inFence = false;
@@ -87,8 +84,34 @@ const headingsOf = (file) => {
   return headings;
 };
 
+/** 从 README 的 ```markdown 代码块中读取骨架 H2，避免脚本里再抄一份骨架。 */
+const codeBlockHeadings = (file) => {
+  const headings = [];
+  let inFence = false;
+  let fenceLang = '';
+
+  for (const line of readFileSync(toAbs(file), 'utf8').split(/\r?\n/)) {
+    if (line.trim().startsWith('```')) {
+      if (!inFence) {
+        inFence = true;
+        fenceLang = line.trim().slice(3).trim();
+      } else {
+        inFence = false;
+        fenceLang = '';
+      }
+      continue;
+    }
+    if (inFence && fenceLang === 'markdown' && line.startsWith('## ')) {
+      headings.push(line.slice(3).trim());
+    }
+  }
+
+  return headings;
+};
+
 const ARCH_DIR = 'docs/10-architecture';
-const ARCH_SKELETON = headingsOf(TECH_DOC_TEMPLATE);
+const ARCH_INDEX = `${ARCH_DIR}/README.md`;
+const ARCH_SKELETON = codeBlockHeadings(ARCH_INDEX);
 
 const failures = [];
 
@@ -126,7 +149,7 @@ for (const dir of INDEXED_DIRS) {
 
   for (const file of docsFiles) {
     if (!file.startsWith(`${dir}/`)) continue;
-    if (file === dirIndex || file === ADR_TEMPLATE) continue;
+    if (file === dirIndex) continue;
     if (!indexed.has(file)) failures.push(`${file} 未登记到 ${dirIndex} 的索引表`);
   }
 }
@@ -151,8 +174,8 @@ for (const file of adrFiles) {
 // H1 不参与：ADR / 规格的 `# 0005. 标题` 是记录编号（文件命名的一部分），不是章节编号。
 const NUMBERED_HEADING = /^#{2,4}\s+(?:第\s*\d+\s*步[：:]|\d+[.、]|[一二三四五六七八九十]+、)/;
 
-for (const file of [...docsFiles, 'AGENTS.md']) {
-  if (file === ADR_TEMPLATE || file === TECH_DOC_TEMPLATE) continue;
+for (const file of [...docsFiles, 'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'AGENTS.md']) {
+  if (!existsSync(toAbs(file))) continue;
 
   const lines = readFileSync(toAbs(file), 'utf8').split(/\r?\n/);
   let inFence = false;
@@ -171,7 +194,7 @@ for (const file of [...docsFiles, 'AGENTS.md']) {
 
 // ── 5. 架构文档骨架 ─────────────────────────────────────────────────────
 if (ARCH_SKELETON.length === 0) {
-  failures.push(`${TECH_DOC_TEMPLATE} 没有可用于校验的二级标题骨架`);
+  failures.push(`${ARCH_INDEX} 没有可用于校验的二级标题骨架（需要 \`\`\`markdown 代码块）`);
 }
 
 for (const file of docsFiles) {
@@ -187,8 +210,8 @@ for (const file of docsFiles) {
 }
 
 // ── 6. 代码块语言标记 ───────────────────────────────────────────────────
-for (const file of docsFiles) {
-  if (file === ADR_TEMPLATE) continue;
+for (const file of [...docsFiles, 'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'AGENTS.md']) {
+  if (!existsSync(toAbs(file))) continue;
 
   let inFence = false;
   readFileSync(toAbs(file), 'utf8')

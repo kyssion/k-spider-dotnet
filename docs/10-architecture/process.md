@@ -2,8 +2,9 @@
 
 > 状态：草案
 > 最后更新：2026-11-08
-> 权威范围：数据处理服务的边界与待落地设计；数据模型见 [data-model.md](data-model.md)，平台架构见 [system-overview.md](system-overview.md)，节点接入见 [distributed.md](distributed.md)。
-> 实现状态：未开始，本文仅为骨架。
+
+本文定义数据处理服务的边界与待落地设计；当前为设计骨架，模块状态见根
+[README.md](../../README.md) 状态表。数据模型、平台架构与节点接入见本文「相关文档」。
 
 ## 定位与职责
 

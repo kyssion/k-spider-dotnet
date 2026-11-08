@@ -2,7 +2,8 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
-> 权威范围：角色分工、阶段门禁、上下文管理、交接格式、升级（Stop and Ask）时机。变更步骤见 [change-protocol.md](change-protocol.md)。
+本文范围：角色分工、阶段门禁、上下文管理、交接格式、升级（Stop and Ask）时机。变更步骤见
+[change-protocol.md](change-protocol.md)。
 
 ## 角色与职责
 
@@ -17,8 +18,9 @@
 1. **定向门禁**：已读 [AGENTS.md](../../AGENTS.md) 与 [docs/README.md](../README.md)，已定位相关权威文档；未读完不写代码。
 2. **产物门禁**：功能有规格，结构/契约有 ADR 或待确认登记；缺产物先补，不先写实现。
 3. **确认门禁**：涉及公共接口、数据模型、DDL、调度、认证、外部依赖或不可逆操作时，先获得项目所有者确认。
-4. **交付门禁**：按 [definition-of-done.md](definition-of-done.md) 自检，`./scripts/verify.sh` 全绿，文档已同步，后台进程已收尾。
-5. **提交门禁**：只有项目所有者明确指示时才提交或推送；不得改写远端历史。
+4. **交付门禁**：按 [definition-of-done.md](definition-of-done.md) 自检；验证与后台进程的判据见
+   [AGENTS.md](../../AGENTS.md) 红线 7、9、12。
+5. **提交门禁**：判据见 [AGENTS.md](../../AGENTS.md) 红线 8。
 
 ## 上下文管理
 
@@ -33,7 +35,8 @@
 
 1. **结论**：完成 / 部分完成 / 阻塞；
 2. **改动**：文件清单与每项“为什么”；
-3. **验证**：实际命令与原始输出，不得只写“已通过”；
+3. **验证**：实际命令与原始输出（判据见 [AGENTS.md](../../AGENTS.md) 红线 9 与
+   [definition-of-done.md](definition-of-done.md)）；
 4. **差异与后续**：与规格/契约的差异、未覆盖项、建议下一步。
 
 部分完成或阻塞时，明确列出阻塞点与需要所有者确认的事项。

@@ -2,8 +2,9 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
-> 权威范围：抓取服务的分层、适配器边界、抓取流程、反爬与数据访问；数据模型规则见 [data-model.md](data-model.md)，调度见 [distributed.md](distributed.md)，平台架构见 [system-overview.md](system-overview.md)。
-> 实现状态：骨架，见根 [README.md](../../README.md) 状态表。
+
+本文定义抓取服务的分层、适配器边界、抓取流程、反爬与数据访问；模块状态见根
+[README.md](../../README.md) 状态表。数据模型、调度与平台架构见本文「相关文档」。
 
 ## 定位与职责
 
@@ -77,7 +78,7 @@ admin 派发列表轮任务后，engine 按任务包中的 `channel_id` 加载�
 
 ## 配置
 
-- 配置来自 `appsettings.json` / 环境配置 / `K_SPIDER__` 前缀环境变量，优先级见 [AGENTS.md](../../AGENTS.md)；
+- crawler 的配置来源与优先级见 [AGENTS.md](../../AGENTS.md)；
 - 渠道实例参数（栏目号、窗口、批量上限、凭据引用名等）走 `channel.extra`；凭据只存 `credential_key` 引用，真实值由部署方环境注入；
 - `channel.extra` 的键名、类型、默认值与所属适配器尚未定稿，实现前须先与项目所有者确认并登记；
 - crawler 自身的限流、冷却、批量等配置键待实现时定。
@@ -86,7 +87,7 @@ admin 派发列表轮任务后，engine 按任务包中的 `channel_id` 加载�
 
 - 通用测试约定（夹具 / Live / 门禁）见 [testing.md](../30-guides/testing.md)；
 - 本服务分层：契约测试（离线）/ 夹具回归（真实响应）/ Live 连通性（门禁排除）；
-- 当前门禁暂跑 v1 测试（`src/k-spider-test`，随 v1 代码）；新 crawler 测试落地后替换；
+- 当前门禁由 v1 过渡测试承担，替换条件见 [testing.md](../30-guides/testing.md)「测试分层」；
 - 适配器注册表、write_mode、水位刷新、`KDbException` 与重试边界必须有测试。
 
 ## 待确认事项

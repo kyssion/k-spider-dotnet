@@ -2,7 +2,7 @@
 
 > 状态：持续更新
 > 最后更新：2026-11-08
-> 权威范围：环境准备、数据库初始化、启动与首次验证；日常命令见 [dev-workflow.md](dev-workflow.md)。
+本文范围：环境准备、数据库初始化、启动与首次验证；日常命令见 [dev-workflow.md](dev-workflow.md)。
 
 让新加入的人在最短时间内把仓库跑起来，并能判断「跑起来了」与「业务已实现」不是一回事。
 平台定位见 [vision.md](../00-overview/vision.md)；模块状态以根 [README.md](../../README.md) 状态表为准。
@@ -55,7 +55,7 @@ cd web && pnpm install && pnpm dev
 `http://localhost:5173`，`/api` 代理到 5094（见 [vite.config.ts](../../web/vite.config.ts)）。
 crawler 当前是 worker 骨架，不监听 HTTP。
 
-当前 admin、crawler、web 都是骨架；能启动不等于业务已实现。
+模块状态以根 [README.md](../../README.md) 状态表为准；能启动不等于业务已实现。
 
 ## 首次验证
 
@@ -67,13 +67,13 @@ crawler 当前是 worker 骨架，不监听 HTTP。
 
 ## 配置与凭据
 
-配置优先级以 [AGENTS.md](../../AGENTS.md) 为唯一来源：`appsettings.json → appsettings.{环境}.json →
-K_SPIDER__ 前缀环境变量 → 代码默认值`。数据库连接串与账号由部署方注入，仓库不提交真实凭据。
+配置优先级与凭据注入规则见 [AGENTS.md](../../AGENTS.md)。数据库连接串与账号由部署方注入，仓库不提交真实凭据。
 
 ## 数据契约
 
-- 数据库是服务间的数据契约：crawler 写原始载荷，process 读原始载荷并写结构化数据，admin 读写系统设施表；
-- web 只通过 admin 的同源 `/api` 访问数据，不直连数据库；
+- 服务间数据契约以 [data-model.md](../10-architecture/data-model.md) 与
+  [distributed.md](../10-architecture/distributed.md) 为准；
+- web 的数据入口以 [web.md](../10-architecture/web.md)「数据与接口」为准；
 - 首次初始化只执行 DDL，不导入业务数据；默认账号等种子数据以 [auth.md](../10-architecture/auth.md) 为准。
 
 ## 待确认事项

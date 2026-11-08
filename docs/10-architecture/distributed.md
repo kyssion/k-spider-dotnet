@@ -2,8 +2,9 @@
 
 > 状态：已确认
 > 最后更新：2026-11-08
-> 权威范围：`sys_node` / `sys_task` 语义、状态机、调度、对账、取消与故障边界；物理结构以 [002_sys_tables.sql](../../db/002_sys_tables.sql) 为唯一权威。
-> 业务表见 [data-model.md](data-model.md)，平台架构见 [system-overview.md](system-overview.md)，认证密钥环见 [auth.md](auth.md)。
+
+本文定义 `sys_node` / `sys_task` 语义、状态机、调度、对账、取消与故障边界；物理结构以
+[002_sys_tables.sql](../../db/002_sys_tables.sql) 为唯一权威。业务表、平台架构与认证见本文「相关文档」。
 
 ## 定位与职责
 
@@ -133,7 +134,7 @@ REST 管理 API 与 gRPC 使用**分离的监听端点**：REST 走 HTTP/1.1，g
 - 状态机、派发 token、条件更新、对账重派、取消检查点必须有测试；
 - gRPC 契约测试与 `task_detail` / `extra` JSON 契约测试在协议定稿后补齐；
 - 节点认证与端口拆分属于部署验收项；
-- 文档与 DDL 的引用由 `scripts/check-doc-*.mjs` 四脚本检查。
+- 文档与 DDL 的引用检查见 [testing.md](../30-guides/testing.md)「测试分层」。
 
 ## 待确认事项
 

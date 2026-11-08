@@ -2,9 +2,10 @@
 
 > 状态：草案
 > 最后更新：2026-11-08
-> 权威范围：前端技术选型、目录结构、页面路由、API 对接与前端测试边界。认证接口以 [auth.md](auth.md) 为准，admin API 落点以 [admin.md](admin.md) 为准，数据语义以 [data-model.md](data-model.md) 为准。
-> 实现状态：骨架，当前只有最小可运行页面，业务页面待实现。
-> 平台架构见 [system-overview.md](system-overview.md)。
+
+本文定义前端技术选型、目录结构、页面路由、API 对接与前端测试边界；当前只有最小可运行页面，
+业务页面待实现，模块状态见根 [README.md](../../README.md) 状态表。认证接口、admin API、数据语义与
+平台架构见本文「相关文档」。
 
 ## 定位与职责
 
@@ -55,8 +56,9 @@ Tailwind 设计令牌、组件分层、布局、暗色模式、可访问性、�
 
 ### API 对接
 
-- 同源 `/api`；开发期 Vite 代理到 admin（`5173 → 5094`，见 [vite.config.ts](../../web/vite.config.ts)）；
-- 请求收敛在 `web/src/api/` 层，页面不直接 `fetch`；
+- 同源 `/api`；开发期 Vite 代理到 admin，端口分配见
+  [dev-workflow.md](../30-guides/dev-workflow.md)「端口」（配置见 [vite.config.ts](../../web/vite.config.ts)）；
+- 请求收敛在 `web/src/api/` 层；页面不直接 `fetch` 的禁令与例外见 [AGENTS.md](../../AGENTS.md) 红线 13；
 - DTO 类型与后端契约对齐；分页、筛选、错误处理、CSRF 与登录态跳转在 `web/src/api/` 层统一处理；
 - admin REST 尚未定稿，首期页面实现前先确认端点与 DTO。
 
@@ -73,17 +75,17 @@ TanStack Query 管理服务端状态（缓存、刷新、失效）；Zustand 管
 
 ## 数据与接口
 
-- 数据入口只有 admin 的同源 REST API；前端不直连 PostgreSQL；
+- 数据入口的模块边界见 [system-overview.md](system-overview.md)「数据与接口」；
 - 认证与账号接口见 [auth.md](auth.md)；admin 管理接口见 [admin.md](admin.md)；
 - 查询参数、分页与筛选以 admin 契约为准；在契约未定前不先造 DTO；
 - 图表与表格的字段映射以数据模型的语义为准，不把展示层字段当作业务字段。
 
 ## 配置
 
-- 开发期代理：`vite.config.ts` 将 `/api` 指向 `http://localhost:5094`；
+- 开发期代理：`vite.config.ts` 将 `/api` 指向 admin 的开发监听端口，端口分配见
+  [dev-workflow.md](../30-guides/dev-workflow.md)「端口」；
 - 生产同源部署：构建产物由 `scripts/build-web.sh` 复制到 `src/k-spider-admin/wwwroot`，不需要代理；
-- 环境变量与构建模式待补；前端不得持有服务端凭据；
-- 端口：开发 `5173`，E2E preview `5899`。
+- 环境变量与构建模式待补；前端不得持有服务端凭据。
 
 ## 测试与守门
 
