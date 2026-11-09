@@ -43,7 +43,7 @@ if (!existsSync(manifestPath)) {
 } else {
   let manifest = null;
   try {
-    manifest = readManifest(ROOT_DIR);
+    ({ manifest } = readManifest(ROOT_DIR));
   } catch (error) {
     failures.push(`${MANIFEST_FILE} 不是合法 JSON：${error.message}`);
   }

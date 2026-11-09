@@ -48,6 +48,10 @@ import {
   META_DIR as META_DIR_REL,
   SKILL_ENTRY,
   SKILLS_DIR as SKILLS_DIR_REL,
+  buildManifest,
+  declaredSkills,
+  readManifest,
+  serializeManifest,
 } from './lib/skills-manifest.mjs';
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -118,17 +122,15 @@ if (options.source) options.source = resolve(ROOT_DIR, options.source);
 // ── 归属清单 ────────────────────────────────────────────────────────────
 
 function loadManifest() {
-  if (!existsSync(MANIFEST_FILE)) return null;
-
   try {
-    return JSON.parse(readFileSync(MANIFEST_FILE, 'utf8'));
+    return readManifest(ROOT_DIR).manifest;
   } catch (error) {
     fail(`manifest.json 无法解析（${MANIFEST_FILE}）：${error.message}`);
   }
 }
 
 const previous = loadManifest();
-const previousSkills = previous?.skills ?? [];
+const previousSkills = declaredSkills(previous);
 const managedNames = new Set(previousSkills.map((skill) => skill.name));
 const unlistedPlugins = previous?.unlisted ?? [];
 
@@ -454,17 +456,17 @@ async function main() {
     cpSync(licenseFile, join(META_DIR, 'LICENSE'));
 
     const skills = discovered.map((skill) => ({ name: skill.name, plugin: skill.plugin, path: skill.path }));
-    const sameSkills = JSON.stringify(previous?.skills ?? []) === JSON.stringify(skills);
-    const manifest = {
+    const sameSkills = JSON.stringify(declaredSkills(previous)) === JSON.stringify(skills);
+    const manifest = buildManifest({
       source: SOURCE_URL,
       commit,
       installedAt: sameSkills && unchangedCommit && previous?.installedAt ? previous.installedAt : new Date().toISOString(),
       unlisted: plugins.filter((plugin) => plugin.unlisted).map((plugin) => plugin.name),
       skills,
-    };
+    });
 
     const temporaryManifest = `${MANIFEST_FILE}.tmp`;
-    writeFileSync(temporaryManifest, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+    writeFileSync(temporaryManifest, serializeManifest(manifest), 'utf8');
     renameSync(temporaryManifest, MANIFEST_FILE);
 
     if (added.length > 0) {

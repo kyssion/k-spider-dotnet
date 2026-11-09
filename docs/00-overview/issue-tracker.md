@@ -32,7 +32,8 @@
 | D | 状态词表多处、索引状态与正文状态可能不一致 | 已统一到 [docs/README.md](../README.md)「文档状态」，并加 [check-doc-status.mjs](../../scripts/check-doc-status.mjs) 从示例行读取词表、校验索引与分组 |
 | E | 文档检查脚本单文件过大，解析规则会在新检查项之间漂移 | 已拆为引用/重复/结构/状态四个脚本，共用 `scripts/lib/` 的扫描范围、引用解析与文档模型 |
 | F | `30-guides/` 沿用了架构文档的七段骨架，指南出现「数据与接口」「配置」等不自然章节 | 已改为指南自己的结构（环境/命令/端口/步骤/门禁/相关文档）；八段骨架只约束 `10-architecture/` |
-| G | 技能清单路径与 schema 在检查脚本和同步脚本里各写一份 | 已抽到 `scripts/lib/skills-manifest.mjs`，检查与同步共用 |
+| G | 技能清单路径与 schema 在检查脚本和同步脚本里各写一份 | 已抽到 `scripts/lib/skills-manifest.mjs`，统一路径、schema、读取、构造与序列化；检查与同步共用 |
+| H | 文档索引与引用可达性会把代码块里的示例链接当成真实登记 | 已在 `scripts/lib/doc-model.mjs` 统一跳过 fenced code；`referencesOf`、`indexRows` 与章节标题校验同时生效 |
 
 ## 如何新增条目
 

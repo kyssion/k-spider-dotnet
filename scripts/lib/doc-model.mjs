@@ -30,6 +30,27 @@ export const DATE_PATTERN = /^> 最后更新：\d{4}-\d{2}-\d{2}/m;
 export const stripNote = (value) => value.replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim();
 
 /**
+ * 去掉三反引号围栏内的示例与命令。
+ *
+ * 代码块不是活引用：索引覆盖、引用可达性与状态读取都必须跳过它，
+ * 否则模板里的示例链接可以把「未登记文档」伪装成已登记。
+ */
+export function withoutFencedCode(text) {
+  const kept = [];
+  let inFence = false;
+
+  for (const line of text.split(/\r?\n/)) {
+    if (line.trim().startsWith('```')) {
+      inFence = !inFence;
+      continue;
+    }
+    if (!inFence) kept.push(line);
+  }
+
+  return kept.join('\n');
+}
+
+/**
  * 建立文档模型。
  *
  * @param {string} rootDir 仓库根目录
@@ -53,7 +74,7 @@ export function createDocModel(rootDir) {
    * 「指没指到真实文档」，裸文件名也多算一条边。
    */
   function referencesOf(file) {
-    const text = readFileSync(toAbs(file), 'utf8');
+    const text = withoutFencedCode(readFileSync(toAbs(file), 'utf8'));
     const targets = [];
 
     for (const match of text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
@@ -95,7 +116,7 @@ export function createDocModel(rootDir) {
   /** 解析索引表：`| [0001](./0001-x.md) | 标题 | 状态 |` → Map(仓库相对路径 → 最后一列)。 */
   function indexRows(indexFile) {
     const rows = new Map();
-    for (const line of readFileSync(toAbs(indexFile), 'utf8').split(/\r?\n/)) {
+    for (const line of withoutFencedCode(readFileSync(toAbs(indexFile), 'utf8')).split(/\r?\n/)) {
       const link = line.match(/\]\(([^)]+\.md)\)/);
       if (!link) continue;
 

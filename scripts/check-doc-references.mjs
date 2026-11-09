@@ -47,6 +47,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { collectMarkdownFiles } from './lib/doc-files.mjs';
+import { withoutFencedCode } from './lib/doc-model.mjs';
 import { PLACEHOLDER_PATTERN, inlineCandidates, linkCandidates } from './lib/doc-refs.mjs';
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -116,7 +117,7 @@ function checkSectionRef(section, candidates, file, line) {
   const target = candidates.find((candidate) => existsSync(candidate));
   if (!target) return;
 
-  const headings = readFileSync(target, 'utf8')
+  const headings = withoutFencedCode(readFileSync(target, 'utf8'))
     .split(/\r?\n/)
     .filter((text) => /^#{1,6} /.test(text))
     .map((text) =>
