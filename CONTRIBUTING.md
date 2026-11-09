@@ -33,8 +33,20 @@
 
 ## 代码约定
 
-不在这里重复：[AGENTS.md](AGENTS.md)「代码约定」是唯一来源；按模块查
-[10-architecture/README.md](docs/10-architecture/README.md)。
+不在这里重复：[AGENTS.md](AGENTS.md)「代码约定」是唯一来源。按改动位置查：
+
+| 改哪里 | 看哪里 |
+| --- | --- |
+| 数据模型、写入规则、DDL | [data-model.md](docs/10-architecture/data-model.md) 与 `db/001_business_tables.sql` |
+| 调度、任务、节点 | [distributed.md](docs/10-architecture/distributed.md) 与 `db/002_sys_tables.sql` |
+| 认证、会话、账号 | [auth.md](docs/10-architecture/auth.md) 与 `db/003_auth_tables.sql` |
+| crawler 分层、适配器、反爬 | [crawler.md](docs/10-architecture/crawler.md) |
+| admin 服务、REST、前端托管 | [admin.md](docs/10-architecture/admin.md) |
+| web 页面、API 客户端、状态管理 | [web.md](docs/10-architecture/web.md) |
+| 测试分层与门禁 | [testing.md](docs/30-guides/testing.md) |
+
+新增特性的完整步骤见 [add-a-feature.md](docs/30-guides/add-a-feature.md)；技能按任务加载 1~2 个，
+不预读全部，路由见 [AGENTS.md](AGENTS.md)「技能」。
 
 ## 文档
 

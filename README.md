@@ -55,6 +55,14 @@ v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试�
 
 完整步骤（环境要求、数据库初始化、启动、验证）见 [getting-started.md](docs/30-guides/getting-started.md)。配置约定（含优先级）与凭据注入规则见 [AGENTS.md](AGENTS.md)。
 
+## 一键校验
+
+```bash
+./scripts/verify.sh
+```
+
+跑哪些环节、门禁边界与 `--skip-tests` 的差别见 [dev-workflow.md](docs/30-guides/dev-workflow.md)「脚本行为」。交付前必须全绿。
+
 ## 技能
 
 通用 Agent Skills 放在 `.agents/skills/`；目录、跨 agent 发现方式与上游同步见 [skills.md](docs/50-ai/skills.md)。

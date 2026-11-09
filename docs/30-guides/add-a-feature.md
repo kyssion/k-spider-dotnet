@@ -19,6 +19,21 @@
 契约变更必须按「文档 → 后端 → 前端 → 验证」的顺序；禁止先改前端再改后端。各主题的唯一权威见
 [docs/README.md](../README.md)「内容归属」。
 
+## 改动落点速查
+
+下表只回答「这类改动先看哪份契约、代码大概落在哪」，文档同步矩阵以
+[change-protocol.md](../50-ai/change-protocol.md)「文档同步矩阵」为准。
+
+| 改动 | 先改的契约 | 代码落点 | 验证重点 |
+| --- | --- | --- | --- |
+| 业务表 / DDL | [data-model.md](../10-architecture/data-model.md) 与 [001_business_tables.sql](../../db/001_business_tables.sql) | repository、服务、写入路径 | DDL 幂等、write_mode、双键水位、update_time 刷新 |
+| 系统设施表 / 调度 | [distributed.md](../10-architecture/distributed.md) 与 [002_sys_tables.sql](../../db/002_sys_tables.sql) | admin 的 Scheduler / Reconciliation / Grpc | 状态机、派发 token、重派、取消检查点 |
+| 认证 / 账号 | [auth.md](../10-architecture/auth.md) 与 [003_auth_tables.sql](../../db/003_auth_tables.sql) | admin 的 Auth、web 登录与路由守卫 | 会话、Cookie 属性、CSRF、禁用账号生效 |
+| crawler 源接入 | [crawler.md](../10-architecture/crawler.md) 与 `channel.extra` 键表 | adapter / parser / repository | 夹具回归、翻页停止、失败重试边界 |
+| admin REST / 托管 | [admin.md](../10-architecture/admin.md) | Api / WebHosting | 端点契约、错误码、SPA fallback |
+| web 页面 / 交互 | [web.md](../10-architecture/web.md) | `web/src/api` → `pages` / `components` / `stores` | 主路径、错误态、路由守卫的 E2E |
+| 用户可见功能范围 | [40-specs/README.md](../40-specs/README.md) 与对应规格 | 按上述落点拆小步 | 验收标准逐条有测试或标注未覆盖 |
+
 ## 步骤
 
 1. **定向**：读 [AGENTS.md](../../AGENTS.md) 与 [docs/README.md](../README.md)，再读相关架构文档；
@@ -54,6 +69,18 @@
 - 修复必须有回归测试，且不得删除或弱化现有测试；
 - 文档改动必须跑 `./scripts/verify.sh`（或至少四个文档检查脚本）；
 - 交付前跑 `./scripts/verify.sh`，并确认没有遗留后台进程。
+
+## 常见失败点
+
+| 失败点 | 避免方式 |
+| --- | --- |
+| 先写前端，再回头补契约 | 按本文「权威文档先行」的顺序，先改权威文档与后端契约 |
+| 只改 DDL / 只改文档，另一侧漂移 | 物理结构以 DDL 为准，语义以 [data-model.md](../10-architecture/data-model.md) 为准；同一次改动同步 |
+| 新增配置键但没进文档 | 配置键同步所属技术文档「配置」章节，凭据只存引用 |
+| 新端点没有登记契约与错误码 | 先登记权威文档与错误码，再写端点测试 |
+| 页面直接 `fetch` 或复制服务端数据到全局 store | 请求收敛到 `web/src/api`，服务端状态交给 TanStack Query |
+| 忘记目录索引、状态块或待确认清单 | 交付前对照 [definition-of-done.md](../50-ai/definition-of-done.md) 逐项检查 |
+| 用跳过测试或放宽断言让 verify 变绿 | 禁止；覆盖不足时在交付说明中标注未覆盖项 |
 
 ## 待确认事项
 

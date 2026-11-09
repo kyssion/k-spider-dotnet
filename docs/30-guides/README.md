@@ -11,7 +11,7 @@
 | --- | --- |
 | [getting-started.md](getting-started.md) | 环境准备、数据库初始化、首次启动与验证 |
 | [dev-workflow.md](dev-workflow.md) | 常用命令、端口、脚本行为、进程收尾、提交与推送 |
-| [testing.md](testing.md) | 测试分层、Live 用例、夹具、门禁边界 |
+| [testing.md](testing.md) | 测试分层、断言与隔离、Live 用例、夹具、门禁边界 |
 | [add-a-feature.md](add-a-feature.md) | 从一个需求到可交付改动的分步做法 |
 
 首次跑通后，日常改动按 [add-a-feature.md](add-a-feature.md) 执行；交付前按

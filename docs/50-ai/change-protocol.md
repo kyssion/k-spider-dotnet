@@ -78,12 +78,24 @@
 | 贡献流程、角色或交付格式变化 | [collaboration-model.md](collaboration-model.md) 与 [definition-of-done.md](definition-of-done.md) |
 | 技能目录或同步方式变化 | [skills.md](skills.md) |
 
+记忆口诀：**改了对外契约，就改 `10-architecture/`；改了未来要做的，就改 [roadmap.md](../00-overview/roadmap.md) /
+[issue-tracker.md](../00-overview/issue-tracker.md)；改了别人怎么参与，就改 [CONTRIBUTING.md](../../CONTRIBUTING.md) /
+[SECURITY.md](../../SECURITY.md)；改了命令与门禁，就改 [dev-workflow.md](../30-guides/dev-workflow.md) /
+[testing.md](../30-guides/testing.md)。**
+
 ## 验证与回滚
 
 - 验证命令与门禁边界见 [testing.md](../30-guides/testing.md)；交付前必须给出实际命令与输出；
 - 文档检查失败按输出逐条修正，不绕过、不压警告；
 - 回滚以 ADR 记录的方案为准：代码回滚、文档回滚与 DDL 回滚必须在同一次操作中完成；DDL 基线幂等，但不提供自动向下迁移，涉及数据删除的变更必须先确认备份与恢复方案；
 - 回滚后重新跑 `./scripts/verify.sh` 并更新文档状态。
+
+## 变更记录
+
+变更历史由 Git 提交承载，提交信息说明本次改了什么、为什么；重大决策的权衡过程由 ADR 承载。
+只有提交信息无法还原当时否掉了哪些选项，只有 ADR 无法定位具体落点；两者互补，缺一不可。
+提交格式见 [dev-workflow.md](../30-guides/dev-workflow.md)「提交与推送」，ADR 写法见
+[20-adr/README.md](../20-adr/README.md)。
 
 ## 与红线的关系
 

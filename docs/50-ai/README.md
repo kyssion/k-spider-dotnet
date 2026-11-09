@@ -8,8 +8,8 @@
 
 | 文档 | 回答的问题 |
 | --- | --- |
-| [change-protocol.md](change-protocol.md) | 变更分类、所需产物、强制顺序、文档同步矩阵、验证与回滚 |
-| [collaboration-model.md](collaboration-model.md) | 角色分工、阶段门禁、上下文预算、交接格式、升级机制 |
+| [change-protocol.md](change-protocol.md) | 变更分类、所需产物、强制顺序、文档同步矩阵、验证与回滚、变更记录 |
+| [collaboration-model.md](collaboration-model.md) | 核心原则、角色分工、阶段门禁、上下文预算、交接格式、升级机制、协作度量 |
 | [definition-of-done.md](definition-of-done.md) | 「算不算完成」的清单 |
 | [prompt-library.md](prompt-library.md) | 可直接复制的任务模板 |
 | [skills.md](skills.md) | 技能目录、跨 agent 发现、上游同步 |

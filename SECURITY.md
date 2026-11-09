@@ -35,6 +35,18 @@
 | 无自动化依赖审计任务 | 升级依赖时人工核对安全公告，并在交付说明中记录 |
 | v1 归档代码 | 不作现行依据，不承诺安全修复 |
 
+## 安全相关权威文档
+
+报告前先确认相关设计是否属于已登记限制；条款本身不在本文复制。
+
+| 主题 | 唯一来源 |
+| --- | --- |
+| 认证、会话、CSRF 与账号管理 | [auth.md](docs/10-architecture/auth.md) |
+| 节点认证、gRPC 信任边界与端口拆分 | [distributed.md](docs/10-architecture/distributed.md) |
+| 配置优先级、凭据注入与凭据红线 | [AGENTS.md](AGENTS.md) |
+| 数据模型、DDL 与写入契约 | [data-model.md](docs/10-architecture/data-model.md) |
+| 依赖漏洞升级与记录流程 | 本文「凭据与依赖」与 [change-protocol.md](docs/50-ai/change-protocol.md) |
+
 ## 凭据与依赖
 
 - 仓库不提交真实凭据；连接串、密钥与节点认证材料由部署方通过配置/环境变量注入，见
