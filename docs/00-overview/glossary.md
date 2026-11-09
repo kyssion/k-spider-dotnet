@@ -1,7 +1,7 @@
 # 术语表
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 > 数据实体语义以 [data-model.md](../10-architecture/data-model.md) 为唯一权威；本文只统一业务语言。
 
 统一用语可以减少人与 AI 之间的歧义。**代码、文档、提交信息、对话中统一使用下表术语。**
@@ -46,4 +46,5 @@
 | 流程 | 唯一来源 | 同一个事实只在一处写成正文，其他地方只引用 | [docs/README.md](../README.md)「写作原则」 |
 | 流程 | 红线 | 全仓库禁令集合，唯一权威清单 | [AGENTS.md](../../AGENTS.md)「红线」 |
 | 流程 | 完成定义（DoD） | 判定任务完成的清单 | [definition-of-done.md](../50-ai/definition-of-done.md) |
+| 流程 | 工程门禁 | 构建、格式、测试、文档与依赖检查等必须通过的质量约束 | [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」 |
 | 流程 | verify | 交付前必须全绿的全量校验入口 | [dev-workflow.md](../30-guides/dev-workflow.md)「脚本行为」 |

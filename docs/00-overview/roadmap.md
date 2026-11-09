@@ -1,10 +1,13 @@
 # 路线图
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 路线图只保留**近期**与**已识别**的事项；远期规划除非已经写进规格文件，否则不列入。
 模块落地状态以根 [README.md](../../README.md) 状态表为准，本文只写里程碑与计划。
+
+当前阶段判断：契约与文档已经先行，v2 代码仍是骨架；下一步优先补工程门禁与 v2 测试，
+而不是直接扩大实现面。顺序见本文「M1.5」。
 
 ## M0 · 契约与骨架（已完成）
 
@@ -22,7 +25,26 @@
 - [x] 新增问题追踪与路线图，关闭「已知问题只存在于会话」的缺口；
 - [x] verify 与 CI 同源：文档检查、构建、格式、测试使用同一顺序。
 
-## M2 · 分布式与调度（建议下一步）
+## M1.5 · 工程基座加固（进行中，先于 M2）
+
+v2 的契约与文档已经先行，代码侧仍以骨架为主（状态见根 [README.md](../../README.md) 状态表）：
+后端服务测试仍由 v1 过渡测试承担，v2 服务测试尚未建立。首批已补 v2 架构/契约守卫、编译与依赖门禁、
+`dev.sh` / `stop.sh`；剩余前端静态门禁与 CI 加固随本里程碑继续。决策见
+[0005-engineering-gates-first.md](../20-adr/0005-engineering-gates-first.md)。
+
+- [x] 建立 v2 架构/契约守卫项目 `tests/k-spider-guards/`，加入 `.sln` 与门禁；
+- [ ] v2 服务测试：状态机、契约；随后替换 v1 过渡测试（[issue-tracker.md](issue-tracker.md) #1）；
+- [x] 编译门禁：`TreatWarningsAsErrors`、分析器、`EnforceCodeStyleInBuild`；
+- [x] 依赖可复现：`nuget.config` 固定源、CPM 传递依赖钉版；
+- [ ] 前端门禁：ESLint / Prettier / Vitest / 首屏体积预算（当前只有 `tsc` + 构建 + E2E 冒烟；[issue-tracker.md](issue-tracker.md) #12）；
+- [x] `dev.sh` / `stop.sh`；
+- [ ] CI 并行、依赖审计与测试报告产物（[issue-tracker.md](issue-tracker.md) #12）；
+- [x] 统一 `verify.sh` 的 SDK 提示与 `global.json` 口径（[issue-tracker.md](issue-tracker.md) K）。
+
+判据与目标门禁见 [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」；本里程碑只定顺序，不改变任何业务契约。
+M1.5 引入的任何新依赖（如前端测试框架）按红线 10 先登记 ADR / 待确认，不在路线图里直接视为已选型。
+
+## M2 · 分布式与调度（M1.5 之后）
 
 - [ ] 创建 `src/k-spider-grpc/`：proto 与生成代码，admin / crawler 共同引用；
 - [ ] admin 调度循环：读 `channel.schedule` 生成任务包，按节点负载派发；

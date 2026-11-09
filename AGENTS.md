@@ -8,6 +8,10 @@
 k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、目标与非目标见 [vision.md](docs/00-overview/vision.md)；
 模块清单、落地状态与仓库结构以根 [README.md](README.md) 为唯一来源；当前处于 v2 重建期，服务代码从骨架逐步落地。
 
+`./scripts/verify.sh` 同时运行 v2 架构/契约守卫与 v1 过渡测试；v2 服务测试仍待 M2/M3，绿色不代表 v2 服务已实现。
+模块状态见根 [README.md](README.md) 状态表，下一步顺序与门禁边界见 [roadmap.md](docs/00-overview/roadmap.md)「M1.5」与
+[testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」；该节同时给出 M1.5 的目标门禁。
+
 ## 项目结构与命令
 
 项目结构与仓库布局以根 [README.md](README.md) 为唯一来源；首次跑通见

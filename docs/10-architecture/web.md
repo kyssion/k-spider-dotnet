@@ -1,7 +1,7 @@
 # k-spider web 技术文档
 
 > 状态：草案
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 本文定义前端技术选型、目录结构、页面路由、API 对接与前端测试边界；当前只有最小可运行页面，
 业务页面待实现，模块状态见根 [README.md](../../README.md) 状态表。认证接口、admin API、数据语义与
@@ -28,6 +28,14 @@
 - Playwright（E2E）。
 
 选型理由、版本约束与升级策略待补；不引入新的运行时依赖前先确认。
+
+### TypeScript 与构建
+
+- `tsconfig.json` 当前开启 `strict`、`noUnusedLocals`、`noUnusedParameters` 与 `noFallthroughCasesInSwitch`；
+- `pnpm build` 先执行 `tsc --noEmit`，类型错误直接阻断构建；
+- 新增编译选项或放宽严格性前，先评估对现有代码与契约类型的影响；
+- ESLint / Prettier / 组件测试尚未接入，门禁现状与目标见
+  [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」。
 
 ### 目录规划
 
@@ -105,6 +113,7 @@ TanStack Query 管理服务端状态（缓存、刷新、失效）；Zustand 管
 | 权限粒度 | 当前所有登录用户同权；是否需要页面级权限 |
 | 前端 i18n | 是否需要多语言；若需要，先登记 ADR |
 | 前端门禁 | 是否补 lint、typecheck 独立脚本与组件测试 |
+| 富文本 / HTML 注入策略 | 当前不使用 `dangerouslySetInnerHTML`；如需富文本渲染，先登记待确认并引入白名单净化 |
 
 ## 相关文档
 

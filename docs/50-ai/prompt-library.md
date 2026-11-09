@@ -1,7 +1,7 @@
 # 任务提示模板
 
 > 状态：已确认
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 本文范围：可直接复制的任务提示模板。流程与门禁见 [change-protocol.md](change-protocol.md) 与
 [definition-of-done.md](definition-of-done.md)。
 
@@ -19,6 +19,74 @@
 - 涉及契约/DDL/调度/认证就先登记待确认项，确认后再实现。
 实现顺序：契约 → 数据访问 → 服务 → 接口/前端；补测试并运行 ./scripts/verify.sh。
 交付时给出结论、改动、实际验证输出、差异与未覆盖项。
+```
+
+## 新增 crawler 数据源
+
+```text
+目标：接入 <源站 / 栏目>，抓取 <列表 / 详情> 原始载荷入库。
+范围：adapter / parser / channel 配置；不改调度主流程，不新增业务表。
+先读 docs/10-architecture/crawler.md、docs/10-architecture/data-model.md 与 docs/00-overview/features.md。
+要求：
+- 源差异只落在 adapter + parser；HTTP 一律经 HttpGateway，不自建 HttpClient；
+- 适配器线程安全，游标与页状态走参数 / 返回值；
+- 明确 write_mode、record_key 预映射、详情目标与失败重试边界；
+- 用真实响应做离线夹具回归，Live 用例排除；
+- 同步 crawler.md 的配置 / 待确认与 channel.extra 键表；
+- 运行 ./scripts/verify.sh，并列出未覆盖项。
+```
+
+## 修改 DDL / 数据模型
+
+```text
+目标：<新增 / 修改表、列、约束或写入规则>。
+范围：db/001_business_tables.sql 与 docs/10-architecture/data-model.md；系统表 / 认证表换对应 DDL 与文档。
+先判断是否属于契约变更：是则先在 docs/20-adr/README.md 登记待确认，确认后写 ADR；未确认不落代码。
+要求：
+- 物理结构只改 DDL，语义与规则只改文档，不互相复制；
+- DDL 保持幂等，不写自动向下迁移；
+- 补 write_mode / 双键水位 / update_time 刷新 / repository 一致性测试；
+- 同步受影响的服务与前端契约；
+- 运行 ./scripts/verify.sh。
+```
+
+## 调度 / 任务 / gRPC 契约
+
+```text
+目标：<新增或修改的任务类型、状态、派发 / 对账 / 取消行为>。
+范围：docs/10-architecture/distributed.md、db/002_sys_tables.sql、admin 与 crawler 的契约实现。
+要求：
+- 先确认状态机、派发 token、条件更新与重试上限，再写实现；
+- task_detail / extra 的 JSON 键名、类型与 casing 必须登记，不把临时字段写进生产；
+- proto 与生成代码放 src/k-spider-grpc/（待创建），admin / crawler 共同引用；
+- 补状态机、token 防覆盖、对账重派、取消检查点测试；
+- 运行 ./scripts/verify.sh 并列出未覆盖项。
+```
+
+## 新增 admin REST 端点
+
+```text
+目标：<端点用途与用户可见行为>。
+范围：admin 端点 / DTO / 认证与 CSRF；必要时同步 web 的 API 客户端。
+要求：
+- 先改 admin.md 与 auth.md 的契约，再写端点；
+- 明确状态码、错误码、分页 / 筛选与未登录行为；
+- 写请求必须走 Antiforgery；页面级与 API 级未登录行为分开；
+- 补契约测试：成功、参数错误、未授权、CSRF 失败；
+- 运行 ./scripts/verify.sh。
+```
+
+## 新增 web 页面
+
+```text
+目标：<页面用途与主路径>。
+范围：web/src/pages、web/src/api、路由与导航；不改后端契约。
+要求：
+- 先读 docs/10-architecture/web.md 与 docs/10-architecture/auth.md；
+- 业务请求收敛到 web/src/api/，页面不直接 fetch；
+- 覆盖加载态、空态、错误态与路由守卫；
+- 新增路由与页面同步 web.md；
+- 补 Playwright E2E 或组件测试，运行 ./scripts/verify.sh。
 ```
 
 ## 写规格

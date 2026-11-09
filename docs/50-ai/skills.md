@@ -1,11 +1,19 @@
 # 通用 Agent Skills
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 项目使用 [Agent Skills](https://agentskills.io) 开放格式管理技能，不绑定某个 agent 实现。技能是模型无关的目录：一个 `SKILL.md`（YAML frontmatter + Markdown 指令）+ 可选的 `references/`、`scripts/`、`assets/`。
 
 > `SKILL.md` 格式遵循 Agent Skills 开放标准；`.agents/skills/` 是仓库约定，宿主是否自动发现取决于客户端。opencode 通过 `opencode.json` 适配。
+
+## 标准与目录位置
+
+- [AGENTS.md](../../AGENTS.md) 是已确立的跨工具协作标准；
+- `SKILL.md` 的格式有开放规范，但 `.agents/skills/` 这个目录位置目前只是厂商中立的开放草案，采用面窄；
+- 技能正文与目录位置解耦，迁移成本仅为 `git mv`。
+
+受管技能在文档引用检查中按 manifest **逐个排除**，不按目录前缀整体排除；原因是上游技能里的示例路径指向上游仓库，逐条改写会破坏同步能力。
 
 ## 目录
 
@@ -58,3 +66,6 @@ node scripts/sync-dotnet-skills.mjs --allow-plugin-removal  # 确认上游插件
 ## 自定义技能
 
 不经过同步脚本的技能直接放在 `.agents/skills/<name>/` 即可，`manifest.json` 不会记录，也不会在同步时被删除。新增技能须满足 Agent Skills 格式，并保持名称唯一。
+
+当前没有项目自有技能。与项目强相关的知识（crawler adapter、write_mode、反爬策略）在出现重复踩坑后再沉淀，
+避免先建空壳技能；新增时按上面的目录规则放置，并在 [AGENTS.md](../../AGENTS.md)「技能」表补一行路由。

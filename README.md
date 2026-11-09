@@ -11,6 +11,8 @@
 
 状态口径：**未开始 / 骨架 / 实现中 / 可用**。模块职责与依赖见 [system-overview.md](docs/10-architecture/system-overview.md)；数据模型见 [data-model.md](docs/10-architecture/data-model.md)；功能清单见 [features.md](docs/00-overview/features.md)；里程碑与下一步见 [roadmap.md](docs/00-overview/roadmap.md)；已知问题见 [issue-tracker.md](docs/00-overview/issue-tracker.md)。
 
+当前处于 v2 骨架期；下一步顺序见 [roadmap.md](docs/00-overview/roadmap.md)「M1.5」，验证覆盖边界见 [testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」。
+
 ## 常用入口
 
 | 我想知道 | 去看 |
@@ -41,15 +43,18 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 ├── scripts/
 ├── .agents/skills/                 Agent Skills 标准技能（跨 agent / 模型共享）
 ├── web/                            前端项目（Node/pnpm，构建产物目标由 admin 托管，当前未接入）
-└── src/
-    ├── k-spider-crawler/           底层：原始数据抓取
-    ├── k-spider-process/           中间层：数据加工
-    ├── k-spider-admin/             旁路：中央调度、集群维护与前端托管
-    ├── k-spider-test/              v1 测试与夹具（门禁过渡，待新测试替换）
-    └── k-spider-dotnet-old/        v1 代码/部署/旧库导出归档（仅考古，生产不依赖）
+├── src/
+│   ├── k-spider-crawler/           底层：原始数据抓取
+│   ├── k-spider-process/           中间层：数据加工
+│   ├── k-spider-admin/             旁路：中央调度、集群维护与前端托管
+│   ├── k-spider-test/              v1 测试与夹具（门禁过渡，待新测试替换）
+│   └── k-spider-dotnet-old/        v1 代码/部署/旧库导出归档（仅考古，生产不依赖）
+└── tests/
+    └── k-spider-guards/            v2 架构/契约守卫（离线，已入解决方案与门禁）
 ```
 
-v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试落地后移除。
+v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；v2 架构/契约守卫在 `tests/k-spider-guards/`，
+服务测试随 M2/M3 落地后替换 v1 过渡测试。
 
 ## 快速开始
 
@@ -62,6 +67,9 @@ v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；新测试�
 ```
 
 跑哪些环节、门禁边界与 `--skip-tests` 的差别见 [dev-workflow.md](docs/30-guides/dev-workflow.md)「脚本行为」。交付前必须全绿。
+
+当前 verify 同时运行 v2 架构/契约守卫与 v1 过渡测试；v2 服务测试仍待 M2/M3 落地，
+不要用绿色推断 v2 服务已实现；覆盖边界见 [testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」。
 
 ## 技能
 

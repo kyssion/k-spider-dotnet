@@ -1,7 +1,7 @@
 # 首次跑通
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 本文范围：环境准备、数据库初始化、启动与首次验证；日常命令见 [dev-workflow.md](dev-workflow.md)。
 
 让新加入的人在最短时间内把仓库跑起来，并能判断「跑起来了」与「业务已实现」不是一回事。
@@ -63,7 +63,10 @@ crawler 当前是 worker 骨架，不监听 HTTP。
 ./scripts/verify.sh
 ```
 
-验证环节、Live 用例与门禁边界见 [testing.md](testing.md)；脚本逐项行为见 [dev-workflow.md](dev-workflow.md)。
+当前 verify 同时运行 v2 架构/契约守卫与 v1 过渡测试；守卫只验证解决方案布局、DDL 与门禁配置，
+v1 测试验证归档代码与夹具回归，都不证明 v2 服务已实现。v2 服务测试随 M2/M3 落地后替换
+（[issue-tracker.md](../00-overview/issue-tracker.md) #1）。验证环节、Live 用例与门禁边界见
+[testing.md](testing.md)；脚本逐项行为见 [dev-workflow.md](dev-workflow.md)。
 
 ## 配置与凭据
 

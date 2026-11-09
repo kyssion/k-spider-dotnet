@@ -128,7 +128,7 @@
 | 架构文档骨架（本目录所有架构文档的必备章节） | [10-architecture/README.md](10-architecture/README.md)「技术文档骨架」 |
 | 首次跑通（安装 → 启动 → 校验） | [getting-started.md](30-guides/getting-started.md) |
 | 常用命令、端口分配、脚本行为、进程收尾、提交与推送、环境排错 | [dev-workflow.md](30-guides/dev-workflow.md) |
-| 测试分层、验证闭环各环节、测试命名 | [testing.md](30-guides/testing.md) |
+| 测试分层、当前与目标门禁、v2 测试接入、验证闭环各环节、测试命名 | [testing.md](30-guides/testing.md) |
 | 新增特性的分步做法 | [add-a-feature.md](30-guides/add-a-feature.md) |
 | 变更分类、强制顺序、文档同步矩阵、验证标准、回滚 | [change-protocol.md](50-ai/change-protocol.md) |
 | 角色分工、阶段门禁、上下文管理、交接格式、升级机制 | [collaboration-model.md](50-ai/collaboration-model.md) |

@@ -1,7 +1,7 @@
 # 新增一个特性
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 本文范围：从一个需求到可交付改动的分步做法。变更分类与文档同步矩阵以
 [change-protocol.md](../50-ai/change-protocol.md) 为准。
 
@@ -33,6 +33,37 @@
 | admin REST / 托管 | [admin.md](../10-architecture/admin.md) | Api / WebHosting | 端点契约、错误码、SPA fallback |
 | web 页面 / 交互 | [web.md](../10-architecture/web.md) | `web/src/api` → `pages` / `components` / `stores` | 主路径、错误态、路由守卫的 E2E |
 | 用户可见功能范围 | [40-specs/README.md](../40-specs/README.md) 与对应规格 | 按上述落点拆小步 | 验收标准逐条有测试或标注未覆盖 |
+
+### 按落点的最小检查清单
+
+**crawler 新源 / 适配器**
+
+- 先读 [crawler.md](../10-architecture/crawler.md) 与 [data-model.md](../10-architecture/data-model.md)；
+- 适配器编码登记到 `crawler_adapter`，渠道行配置 source / detail adapter、write_mode、retention、schedule、extra；
+- 源差异只落在 adapter + parser，请求统一走 HttpGateway；
+- 补离线夹具回归、write_mode / 双键水位 / update_time 刷新测试；
+- 同步 `channel.extra` 键表与待确认事项。
+
+**admin REST / 认证**
+
+- 先读 [admin.md](../10-architecture/admin.md) 与 [auth.md](../10-architecture/auth.md)；
+- 端点、DTO、错误码、CSRF 与未登录行为先写进权威文档；
+- 补契约测试：状态码、错误码、Cookie / CSRF、禁用账号；
+- 前端 API 客户端与页面在同一次改动内对齐。
+
+**web 页面**
+
+- 先读 [web.md](../10-architecture/web.md) 与 [auth.md](../10-architecture/auth.md)；
+- 请求收敛到 `web/src/api/`，页面不直接 `fetch`；
+- 主路径、加载态、空态、错误态、路由守卫都要有 E2E 或组件测试；
+- 新增页面同步 web.md 的页面与路由。
+
+**DDL / 数据模型**
+
+- 先改 [data-model.md](../10-architecture/data-model.md) 与对应 DDL；
+- 物理结构只写 DDL，语义规则只写文档；
+- 补 repository 的写入模式、水位、一致性与异常边界测试；
+- 破坏性变更先在 [20-adr/README.md](../20-adr/README.md) 登记待确认。
 
 ## 步骤
 

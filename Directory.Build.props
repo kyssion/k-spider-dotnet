@@ -6,4 +6,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+
+    <!--
+      v2 服务的编译质量门禁 : 警告即错误 + 推荐级分析器 + 代码风格进入编译。
+      v1 归档与 v1 过渡测试按「只作考古 / 过渡门禁」处理 , 不追溯补规则 , 因此排除。
+      新增项目默认继承门禁 ; 需要范围内豁免时在项目 csproj 写 NoWarn 并注明原因。
+    -->
+    <PropertyGroup Condition="'$(MSBuildProjectName)' != 'k-spider-dotnet-old' and '$(MSBuildProjectName)' != 'k-spider-test'">
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
 </Project>

@@ -32,7 +32,7 @@
 | 认证与账号尚未实现 | 只有设计见 [auth.md](docs/10-architecture/auth.md)；实现前不要把服务暴露到不可信网络 |
 | 初始化账号 | 账号与密码规则见 [auth.md](docs/10-architecture/auth.md)「默认账号」；部署后必须修改初始密码 |
 | gRPC 内网 h2c 明文、节点认证未定 | 见 [distributed.md](docs/10-architecture/distributed.md)「监听端点」；生产部署前必须先关闭该待确认项 |
-| 无自动化依赖审计任务 | 升级依赖时人工核对安全公告，并在交付说明中记录 |
+| 前端依赖审计尚未接入 CI | 后端 NuGet 审计随 restore / build 输出；pnpm 审计在 CI 接入前由人工核对安全公告 |
 | v1 归档代码 | 不作现行依据，不承诺安全修复 |
 
 ## 安全相关权威文档

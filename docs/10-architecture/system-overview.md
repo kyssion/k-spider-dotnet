@@ -1,7 +1,7 @@
 # k-spider 架构
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 本文定义系统分层、模块边界与依赖方向；各机制的细节以对应主题文档为准。平台定位、模块状态与
 主要契约见本文「相关文档」。
@@ -66,7 +66,7 @@ k-spider 是“抓取 → 处理 → 展示”的数据平台。crawler 把外�
 
 ## 测试与守门
 
-测试分层、Live 用例与门禁边界见 [testing.md](../30-guides/testing.md)；crawler 的测试分层见
+测试分层、当前与目标门禁、Live 用例与门禁边界见 [testing.md](../30-guides/testing.md)；crawler 的测试分层见
 [crawler.md](crawler.md)。文档四检查与技能清单的环节见 [testing.md](../30-guides/testing.md)「测试分层」。
 
 ## 待确认事项

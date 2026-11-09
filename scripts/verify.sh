@@ -36,7 +36,7 @@ fail() {
 
 printf '\033[1mk-spider 全量校验\033[0m\n'
 
-command -v dotnet >/dev/null 2>&1 || fail "未找到 dotnet，请先安装 .NET SDK 10.0.300+（版本由 global.json 锁定）"
+command -v dotnet >/dev/null 2>&1 || fail "未找到 dotnet，请先安装 .NET SDK（版本由 global.json 锁定）"
 command -v node >/dev/null 2>&1 || fail "未找到 node，请先安装 Node.js 20+"
 command -v pnpm >/dev/null 2>&1 || fail "未找到 pnpm，请先安装 Node.js 20+ 与 pnpm"
 
@@ -85,11 +85,13 @@ step "9/10 后端格式校验"
 dotnet format "$SOLUTION" --no-restore --verify-no-changes || fail "后端格式与 .editorconfig 不一致，请执行 dotnet format"
 
 if [ "$SKIP_TESTS" = "true" ]; then
-  step "10/10 v1 过渡测试（已跳过）"
+  step "10/10 v2 守卫 + v1 过渡测试（已跳过）"
 else
-  # v1 测试暂留门禁，待新 crawler 测试落地后替换；去掉 --no-build，保证测试项目按 Release 重建。
-  step "10/10 v1 过渡测试（Release，排除 Live）"
-  dotnet test "$ROOT_DIR/src/k-spider-test/k-spider-test.csproj" --configuration Release --filter "TestCategory!=Live" --nologo -v quiet || fail "后端测试失败"
+  # v2 守卫在解决方案内，复用第 8 步的 Release 构建；v1 测试暂留过渡门禁，待服务测试落地后替换。
+  # v1 测试项目不在 sln 中，不能用 --no-build，保证测试项目按 Release 重建。
+  step "10/10 v2 守卫 + v1 过渡测试（Release，排除 Live）"
+  dotnet test "$SOLUTION" --configuration Release --no-build --nologo -v quiet || fail "v2 守卫测试失败"
+  dotnet test "$ROOT_DIR/src/k-spider-test/k-spider-test.csproj" --configuration Release --filter "TestCategory!=Live" --nologo -v quiet || fail "v1 过渡测试失败"
 fi
 
 if [ "$SKIP_TESTS" = "true" ]; then
