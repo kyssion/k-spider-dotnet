@@ -112,13 +112,13 @@ ADR 就是为了把「权衡过程」固化下来。
 | admin 后台页面范围 | [admin.md](../10-architecture/admin.md) |
 | admin 目录结构与模块拆分 | [admin.md](../10-architecture/admin.md) |
 | 部署形态与运维 | [system-overview.md](../10-architecture/system-overview.md) / [admin.md](../10-architecture/admin.md) |
-| 剩余工程门禁（前端 / CI） | [0005-engineering-gates-first.md](0005-engineering-gates-first.md) / [roadmap.md](../00-overview/roadmap.md)「M1.5」 |
+| CI 缓存与耗时调优 | [0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md) / [dev-workflow.md](../30-guides/dev-workflow.md) |
 | web 首期页面范围与交互 | [web.md](../10-architecture/web.md) |
 | 组件库与样式 | [web.md](../10-architecture/web.md) |
 | 图表交互 | [web.md](../10-architecture/web.md) |
 | 权限粒度 | [web.md](../10-architecture/web.md) |
 | 前端 i18n | [web.md](../10-architecture/web.md) |
-| 前端门禁 | [web.md](../10-architecture/web.md) |
+| 组件测试范围 | [0006-frontend-static-gates.md](0006-frontend-static-gates.md) / [web.md](../10-architecture/web.md) |
 | 富文本 / HTML 注入策略 | [web.md](../10-architecture/web.md) |
 | process 结构化数据契约 | [process.md](../10-architecture/process.md) |
 | process 节点接入 | [process.md](../10-architecture/process.md) / [distributed.md](../10-architecture/distributed.md) |
@@ -138,6 +138,8 @@ ADR 就是为了把「权衡过程」固化下来。
 | [0003-docs-and-skill-governance.md](0003-docs-and-skill-governance.md) | 文档与技能治理 | 已确认 |
 | [0004-docs-and-skill-governance-v2.md](0004-docs-and-skill-governance-v2.md) | 文档治理 v2：词表、索引与守卫拆分 | 已确认 |
 | [0005-engineering-gates-first.md](0005-engineering-gates-first.md) | 工程基座加固先于分布式实现 | 已确认 |
+| [0006-frontend-static-gates.md](0006-frontend-static-gates.md) | 前端静态门禁采用 ESLint + Prettier + Vitest + 体积预算 | 已确认 |
+| [0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md) | CI 按域并行，质量口径与 verify 同源 | 已确认 |
 
 ### 历史（已取代 / 已废弃）
 

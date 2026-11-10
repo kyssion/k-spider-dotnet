@@ -3,7 +3,7 @@
 > 状态：已确认
 > 最后更新：2026-11-09
 > 决策人：项目所有者（执行指令）
-> 关联：[roadmap.md](../00-overview/roadmap.md)、[testing.md](../30-guides/testing.md)、[dev-workflow.md](../30-guides/dev-workflow.md)
+> 关联：[roadmap.md](../00-overview/roadmap.md)、[testing.md](../30-guides/testing.md)、[dev-workflow.md](../30-guides/dev-workflow.md)、[0006-frontend-static-gates.md](0006-frontend-static-gates.md)、[0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md)
 > 影响：解决方案、测试项目、`Directory.Build.props`、`Directory.Packages.props`、`nuget.config`、`scripts/`、`verify.sh`、CI
 
 ## 背景
@@ -29,7 +29,7 @@ v2 的契约与文档已经先行，但代码侧仍以骨架为主：后端服�
 
 - 正面：v2 代码从第一天起有机器守卫；依赖与构建基线可复现；本地与 CI 的差异可登记。
 - 负面（需要接受的代价）：v1 过渡测试仍会保留一段时间；新增测试项目与门禁需要维护；
-  前端静态门禁与 CI 依赖审计仍需后续落地。
+  组件测试范围待首个真实页面评估。
 - 需要同步修改的位置：`k-spider-dotnet.sln`、`tests/k-spider-guards/`、`Directory.Build.props`、
   `Directory.Packages.props`、`nuget.config`、`scripts/dev.sh`、`scripts/stop.sh`、`scripts/verify.sh`、
   `.github/workflows/ci.yml`、[testing.md](../30-guides/testing.md)、[dev-workflow.md](../30-guides/dev-workflow.md)。
@@ -41,5 +41,7 @@ v2 的契约与文档已经先行，但代码侧仍以骨架为主：后端服�
 - [x] 编译门禁、`nuget.config`、CPM 传递依赖钉版
 - [x] `dev.sh` / `stop.sh` 与本地校验链路
 - [ ] v2 服务测试随 M2/M3 落地
-- [ ] 前端静态门禁、CI 并行与依赖审计
+- [x] 前端静态门禁（ESLint / Prettier / Vitest / 体积预算）
+- [x] CI 依赖审计与测试报告
+- [x] CI 并行（[0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md)）
 - [ ] 替换 v1 过渡测试

@@ -22,6 +22,8 @@
 | 后端格式校验 | `dotnet format k-spider-dotnet.sln --verify-no-changes --no-restore` |
 | 后端格式修复 | `dotnet format k-spider-dotnet.sln` |
 | 构建并同步前端产物 | `bash scripts/build-web.sh` |
+| 前端校验闭环 | `cd web && pnpm verify` |
+| 前端格式修复 | `cd web && pnpm format` |
 | 前端开发服务器 | `cd web && pnpm dev` |
 | v2 架构 / 契约守卫 | `dotnet test k-spider-dotnet.sln --configuration Release` |
 | 后端 v1 过渡测试（排除 Live） | `dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"` |
@@ -52,9 +54,10 @@ Playwright 用 preview 伺服构建产物。
 
 ## 脚本行为
 
-- `scripts/verify.sh`：依次跑文档引用 / 重复 / 结构 / 状态四检查、技能清单、前端构建、E2E、
-  后端构建、格式校验、v2 守卫与 v1 过渡测试（排除 `TestCategory=Live`）。默认要求 dotnet / Node / pnpm /
-  Playwright 浏览器齐全；仅本地冒烟可用 `--skip-tests` 跳过 E2E 与后端测试，输出会显式标注。
+- `scripts/verify.sh`：依次跑文档引用 / 重复 / 结构 / 状态四检查、技能清单、前端校验
+  （lint / format / 单元 / build / 体积）、E2E、后端构建、格式校验、v2 守卫与 v1 过渡测试
+  （排除 `TestCategory=Live`）。默认要求 dotnet / Node / pnpm / Playwright 浏览器齐全；
+  仅本地冒烟可用 `--skip-tests` 跳过前端单元 / E2E 与后端测试，输出会显式标注。
 - `scripts/build-web.sh`：`pnpm install --frozen-lockfile`（失败时回退普通 install）→ `pnpm build` →
   清空 `src/k-spider-admin/wwwroot` 并复制 `web/dist`。
 - `scripts/dev.sh`：前台同时启动 admin（5094）与 web（5173），Ctrl+C 停止全部子进程。
@@ -116,7 +119,9 @@ lsof -nP -iTCP:5094 -sTCP:LISTEN
 ## 测试与门禁
 
 - 测试分层与 Live 用例边界见 [testing.md](testing.md)；
-- 文档四检查、技能清单、前端构建/E2E、后端构建/格式/测试都已接入 `verify.sh` 与 CI；
+- 文档四检查、技能清单、前端校验/E2E、后端构建/格式/测试都已接入 `verify.sh` 与 CI；
+- CI 按 docs / backend / frontend 并行，质量口径与 verify 一致；决策见
+  [0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md)。
 - 交付前必须给出实际命令与输出，不得只写「已通过」。
 
 ## 环境排错

@@ -21,7 +21,6 @@
 | 7 | `src/k-spider-dotnet-old/` 归档仍在仓库 | 全仓检索、依赖扫描与新手阅读会命中历史代码 | 根 [README.md](../../README.md) 项目结构 | 新测试替换 v1 后评估移出仓库或保持只读归档 |
 | 9 | HTTPS 推送在修改 `.github/workflows/` 时被拒绝 | PAT 缺 `workflow` 权限时，CI 相关提交无法通过 HTTPS 推送 | `remote rejected ... without 'workflow' scope` | 改用 SSH 远端（`git@github.com:kyssion/k-spider-dotnet.git`，本次已通过 SSH 推送），或给 PAT 补 `workflow` 权限 |
 | 11 | CPM 中声明了未引用的 `Npgsql` 版本 | 依赖清单与实际引用不一致，容易被误读为数据访问选型已定 | `Directory.Packages.props` 有 `Npgsql` 9.0.3；当前 v2 项目没有对应 `PackageReference`；[AGENTS.md](../../AGENTS.md) 注明数据访问目标 linq2db 待确认 | 数据访问选型确认后清理或补引用；在此之前不把 `Npgsql` 当作既定选型 |
-| 12 | v2 前端 / CI 门禁仍弱于文档治理 | 前端没有 lint / 单测 / 体积预算；CI 仍是单 job，pnpm 审计未接入 | `web/package.json` 无 lint / Vitest 脚本；CI 未跑 `pnpm audit`；后端 NuGet 审计已随 restore / build 输出 | 列入 roadmap M1.5 剩余项；新增依赖按红线 10 先确认 |
 
 ## 已处理
 
@@ -39,6 +38,8 @@
 | J | 没有本地 `stop.sh` / `dev.sh`，后台进程收尾靠手工 | 已补 [dev.sh](../../scripts/dev.sh) / [stop.sh](../../scripts/stop.sh)：按端口定位并复查释放；规则见 [dev-workflow.md](../30-guides/dev-workflow.md)「后台进程收尾」 |
 | K | `verify.sh` 的 SDK 提示与 `global.json` 不一致 | 已把提示改为“版本由 `global.json` 锁定”，不再写死 `10.0.300+`；判据仍以 `global.json` 为准 |
 | L | v1 测试依赖树存在已知漏洞（`MySqlConnector` 2.2.5 / `System.Security.Cryptography.Pkcs` 8.0.1） | 已用 CPM 传递依赖钉版升级到 2.6.1 / 8.0.2；v1 测试 227 通过。来源 GHSA-473q-m89c-ghf8 / GHSA-846f-f764-76mx / GHSA-2fmv-rv2c-59x7 |
+| M | v2 前端 / CI 门禁弱于文档治理 | 已补 ESLint / Prettier / Vitest / 体积预算、CI `pnpm audit`、测试报告上传与按域并行；决策见 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md) 与 [0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md) |
+| N | 前端依赖审计发现已知漏洞（Vite 7.3.6 / source-map-js 1.2.1 / minimatch <11.0.1） | 已升级 Vite 7.3.7，并在 `web/pnpm-workspace.yaml` 钉 `source-map-js` / `minimatch`；`pnpm audit` 0 漏洞 |
 
 ## 如何新增条目
 

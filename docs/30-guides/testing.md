@@ -16,6 +16,7 @@
 | 后端服务测试 | 各服务测试项目（待落地） | 是（落地后） | 领域规则、状态机、REST/gRPC 契约 |
 | v2 架构 / 契约守卫 | `tests/k-spider-guards/` | 是 | 解决方案布局、DDL 幂等与表清单、CPM/编译门禁配置 |
 | v1 过渡测试 | `src/k-spider-test/` | 是 | 排除 `TestCategory=Live`；服务测试落地后替换 |
+| 前端纯逻辑 | `web/src/**/*.test.ts` | 是 | Vitest；工具函数、格式化等可脱离 DOM 的逻辑 |
 | 前端 E2E | `web/tests/` | 是 | Playwright；当前为骨架冒烟，API 在用例内 mock |
 | Live 连通性 | 按测试项目约定 | 否 | 依赖真实接口或线上可达，手动执行 |
 
@@ -31,12 +32,13 @@
 | 架构 / 契约守卫 | `tests/k-spider-guards/`（解决方案、DDL、依赖基线） | 增加服务分层与错误码守卫 |
 | 编译质量 | `TreatWarningsAsErrors` + 分析器 + `EnforceCodeStyleInBuild`（v2 项目） | 保持 |
 | 依赖可复现 | CPM + `nuget.config` + 传递依赖钉版 | 保持 |
-| 前端静态门禁 | `tsc --noEmit` + 构建 | 增加 ESLint / Prettier / Vitest / 体积预算 |
+| 前端静态门禁 | `tsc --noEmit` + ESLint + Prettier + Vitest + 体积预算 | 补组件测试（按需） |
 | 前端 E2E | Playwright 冒烟 | 保留；新增页面补主路径与错误态 |
-| 依赖审计 | 后端 NuGet 审计随 restore / build 输出；pnpm 审计未接入 CI | CI 增加 pnpm 审计与固定检查 |
+| 依赖审计 | 后端 NuGet 审计随 restore / build；CI 跑 `pnpm audit` | 保持 |
 | 文档 / 技能 | 4 个文档检查 + 技能清单 | 保持 |
 
-目标门禁里的前端工具或测试库若需要新增依赖，按 [AGENTS.md](../../AGENTS.md) 红线 10 先登记 ADR / 待确认。
+新增前端测试依赖已按 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md) 登记；
+新增工具仍按 [AGENTS.md](../../AGENTS.md) 红线 10 先确认。
 
 ### v2 测试项目接入要求
 
@@ -67,6 +69,7 @@
 - C# 测试沿用「被测对象 / 方法 + 场景」的 PascalCase 命名，例如 `PartitionEmptyList`、`GetJsonRoundTrip`；
   新服务测试落地后沿用同一风格；
 - Playwright 用例用中文描述用户可见行为，例如「控制台骨架可渲染」；
+- Vitest 用例沿用中文 `describe` / `it`，只覆盖可脱离 DOM 的纯逻辑；
 - 一个用例只断言一个行为；失败信息要能区分期望与实际。
 
 ## 断言约定
@@ -125,7 +128,7 @@
 ## 待确认事项
 
 - v2 服务测试项目的命名、目录与是否引入统一的测试夹具库（守卫项目已用 `tests/k-spider-guards/`）；
-- 前端是否补 lint、typecheck 与组件测试门禁；
+- 组件测试范围（jsdom / Testing Library）在首个真实页面落地时评估；
 - Live 用例的触发方式（本地脚本 / 手动 CI job）与凭据来源；
 - v1 测试替换的时间点与旧用例迁移范围。
 

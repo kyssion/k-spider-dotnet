@@ -23,26 +23,29 @@
 - [x] 引用、重复、结构、状态四个守卫脚本拆分，共用 `scripts/lib/` 解析层；
 - [x] 目录索引覆盖、ADR 必备章节、规格验收结论、待确认索引机器校验；
 - [x] 新增问题追踪与路线图，关闭「已知问题只存在于会话」的缺口；
-- [x] verify 与 CI 同源：文档检查、构建、格式、测试使用同一顺序。
+- [x] verify 与 CI 同源：文档检查、构建、格式、测试使用同一质量口径；CI 按域并行（[0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md)）。
 
-## M1.5 · 工程基座加固（进行中，先于 M2）
+## M1.5 · 工程基座加固（基础设施已完成；服务测试随 M2/M3）
 
 v2 的契约与文档已经先行，代码侧仍以骨架为主（状态见根 [README.md](../../README.md) 状态表）：
-后端服务测试仍由 v1 过渡测试承担，v2 服务测试尚未建立。首批已补 v2 架构/契约守卫、编译与依赖门禁、
-`dev.sh` / `stop.sh`；剩余前端静态门禁与 CI 加固随本里程碑继续。决策见
-[0005-engineering-gates-first.md](../20-adr/0005-engineering-gates-first.md)。
+基础设施已落地，仅剩 v2 服务测试与 v1 过渡测试替换，依赖 M2/M3 的真实代码。v2 架构/契约守卫、
+编译与依赖门禁、`dev.sh` / `stop.sh`、前端静态门禁、CI 依赖审计/测试报告与按域并行均已落地。决策见
+[0005-engineering-gates-first.md](../20-adr/0005-engineering-gates-first.md) 与
+[0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md)。
 
 - [x] 建立 v2 架构/契约守卫项目 `tests/k-spider-guards/`，加入 `.sln` 与门禁；
 - [ ] v2 服务测试：状态机、契约；随后替换 v1 过渡测试（[issue-tracker.md](issue-tracker.md) #1）；
 - [x] 编译门禁：`TreatWarningsAsErrors`、分析器、`EnforceCodeStyleInBuild`；
 - [x] 依赖可复现：`nuget.config` 固定源、CPM 传递依赖钉版；
-- [ ] 前端门禁：ESLint / Prettier / Vitest / 首屏体积预算（当前只有 `tsc` + 构建 + E2E 冒烟；[issue-tracker.md](issue-tracker.md) #12）；
+- [x] 前端门禁：ESLint / Prettier / Vitest / 首屏体积预算（[0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md)）；
 - [x] `dev.sh` / `stop.sh`；
-- [ ] CI 并行、依赖审计与测试报告产物（[issue-tracker.md](issue-tracker.md) #12）；
+- [x] CI 依赖审计与测试报告产物；
+- [x] CI 按域并行（[0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md)）；
 - [x] 统一 `verify.sh` 的 SDK 提示与 `global.json` 口径（[issue-tracker.md](issue-tracker.md) K）。
 
 判据与目标门禁见 [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」；本里程碑只定顺序，不改变任何业务契约。
-M1.5 引入的任何新依赖（如前端测试框架）按红线 10 先登记 ADR / 待确认，不在路线图里直接视为已选型。
+M1.5 引入的新依赖已按红线 10 登记（前端工具见 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md)）；
+后续新增依赖仍先登记 ADR / 待确认。
 
 ## M2 · 分布式与调度（M1.5 之后）
 

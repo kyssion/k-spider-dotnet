@@ -45,10 +45,11 @@
 | `web/src/components/` | 通用组件（待创建） |
 | `web/src/pages/` | 页面组件（待创建） |
 | `web/src/stores/` | Zustand 客户端状态（待创建） |
-| `web/src/lib/` | 无业务语义的工具（待创建） |
+| `web/src/lib/` | 无业务语义的工具（如 `cn` 类名合并） |
 | `web/tests/` | Playwright E2E |
 
-当前只有 `App.tsx`、`main.tsx`、`index.css` 与 `tests/smoke.spec.ts`；新增目录时同步本文与 [docs/README.md](../README.md) 的目录索引（如涉及文档）。
+当前有 `App.tsx`、`main.tsx`、`index.css`、`web/src/lib/cn.ts` 与 `tests/smoke.spec.ts`；新增目录时同步本文与
+[docs/README.md](../README.md) 的目录索引（如涉及文档）。
 
 ### 页面与路由
 
@@ -99,7 +100,11 @@ TanStack Query 管理服务端状态（缓存、刷新、失效）；Zustand 管
 
 - 当前 E2E：`web/tests/smoke.spec.ts`，Playwright 配置见 [playwright.config.ts](../../web/playwright.config.ts)；
 - E2E 的业务 API 在用例内按需 mock，保证门禁离线确定；真实后端用例后续补 Live spec；
-- 构建前类型检查由 `pnpm build` 的 `tsc --noEmit` 覆盖；当前没有独立的 lint / 组件测试门禁；
+- 当前静态门禁：`tsc --noEmit`、ESLint、Prettier、Vitest（纯逻辑）与首屏体积预算；体积预算数字以
+  [bundle-budget.json](../../web/bundle-budget.json) 为准，脚本见
+  [check-bundle-budget.mjs](../../web/scripts/check-bundle-budget.mjs)；
+- 组件测试（jsdom / Testing Library）尚未引入，首个真实页面落地时评估，决策见
+  [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md)；
 - 新增页面必须有路由级 E2E 或组件测试，至少覆盖主路径与错误态。
 
 ## 待确认事项
@@ -112,7 +117,7 @@ TanStack Query 管理服务端状态（缓存、刷新、失效）；Zustand 管
 | 图表交互 | Recharts 的图表类型、筛选联动与性能边界 |
 | 权限粒度 | 当前所有登录用户同权；是否需要页面级权限 |
 | 前端 i18n | 是否需要多语言；若需要，先登记 ADR |
-| 前端门禁 | 是否补 lint、typecheck 独立脚本与组件测试 |
+| 组件测试范围 | 纯逻辑用 Vitest；是否引入 jsdom / Testing Library 待首个页面评估 |
 | 富文本 / HTML 注入策略 | 当前不使用 `dangerouslySetInnerHTML`；如需富文本渲染，先登记待确认并引入白名单净化 |
 
 ## 相关文档

@@ -2,14 +2,14 @@
 #
 # 全量校验：交付前必须全绿的唯一入口。
 #
-# 步骤与 .github/workflows/ci.yml 同源：同一顺序、同一质量口径（构建、格式与测试都用 Release）。
-# 允许的差异只有一处，且必须在此登记 —— 不登记的差异就是「本地绿、CI 红」的起点：
-#   1. 测试跳过：--skip-tests 只用于本地快速冒烟（跳过 E2E 与后端测试），输出会显式标注；
+# 与 .github/workflows/ci.yml 同源：同一质量口径（构建、格式与测试都用 Release）；CI 按后端 / 前端 / 文档并行。
+# 允许的质量差异只有一处，且必须在此登记 —— 不登记的差异就是「本地绿、CI 红」的起点：
+#   1. 测试跳过：--skip-tests 只用于本地快速冒烟（跳过前端单元 / E2E 与后端测试），输出会显式标注；
 #      CI 永远跑完整测试，不提供跳过开关。
 #
 # 用法：
 #   ./scripts/verify.sh              # 全量
-#   ./scripts/verify.sh --skip-tests # 本地冒烟（文档 + 技能 + 构建 + 格式）
+#   ./scripts/verify.sh --skip-tests # 本地冒烟（文档 + 技能 + 前端静态 + 构建 + 格式）
 
 set -euo pipefail
 
@@ -66,14 +66,15 @@ step "5/10 技能清单检查"
 node "$ROOT_DIR/scripts/check-skills-manifest.mjs" || fail "技能清单与磁盘不一致（见上方清单）"
 
 # ── 前端 ────────────────────────────────────────────────────────────────
-step "6/10 前端构建（pnpm install + tsc + vite）"
+step "6/10 前端校验（install + lint / format / build / 体积）"
 bash "$ROOT_DIR/scripts/build-web.sh" || fail "前端构建失败"
+(cd "$WEB_DIR" && pnpm run lint && pnpm run format:check && pnpm run check:bundle) || fail "前端静态校验失败"
 
 if [ "$SKIP_TESTS" = "true" ]; then
-  step "7/10 前端 E2E（已跳过）"
+  step "7/10 前端单元测试与 E2E（已跳过）"
 else
-  step "7/10 前端 E2E（Playwright）"
-  (cd "$WEB_DIR" && pnpm test:e2e) || fail "前端 E2E 失败"
+  step "7/10 前端单元测试与 E2E（Vitest + Playwright）"
+  (cd "$WEB_DIR" && pnpm run test && pnpm test:e2e) || fail "前端测试失败"
 fi
 
 # ── 后端 ────────────────────────────────────────────────────────────────
