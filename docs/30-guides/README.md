@@ -25,7 +25,7 @@
 | 事项 | 入口 |
 | --- | --- |
 | crawler/process 服务测试项目命名、目录与夹具库 | [testing.md](testing.md)「待确认事项」 |
-| 组件测试范围（jsdom / Testing Library） | [testing.md](testing.md)「待确认事项」/ [web.md](../10-architecture/web.md)「待确认事项」 |
+| 组件测试覆盖率目标与页面 E2E 边界 | [testing.md](testing.md)「待确认事项」 |
 | Live 用例触发方式与凭据 | [testing.md](testing.md)「待确认事项」 |
 | v1 测试替换时间与迁移范围 | [testing.md](testing.md)「待确认事项」/ [issue-tracker.md](../00-overview/issue-tracker.md) #1 |
 | CI 缓存与耗时调优 | [0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md) / [testing.md](testing.md)「待确认事项」 |
@@ -35,4 +35,4 @@
 | 数据库连接串与账号键名 | [getting-started.md](getting-started.md)「待确认事项」/ [AGENTS.md](../../AGENTS.md) |
 | 规格模板与验收结论细化程度 | [add-a-feature.md](add-a-feature.md)「待确认事项」/ [40-specs/README.md](../40-specs/README.md) |
 | 新服务测试项目接入步骤 | [add-a-feature.md](add-a-feature.md)「待确认事项」 |
-| 前端组件、状态与 API 客户端约定 | [add-a-feature.md](add-a-feature.md)「待确认事项」/ [web.md](../10-architecture/web.md)「待确认事项」 |
+| 首期页面交互细节 | [web.md](../10-architecture/web.md)「待确认事项」 |

@@ -72,9 +72,9 @@ k-spider-admin/
 
 ### REST 管理 API 与认证
 
-REST 端点覆盖认证/账号、渠道、任务、节点与健康检查；原始数据浏览与总览页面仍按 M5 规格推进。认证使用 Cookie
-会话、`PasswordHasher`、Antiforgery；除 `/api/auth/login` 外的写请求统一校验 `X-CSRF-TOKEN`；登录校验
-Origin/Referer。具体行为以 [auth.md](auth.md) 为准。
+REST 端点覆盖认证/账号、渠道、任务、节点与健康检查；总览与原始数据浏览的端点/DTO 已确认，等待实现。
+认证使用 Cookie 会话、`PasswordHasher`、Antiforgery；除 `/api/auth/login` 外的写请求统一校验 `X-CSRF-TOKEN`；
+登录校验 Origin/Referer。具体行为以 [auth.md](auth.md) 为准。
 
 ### 前端托管
 
@@ -89,6 +89,17 @@ Origin/Referer。具体行为以 [auth.md](auth.md) 为准。
 - `task_detail` / `extra` 当前使用 snake_case 约定键：`channel_id`、`round_type`、`batch_limit`、`dispatch_token`、
   `fail_count`、`last_error`；完整 JSON 契约仍以 [distributed.md](distributed.md)「待确认事项」为准；
 - 数据访问选型与边界见 [0011-admin-data-access-linq2db.md](../20-adr/0011-admin-data-access-linq2db.md)。
+
+### REST 端点状态
+
+| 端点组 | 状态 | 说明 |
+| --- | --- | --- |
+| `/api/auth/*`、`/api/users` | 已实现 | 登录、登出、改密、当前用户与账号管理 |
+| `/api/channels`、`/api/channel-categories` | 已实现 | 渠道查询、暂停/恢复 |
+| `/api/tasks`、`/api/nodes` | 已实现 | 任务查询/取消、节点镜像查询 |
+| `/api/health` | 已实现 | 数据库健康检查；匿名可访问 |
+| `/api/overview` | 已实现 | 渠道/任务/节点统计与最近失败；DTO 见 [0004-overview-dashboard.md](../40-specs/0004-overview-dashboard.md) |
+| `/api/raw-data/*` | 已实现 | 只读分页；列表不含 raw，详情返回 base64；DTO 见 [0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md) |
 
 ## 配置
 
@@ -110,7 +121,7 @@ Origin/Referer。具体行为以 [auth.md](auth.md) 为准。
 ## 测试与守门
 
 - admin 核心测试在 `tests/k-spider-admin-tests/`：状态机、schedule 解析、同渠道互斥、任务生命周期、对账重派/
-  放弃、节点选择、账号管理边界与 DI 图解析；
+  放弃、节点选择、账号管理边界、总览/原始数据查询映射与 DI 图解析；
 - v2 架构/契约守卫在 `tests/k-spider-guards/`；gRPC 消息 round-trip 在 `tests/k-spider-grpc-tests/`；
 - 真实 PostgreSQL 的 repository 集成测试尚未接入门禁，需在数据访问联调时补；
 - 测试分层与门禁边界见 [testing.md](../30-guides/testing.md)。
@@ -122,7 +133,6 @@ Origin/Referer。具体行为以 [auth.md](auth.md) 为准。
 - `channel.schedule` 的 cron、时区与错过轮次语义；当前只实现 interval；
 - 同渠道互斥持久化：继续解析 `task_detail` JSONB，还是把 `channel_id` 提升为独立列并加索引；
 - 节点认证、端口与 TLS 配置；
-- REST 原始数据浏览/总览端点与 DTO；
 - 部署方式、systemd 托管、日志与回滚方案。
 
 ## 相关文档
@@ -130,6 +140,8 @@ Origin/Referer。具体行为以 [auth.md](auth.md) 为准。
 - [system-overview.md](system-overview.md)、[distributed.md](distributed.md)、[auth.md](auth.md)、[web.md](web.md)：
   admin 的上游规则与下游调用方；
 - [data-model.md](data-model.md)：业务表语义；
+- [0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md)、
+  [0004-overview-dashboard.md](../40-specs/0004-overview-dashboard.md)：原始数据与总览端点/DTO；
 - [0010-admin-modular-monolith.md](../20-adr/0010-admin-modular-monolith.md)、
   [0011-admin-data-access-linq2db.md](../20-adr/0011-admin-data-access-linq2db.md)：admin 结构与数据访问决策；
 - [dev-workflow.md](../30-guides/dev-workflow.md)：启动命令、端口与前端构建；

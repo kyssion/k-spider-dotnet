@@ -40,6 +40,8 @@ public sealed class DependencyInjectionTests
         Assert.IsNotNull(app.Services.GetRequiredService<IProbeService>());
         Assert.IsNotNull(app.Services.GetRequiredService<IUserRepository>());
         Assert.IsNotNull(app.Services.GetRequiredService<ChannelQueryService>());
+        Assert.IsNotNull(app.Services.GetRequiredService<OverviewQueryService>());
+        Assert.IsNotNull(app.Services.GetRequiredService<RawDataQueryService>());
         Assert.IsTrue(app.Services.GetRequiredService<IEnumerable<IHostedService>>()
             .Any(service => service is SchedulerLoop));
         Assert.IsNotNull(app.Services.GetRequiredService<NodeConnectionRegistry>());

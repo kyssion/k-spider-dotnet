@@ -103,13 +103,10 @@ ADR 就是为了把「权衡过程」固化下来。
 | detail 写入快照来源 | [data-model.md](../10-architecture/data-model.md) |
 | `data_status` 是否跳过详情回填 | [data-model.md](../10-architecture/data-model.md) |
 | 双键水位消费侧 | [crawler.md](../10-architecture/crawler.md) / [process.md](../10-architecture/process.md) |
-| admin REST 首期端点/DTO | [admin.md](../10-architecture/admin.md) / [web.md](../10-architecture/web.md) |
 | admin 后台页面范围 | [admin.md](../10-architecture/admin.md) |
 | 部署形态与运维 | [system-overview.md](../10-architecture/system-overview.md) / [admin.md](../10-architecture/admin.md) |
-| web 首期页面范围与交互 | [web.md](../10-architecture/web.md) |
-| 组件库与样式 | [web.md](../10-architecture/web.md) |
+| 首期页面交互细节 | [web.md](../10-architecture/web.md) |
 | 图表交互 | [web.md](../10-architecture/web.md) |
-| 权限粒度 | [web.md](../10-architecture/web.md) |
 | 前端 i18n | [web.md](../10-architecture/web.md) |
 | 富文本 / HTML 注入策略 | [web.md](../10-architecture/web.md) |
 | process 结构化数据契约 | [process.md](../10-architecture/process.md) |
@@ -136,6 +133,7 @@ ADR 就是为了把「权衡过程」固化下来。
 | [0009-adr-does-not-track-progress.md](0009-adr-does-not-track-progress.md) | ADR 不承载进度：移除模板待办 | 已确认 |
 | [0010-admin-modular-monolith.md](0010-admin-modular-monolith.md) | admin 采用模块化单体与后台循环 | 已确认 |
 | [0011-admin-data-access-linq2db.md](0011-admin-data-access-linq2db.md) | admin 数据访问采用 linq2db 与裸 SQL 组合 | 已确认 |
+| [0012-web-minimal-stack-and-component-tests.md](0012-web-minimal-stack-and-component-tests.md) | web 保持 React 最小栈并采用组件级测试 | 已确认 |
 
 > 0004–0008 的「待办」是旧模板历史快照，不再更新；状态行已标注，进度见 [roadmap.md](../00-overview/roadmap.md)。
 >

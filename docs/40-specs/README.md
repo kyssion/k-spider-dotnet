@@ -17,7 +17,7 @@
 一句话：**用户可见行为变化要规格；纯重构、依赖升级、样式微调、文档修订不要。**
 
 结构性变更（调度、DDL、服务分层、工程门禁）走 ADR 或待确认，不写规格；规格只用于用户可见行为。
-M5 首期功能规格草案见本文「索引」：登录 / 账号管理、原始数据只读浏览、渠道管理；其余页面按 MVP 排期。
+M5 首期功能规格见本文「索引」：登录 / 账号管理、原始数据只读浏览、渠道管理、总览；其余页面按 MVP 排期。
 
 ## 命名与状态
 
@@ -88,7 +88,8 @@ M5 首期功能规格草案见本文「索引」：登录 / 账号管理、原�
 | 编号 | 标题 | 状态 |
 | --- | --- | --- |
 | [0001-auth-login-users.md](0001-auth-login-users.md) | 登录与账号管理 | 草案 |
-| [0002-raw-data-browser.md](0002-raw-data-browser.md) | 原始数据只读浏览 | 草案 |
+| [0002-raw-data-browser.md](0002-raw-data-browser.md) | 原始数据只读浏览 | 实现中 |
 | [0003-channel-management.md](0003-channel-management.md) | 渠道管理 | 草案 |
+| [0004-overview-dashboard.md](0004-overview-dashboard.md) | 总览 | 实现中 |
 
 新增规格后在此登记，并同步更新 [docs/README.md](../README.md) 的目录索引（如新增目录）。

@@ -38,6 +38,8 @@ public static class AdminServiceCollectionExtensions
         services.AddSingleton<ISysNodeRepository, PostgresNodeRepository>();
         services.AddSingleton<IChannelRepository, PostgresChannelRepository>();
         services.AddSingleton<IUserRepository, PostgresUserRepository>();
+        services.AddSingleton<IOverviewRepository, PostgresOverviewRepository>();
+        services.AddSingleton<IRawDataRepository, PostgresRawDataRepository>();
 
         services.AddSingleton<IAdminTaskService, AdminTaskService>();
         services.AddSingleton<ChannelRoundGuard>();
@@ -67,6 +69,8 @@ public static class AdminServiceCollectionExtensions
         services.AddSingleton<ChannelQueryService>();
         services.AddSingleton<TaskQueryService>();
         services.AddSingleton<NodeQueryService>();
+        services.AddSingleton<OverviewQueryService>();
+        services.AddSingleton<RawDataQueryService>();
 
         services.AddHostedService<SchedulerLoop>();
         services.AddHostedService<ReconciliationLoop>();

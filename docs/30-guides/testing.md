@@ -19,6 +19,7 @@
 | admin 核心测试 | `tests/k-spider-admin-tests/` | 是 | 任务状态机、schedule、同渠道互斥、任务生命周期、对账重派/放弃、DI 图 |
 | v1 过渡测试 | `src/k-spider-test/` | 是 | 排除 `TestCategory=Live`；crawler/process 服务测试落地后替换 |
 | 前端纯逻辑 | `web/src/**/*.test.ts` | 是 | Vitest；工具函数、格式化等可脱离 DOM 的逻辑 |
+| 前端组件 | `web/src/**/*.test.tsx` | 是 | Vitest + Testing Library + jsdom；每个组件覆盖渲染、交互与加载/空/错误/禁用态 |
 | 前端 E2E | `web/tests/` | 是 | Playwright；当前为骨架冒烟，API 在用例内 mock |
 | Live 连通性 | 按测试项目约定 | 否 | 依赖真实接口或线上可达，手动执行 |
 
@@ -34,8 +35,8 @@
 | 架构 / 契约守卫 | `tests/k-spider-guards/`（解决方案、DDL、依赖基线） | 增加服务分层与错误码守卫 |
 | 编译质量 | `TreatWarningsAsErrors` + 分析器 + `EnforceCodeStyleInBuild`（v2 项目） | 保持 |
 | 依赖可复现 | CPM + `nuget.config` + 传递依赖钉版 | 保持 |
-| 前端静态门禁 | `tsc --noEmit` + ESLint + Prettier + Vitest + 体积预算 | 补组件测试（按需） |
-| 前端 E2E | Playwright 冒烟 | 保留；新增页面补主路径与错误态 |
+| 前端静态门禁 | `tsc --noEmit` + ESLint + Prettier + Vitest（纯逻辑 + 组件）+ 体积预算 | 保持；新增组件继续补测试 |
+| 前端 E2E | Playwright 8 条核心路径 | 保留；新增页面补主路径与错误态 |
 | 依赖审计 | 后端 NuGet 审计随 restore / build；CI 跑 `pnpm audit` | 保持 |
 | 文档 / 技能 | 4 个文档检查 + 技能清单 | 保持 |
 
@@ -133,7 +134,7 @@ v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 ## 待确认事项
 
 - crawler/process 服务测试项目的命名、目录与是否引入统一测试夹具库（admin 已用 `tests/k-spider-admin-tests/`）；
-- 组件测试范围（jsdom / Testing Library）在首个真实页面落地时评估；
+- 组件测试的覆盖率目标与页面 E2E 的边界；
 - Live 用例的触发方式（本地脚本 / 手动 CI job）与凭据来源；
 - v1 测试替换的时间点与旧用例迁移范围；
 - CI 缓存与耗时调优（ADR 0007 的后续观察项）。

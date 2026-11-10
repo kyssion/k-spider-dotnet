@@ -7,7 +7,7 @@
 | 抓取（底层） | `k-spider-crawler` | 骨架 |
 | 处理（中间层） | `k-spider-process` | 未开始 |
 | 管理（旁路） | `k-spider-admin` | 实现中 |
-| 展示（顶层） | `web/`（前端项目） | 骨架 |
+| 展示（顶层） | `web/`（前端项目） | 实现中 |
 
 状态口径：**未开始 / 骨架 / 实现中 / 可用**。模块职责与依赖见 [system-overview.md](docs/10-architecture/system-overview.md)；数据模型见 [data-model.md](docs/10-architecture/data-model.md)；功能清单见 [features.md](docs/00-overview/features.md)；里程碑与下一步见 [roadmap.md](docs/00-overview/roadmap.md)；已知问题见 [issue-tracker.md](docs/00-overview/issue-tracker.md)。
 

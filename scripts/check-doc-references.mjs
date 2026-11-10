@@ -62,13 +62,7 @@ const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
  * 真实引用的漂移不允许进这里 —— 那正是本脚本要拦住的。
  */
 const ALLOWED_MISSING_REFERENCES = [
-  { prefix: 'src/k-spider-grpc/', reason: '分布式契约项目：待创建，见 docs/10-architecture/distributed.md', hits: 0 },
   { prefix: 'web/dist', reason: '前端构建产物：目标由 admin 托管，构建后生成，不入库', hits: 0 },
-  { prefix: 'web/src/api', reason: '前端目录规划：待创建，见 docs/10-architecture/web.md', hits: 0 },
-  { prefix: 'web/src/components', reason: '前端目录规划：待创建，见 docs/10-architecture/web.md', hits: 0 },
-  { prefix: 'web/src/pages', reason: '前端目录规划：待创建，见 docs/10-architecture/web.md', hits: 0 },
-  { prefix: 'web/src/stores', reason: '前端目录规划：待创建，见 docs/10-architecture/web.md', hits: 0 },
-  { prefix: 'web/src/lib', reason: '前端目录规划：待创建，见 docs/10-architecture/web.md', hits: 0 },
   { prefix: 'pages/LoginPage', reason: '认证前端页面：待实现，见 docs/10-architecture/auth.md', hits: 0 },
   { prefix: 'pages/UsersPage', reason: '认证前端页面：待实现，见 docs/10-architecture/auth.md', hits: 0 },
   { prefix: 'api/auth', reason: '认证前端 API 客户端：待实现，见 docs/10-architecture/auth.md', hits: 0 },

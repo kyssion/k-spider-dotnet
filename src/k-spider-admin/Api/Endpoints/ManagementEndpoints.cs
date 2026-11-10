@@ -23,6 +23,7 @@ public static class ManagementEndpoints
     {
         var group = endpoints.MapGroup("/api");
 
+        group.MapGet("/overview", GetOverviewAsync);
         group.MapGet("/channels", ListChannelsAsync);
         group.MapGet("/channels/{id:long}", GetChannelAsync);
         group.MapPost("/channels/{id:long}/pause", PauseChannelAsync);
@@ -37,6 +38,13 @@ public static class ManagementEndpoints
         group.MapGet("/nodes/{nodeId:guid}", GetNodeAsync);
 
         return endpoints;
+    }
+
+    private static async Task<IResult> GetOverviewAsync(
+        OverviewQueryService query,
+        CancellationToken cancellationToken)
+    {
+        return Results.Ok(await query.GetAsync(cancellationToken));
     }
 
     private static async Task<IResult> ListChannelsAsync(

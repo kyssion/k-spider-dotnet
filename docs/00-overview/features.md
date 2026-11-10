@@ -76,9 +76,10 @@ v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代�
 - 分析看板：视图驱动的图表（依赖分析层）；
 - 数据重放：按原始响应重跑解析（依赖 process，引擎能力而非一次性工具）。
 
-首期页面规格草案见 [0001-auth-login-users.md](../40-specs/0001-auth-login-users.md)、
-[0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md) 与
-[0003-channel-management.md](../40-specs/0003-channel-management.md)；其余页面按 MVP 排期。
+首期页面规格见 [0001-auth-login-users.md](../40-specs/0001-auth-login-users.md)、
+[0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md)、
+[0003-channel-management.md](../40-specs/0003-channel-management.md) 与
+[0004-overview-dashboard.md](../40-specs/0004-overview-dashboard.md)；其余页面按 MVP 排期。
 
 ## 运维功能
 

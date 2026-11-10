@@ -80,13 +80,16 @@ M1.5 引入的新依赖已按红线 10 登记（前端工具见 [0006-frontend-s
 
 REST/托管见 [admin.md](../10-architecture/admin.md)，页面与前端约定见 [web.md](../10-architecture/web.md)，
 认证见 [auth.md](../10-architecture/auth.md) 与 [0001-auth-login-users.md](../40-specs/0001-auth-login-users.md)，
-原始数据浏览见 [0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md)，渠道管理见
+总览见 [0004-overview-dashboard.md](../40-specs/0004-overview-dashboard.md)，原始数据浏览见
+[0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md)，渠道管理见
 [0003-channel-management.md](../40-specs/0003-channel-management.md)。
 
-- [ ] REST 管理 API 首期端点与 DTO；
-- [ ] 登录、用户管理、总览、渠道管理、任务控制、节点状态、原始数据只读浏览；
-- [ ] 前端 API 客户端、路由守卫、CSRF 与错误态统一处理；
-- [ ] admin 托管 `web/dist` 的同源部署链路。
+- [x] 首期页面与接口契约确认（web.md / 0002 / 0004 / 0012）；
+- [x] REST 管理 API 首期端点与 DTO（含 overview / raw-data 只读）；
+- [x] 登录、用户管理、总览、渠道管理、任务控制、节点状态页面；
+- [ ] 原始数据只读浏览页面；
+- [x] 前端 API 客户端、路由守卫、CSRF 与错误态统一处理；
+- [x] admin 托管 `web/dist` 的同源部署链路。
 
 ## M6 · 分析与运维
 

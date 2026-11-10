@@ -22,6 +22,7 @@ public static class AdminEndpointExtensions
         app.MapAuthEndpoints();
         app.MapUserEndpoints();
         app.MapManagementEndpoints();
+        app.MapRawDataEndpoints();
 
         app.MapHealthChecks("/api/health").AllowAnonymous();
         app.MapGrpcService<SchedulerGrpcService>().AllowAnonymous();
