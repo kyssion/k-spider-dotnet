@@ -1,6 +1,6 @@
 # 0008 gRPC 契约项目采用共享生成库
 
-> 状态：已确认
+> 状态：已确认（待办为历史快照，进度见 roadmap）
 > 最后更新：2026-11-09
 > 决策人：项目所有者（执行指令）
 > 关联：[0002-grpc-transport.md](0002-grpc-transport.md)、[distributed.md](../10-architecture/distributed.md)、[roadmap.md](../00-overview/roadmap.md)

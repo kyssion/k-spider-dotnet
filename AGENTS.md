@@ -62,11 +62,13 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
 
 ## 技能（按需加载，别读完再动手）
 
-`.agents/skills/` 下平铺来自 [dotnet/skills](https://github.com/dotnet/skills) 的上游技能；归属、版本、数量与同步规则见
+`.agents/skills/` 下平铺来自 [dotnet/skills](https://github.com/dotnet/skills) 的上游技能与项目自有技能；归属、版本、数量与同步规则见
 [skills.md](docs/50-ai/skills.md)。
 
 | 任务 | 常用技能 |
 | --- | --- |
+| 文档 / 契约 / ADR / 待确认 | `k-spider-docs-contract` |
+| gRPC proto / 契约项目 | `k-spider-grpc-contract` |
 | C# 语言、重构、构建基础 | `csharp-expert`、`csharp-refactoring`、`msbuild`、`setup-local-sdk` |
 | Web API、端点、中间件 | `dotnet-webapi` |
 | 测试生成 / 执行 / 覆盖率 / 反模式 | `run-tests`、`code-testing`、`coverage-analysis`、`test-anti-patterns` |

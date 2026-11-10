@@ -1,6 +1,6 @@
 # 0006 前端静态门禁采用 ESLint + Prettier + Vitest + 体积预算
 
-> 状态：已确认
+> 状态：已确认（待办为历史快照，进度见 roadmap）
 > 最后更新：2026-11-09
 > 决策人：项目所有者（执行指令）
 > 关联：[web.md](../10-architecture/web.md)、[testing.md](../30-guides/testing.md)、[dev-workflow.md](../30-guides/dev-workflow.md)

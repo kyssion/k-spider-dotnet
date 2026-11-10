@@ -139,6 +139,7 @@
 | 提示词模板（可直接复制的任务模板） | [prompt-library.md](50-ai/prompt-library.md) |
 | 技能目录、跨 agent 发现、上游同步 | [skills.md](50-ai/skills.md) |
 | ADR 的写法与架构 / 契约待确认索引 | [20-adr/README.md](20-adr/README.md) |
+| 指南类待确认项（测试 / 开发 / 规格模板） | [30-guides/README.md](30-guides/README.md)「指南待确认索引」 |
 | 规格的写法与索引 | [40-specs/README.md](40-specs/README.md) |
 | 状态词表与语义 | 本文「文档状态」 |
 | 文档索引、写作规则与文件命名 | 本文 |

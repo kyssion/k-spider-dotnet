@@ -1,6 +1,6 @@
 # 0004 文档治理 v2：词表、索引与守卫拆分
 
-> 状态：已确认
+> 状态：已确认（待办为历史快照，进度见 roadmap）
 > 最后更新：2026-11-08
 > 决策人：项目所有者 / AI 协作会话
 > 关联：[docs/README.md](../README.md)、[testing.md](../30-guides/testing.md)、[change-protocol.md](../50-ai/change-protocol.md)

@@ -31,7 +31,7 @@ ADR 就是为了把「权衡过程」固化下来。
 - 每份决策必须有状态、日期、决策人与关联权威文档；文件命名与文档状态见 [docs/README.md](../README.md)；
 - 决策与权威文档冲突时，以最新已确认决策为准，并在同一次改动中修正权威文档；
 - ADR 只增不改；需要改变决策时新增一篇，并在新旧两篇中互相引用；仅允许更新状态行与索引；
-- 新 ADR 正文不承载进度或待办：进度归 [roadmap.md](../00-overview/roadmap.md)，问题归 [issue-tracker.md](../00-overview/issue-tracker.md)，门禁判据归 [testing.md](../30-guides/testing.md)；模板不含待办；0005–0008 的旧待办作为历史快照，不再更新；
+- 新 ADR 正文不承载进度或待办：进度归 [roadmap.md](../00-overview/roadmap.md)，问题归 [issue-tracker.md](../00-overview/issue-tracker.md)，门禁判据归 [testing.md](../30-guides/testing.md)；模板不含待办；0004–0008 的旧待办作为历史快照，不再更新；
 - 每篇必须包含「备选项」与「后果（含重新评估触发条件）」。没有备选项对比的 ADR 只是公告；
   没有重新评估条件的 ADR 会被永远遵守，哪怕当初的前提早已不成立；
 - 新增 ADR 后必须更新本文底部的索引表；
@@ -40,7 +40,7 @@ ADR 就是为了把「权衡过程」固化下来。
   冲突时改正文。
 
 **历史说明**：0001–0003 写于 ADR 0004 之前，保留原文（包括其中的旧脚本名与旧路径），
-不追溯补「决策人 / 备选项 / 后果」；0005–0008 的「待办」是旧模板的历史快照，不再更新；
+不追溯补「决策人 / 备选项 / 后果」；0004–0008 的「待办」是旧模板的历史快照（0009 正文只点名 0005–0008；0004 同样适用），不再更新；
 新 ADR 一律按本文「模板」执行，现行文档守卫见 [docs/README.md](../README.md)。
 
 ## 模板
@@ -80,7 +80,8 @@ ADR 就是为了把「权衡过程」固化下来。
 ## 待确认
 
 详细描述只在对应权威文档的待确认章节/条目中维护，本表只做入口索引。
-本表只索引契约 / 架构类待确认项；指南中的流程 / 工具待确认项留在原文档与 roadmap / issue-tracker。
+本表只索引契约 / 架构 / 跨模块设计类待确认项；指南中的流程 / 工具待确认项见
+[30-guides/README.md](../30-guides/README.md)「指南待确认索引」。
 
 | 事项 | 入口 |
 | --- | --- |
@@ -108,13 +109,11 @@ ADR 就是为了把「权衡过程」固化下来。
 | admin 后台页面范围 | [admin.md](../10-architecture/admin.md) |
 | admin 目录结构与模块拆分 | [admin.md](../10-architecture/admin.md) |
 | 部署形态与运维 | [system-overview.md](../10-architecture/system-overview.md) / [admin.md](../10-architecture/admin.md) |
-| CI 缓存与耗时调优 | [0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md) / [dev-workflow.md](../30-guides/dev-workflow.md) |
 | web 首期页面范围与交互 | [web.md](../10-architecture/web.md) |
 | 组件库与样式 | [web.md](../10-architecture/web.md) |
 | 图表交互 | [web.md](../10-architecture/web.md) |
 | 权限粒度 | [web.md](../10-architecture/web.md) |
 | 前端 i18n | [web.md](../10-architecture/web.md) |
-| 组件测试范围 | [0006-frontend-static-gates.md](0006-frontend-static-gates.md) / [web.md](../10-architecture/web.md) |
 | 富文本 / HTML 注入策略 | [web.md](../10-architecture/web.md) |
 | process 结构化数据契约 | [process.md](../10-architecture/process.md) |
 | process 节点接入 | [process.md](../10-architecture/process.md) / [distributed.md](../10-architecture/distributed.md) |
@@ -138,6 +137,16 @@ ADR 就是为了把「权衡过程」固化下来。
 | [0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md) | CI 按域并行，质量口径与 verify 同源 | 已确认 |
 | [0008-grpc-contract-project.md](0008-grpc-contract-project.md) | gRPC 契约项目采用共享生成库 | 已确认 |
 | [0009-adr-does-not-track-progress.md](0009-adr-does-not-track-progress.md) | ADR 不承载进度：移除模板待办 | 已确认 |
+
+> 0004–0008 的「待办」是旧模板历史快照，不再更新；状态行已标注，进度见 [roadmap.md](../00-overview/roadmap.md)。
+>
+> | ADR | 当前进度 |
+> | --- | --- |
+> | 0004 | roadmap M1 / M2 |
+> | 0005 | roadmap M1.5 / M2 |
+> | 0006 | roadmap M1.5 |
+> | 0007 | roadmap M1.5 |
+> | 0008 | roadmap M2 |
 
 ### 历史（已取代 / 已废弃）
 

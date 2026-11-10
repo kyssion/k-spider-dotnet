@@ -78,7 +78,9 @@ M1.5 引入的新依赖已按红线 10 登记（前端工具见 [0006-frontend-s
 ## M5 · admin REST 与 web 首期页面
 
 REST/托管见 [admin.md](../10-architecture/admin.md)，页面与前端约定见 [web.md](../10-architecture/web.md)，
-认证见 [auth.md](../10-architecture/auth.md) 与 [0001-auth-login-users.md](../40-specs/0001-auth-login-users.md)。
+认证见 [auth.md](../10-architecture/auth.md) 与 [0001-auth-login-users.md](../40-specs/0001-auth-login-users.md)，
+原始数据浏览见 [0002-raw-data-browser.md](../40-specs/0002-raw-data-browser.md)，渠道管理见
+[0003-channel-management.md](../40-specs/0003-channel-management.md)。
 
 - [ ] REST 管理 API 首期端点与 DTO；
 - [ ] 登录、用户管理、总览、渠道管理、任务控制、节点状态、原始数据只读浏览；

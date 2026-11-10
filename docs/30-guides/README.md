@@ -16,3 +16,23 @@
 
 首次跑通后，日常改动按 [add-a-feature.md](add-a-feature.md) 执行；交付前按
 [definition-of-done.md](../50-ai/definition-of-done.md) 自检。
+
+## 指南待确认索引
+
+本目录的待确认项只做入口索引，细节以原文档为准；契约 / 架构 / 跨模块设计类待确认见
+[20-adr/README.md](../20-adr/README.md)「待确认」。
+
+| 事项 | 入口 |
+| --- | --- |
+| v2 服务测试项目命名、目录与夹具库 | [testing.md](testing.md)「待确认事项」 |
+| 组件测试范围（jsdom / Testing Library） | [testing.md](testing.md)「待确认事项」/ [web.md](../10-architecture/web.md)「待确认事项」 |
+| Live 用例触发方式与凭据 | [testing.md](testing.md)「待确认事项」 |
+| v1 测试替换时间与迁移范围 | [testing.md](testing.md)「待确认事项」/ [issue-tracker.md](../00-overview/issue-tracker.md) #1 |
+| CI 缓存与耗时调优 | [0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md) / [testing.md](testing.md)「待确认事项」 |
+| crawler 本地启动参数与端口 | [dev-workflow.md](dev-workflow.md)「待确认事项」 |
+| 生产部署托管、日志与回滚 | [dev-workflow.md](dev-workflow.md)「待确认事项」/ [roadmap.md](../00-overview/roadmap.md)「M6」 |
+| 生产端口、TLS 与反向代理 | [getting-started.md](getting-started.md)「待确认事项」/ [distributed.md](../10-architecture/distributed.md)「待确认事项」 |
+| 数据库连接串与账号键名 | [getting-started.md](getting-started.md)「待确认事项」/ [AGENTS.md](../../AGENTS.md) |
+| 规格模板与验收结论细化程度 | [add-a-feature.md](add-a-feature.md)「待确认事项」/ [40-specs/README.md](../40-specs/README.md) |
+| 新服务测试项目接入步骤 | [add-a-feature.md](add-a-feature.md)「待确认事项」 |
+| 前端组件、状态与 API 客户端约定 | [add-a-feature.md](add-a-feature.md)「待确认事项」/ [web.md](../10-architecture/web.md)「待确认事项」 |

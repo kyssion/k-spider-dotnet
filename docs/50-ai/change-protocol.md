@@ -62,9 +62,14 @@
 - 改变字段类型或语义；
 - 收紧取值约束；
 - 改变状态机、调度语义或认证行为；
-- 修改 DDL 中已有列的含义。
+- 修改 DDL 中已有列的含义；
+- 修改已确认 ADR 的正文或已记录的决策（应新增 ADR，而不是改旧文）。
 
 处理方式按 ADR 记录的迁移与回滚方案执行；未确认前不落代码。
+ADR 正文只增不改；进度写 [roadmap.md](../00-overview/roadmap.md)，不写 ADR（见
+[0009-adr-does-not-track-progress.md](../20-adr/0009-adr-does-not-track-progress.md)）。
+ADR 正文修改目前靠评审与 [definition-of-done.md](definition-of-done.md) 检查，暂不引入哈希守卫；
+出现实际违规后再评估。
 
 ## 文档同步矩阵
 

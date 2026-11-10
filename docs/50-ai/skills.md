@@ -67,5 +67,10 @@ node scripts/sync-dotnet-skills.mjs --allow-plugin-removal  # 确认上游插件
 
 不经过同步脚本的技能直接放在 `.agents/skills/<name>/` 即可，`manifest.json` 不会记录，也不会在同步时被删除。新增技能须满足 Agent Skills 格式，并保持名称唯一。
 
-当前没有项目自有技能。与项目强相关的知识（crawler adapter、write_mode、反爬策略）在出现重复踩坑后再沉淀，
-避免先建空壳技能；新增时按上面的目录规则放置，并在 [AGENTS.md](../../AGENTS.md)「技能」表补一行路由。
+当前有 2 个项目自有技能：
+
+- [SKILL.md](../../.agents/skills/k-spider-docs-contract/SKILL.md)：文档 / 契约 / ADR / 待确认变更的判别与易漏项；
+- [SKILL.md](../../.agents/skills/k-spider-grpc-contract/SKILL.md)：gRPC proto / 契约项目变更流程。
+
+crawler adapter、write_mode、反爬策略等项目知识在 M3 真实适配器落地后再沉淀；新增自有技能时按上面的
+目录规则放置，并在 [AGENTS.md](../../AGENTS.md)「技能」表补一行路由。

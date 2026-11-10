@@ -7,7 +7,7 @@
  *   标题编号风格、代码块语言。它们只写在文档里，只有人记得时才成立。本脚本把这些规则
  *   变成 verify 的硬失败，与引用检查、重复检查、状态检查同思路。
  *
- * 七条规则（判据仍以文档为准，本脚本只做判定，不复述条款）：
+ * 八条规则（判据仍以文档为准，本脚本只做判定，不复述条款）：
  *   1. 状态块：`docs/` 下每篇文档开头必须有 `> 状态：` 与 `> 最后更新：YYYY-MM-DD`；
  *   2. 目录索引：`docs/README.md` 必须列出每个目录的 README；每个目录 README 必须列出
  *      本目录下的每篇文档 —— 索引是唯一入口，孤儿文档即缺索引；
@@ -17,7 +17,8 @@
  *      完全一致（顺序与完整性），不适用的章节写「不适用」而不是删段；
  *   6. 代码块语言：开围栏必须带语言标记（纯文本用 `text`）；
  *   7. k-spider 专属：含待确认内容的架构文档必须登记到 `20-adr/README.md`；
- *      历史路径/命令模式不得复活。
+ *      历史路径/命令模式不得复活；
+ *   8. ADR 正文不承载进度：新 ADR 不得出现 `## 待办`；0004–0008 为旧模板历史豁免。
  *
  * 与状态检查的分工：本脚本只问「有没有、登记没登记、格式对不对」；**两处状态是否一致**、
  * 索引是否与正文对应、已实现规格是否补了验收结论，归 `check-doc-status.mjs`。
@@ -56,6 +57,15 @@ const LEGACY_ADRS = new Set([
   `${ADR_DIR}/0001-admin-central-scheduling.md`,
   `${ADR_DIR}/0002-grpc-transport.md`,
   `${ADR_DIR}/0003-docs-and-skill-governance.md`,
+]);
+
+/** 旧模板遗留待办：仅 0004–0008 允许，正文不改；进度见 roadmap。 */
+const LEGACY_TODO_ADRS = new Set([
+  `${ADR_DIR}/0004-docs-and-skill-governance-v2.md`,
+  `${ADR_DIR}/0005-engineering-gates-first.md`,
+  `${ADR_DIR}/0006-frontend-static-gates.md`,
+  `${ADR_DIR}/0007-ci-parallel-jobs.md`,
+  `${ADR_DIR}/0008-grpc-contract-project.md`,
 ]);
 
 /** 有 README 索引的文档目录：由实际文件推导，新增目录不能漏检。 */
@@ -168,6 +178,10 @@ for (const file of adrFiles) {
   for (const part of REQUIRED_ADR_PARTS) {
     if (!part.pattern.test(text)) failures.push(`${file} 缺少${part.label}`);
   }
+
+  if (!LEGACY_TODO_ADRS.has(file) && /^## 待办/m.test(text)) {
+    failures.push(`${file} 含「## 待办」；ADR 正文不承载进度，进度写 roadmap`);
+  }
 }
 
 // ── 4. 标题不编号 ───────────────────────────────────────────────────────
@@ -269,6 +283,7 @@ if (failures.length > 0) {
     `\n判据：${DOCS_INDEX}「文件命名」「文档状态」「写作原则」、` +
       `${ADR_DIR}/README.md「规则」与 docs/10-architecture/README.md「技术文档骨架」。` +
       '\n状态块缺失就补上；新文档补进所属目录 README；ADR 缺章节按模板补齐；' +
+      '\nADR 的进度写 roadmap，不在正文新增待办；' +
       '\n标题去掉编号（顺序交给正文与列表）；架构文档按模板补齐，不适用也要保留小节。' +
       '\n两处状态是否一致由 check-doc-status.mjs 判定。',
   );

@@ -8,20 +8,27 @@
 存在的意义：让「我知道这里有问题」不再只存在于某次对话里。条目被修复后**不删除**，
 改为在「结论」列写明结果 —— 记录「曾经错在哪、怎么定的」比只留一份待办更有价值。
 
-> 开放中既列可复现问题，也列尚未落地的能力缺口；后者只保留一句影响与方向，
-> 模块状态与里程碑进度以根 [README.md](../../README.md) 状态表和 [roadmap.md](roadmap.md) 为准。
+> 开放中只列可定位的问题；尚未落地的模块能力见本文「能力缺口」，其进度以
+> 根 [README.md](../../README.md) 状态表和 [roadmap.md](roadmap.md) 为准。
 
 ## 开放中
 
 | # | 问题 | 影响 | 复现/证据 | 处理方向 |
 | --- | --- | --- | --- | --- |
 | 1 | v1 测试仍是唯一后端服务门禁 | v2 已有架构/契约守卫与 gRPC 契约测试，但服务逻辑仍无测试；v1 与 v2 代码脱节 | `src/k-spider-test/` 引用归档项目；`tests/k-spider-guards/` 只覆盖布局与契约，`tests/k-spider-grpc-tests/` 只覆盖消息 round-trip；见 [testing.md](../30-guides/testing.md)「测试分层」 | v2 服务测试随 M2/M3 落地后替换，v1 测试不长期双轨 |
-| 3 | admin / crawler / web 只有骨架，process 未开始 | 无法端到端跑通「抓取 → 处理 → 展示」 | 根 [README.md](../../README.md) 状态表 | 按 [roadmap.md](roadmap.md) 的 M2–M5 推进 |
 | 4 | 前端构建产物尚未接入 admin 托管 | web 只能独立开发服务器运行，生产同源链路未验证 | 见 [admin.md](../10-architecture/admin.md)「前端托管」与 [web.md](../10-architecture/web.md)「配置」 | M5 接入同源部署并补 E2E |
-| 5 | 认证、调度、对账只有设计，没有实现 | 无法用测试证明契约成立 | 见 [auth.md](../10-architecture/auth.md)、[distributed.md](../10-architecture/distributed.md) | 实现时逐条对应「测试与守门」章节补测试 |
-| 6 | 待确认事项较多且分散在架构文档 | 实现前需要逐项确认，容易漏 | 集中索引见 [20-adr/README.md](../20-adr/README.md)「待确认」 | 实现对应模块前先关闭该模块的待确认项 |
+| 6 | 待确认事项分散在架构文档与指南 | 实现前需要逐项确认，指南类没有统一入口 | 契约 / 架构类见 [20-adr/README.md](../20-adr/README.md)「待确认」；指南类见 [30-guides/README.md](../30-guides/README.md)「指南待确认索引」 | 实现前先关闭对应模块的契约 / 架构项；指南项按索引逐项跟进 |
 | 7 | `src/k-spider-dotnet-old/` 归档仍在仓库 | 全仓检索、依赖扫描与新手阅读会命中历史代码 | 根 [README.md](../../README.md) 项目结构 | 新测试替换 v1 后评估移出仓库或保持只读归档 |
 | 11 | CPM 中声明了未引用的 `Npgsql` 版本 | 依赖清单与实际引用不一致，容易被误读为数据访问选型已定 | `Directory.Packages.props` 有 `Npgsql` 9.0.3；当前 v2 项目没有对应 `PackageReference`；[AGENTS.md](../../AGENTS.md) 注明数据访问目标 linq2db 待确认 | 数据访问选型确认后清理或补引用；在此之前不把 `Npgsql` 当作既定选型 |
+
+## 能力缺口（按 roadmap 推进）
+
+> 这些是模块状态 / 能力缺口，不是可复现缺陷；进度以 [roadmap.md](roadmap.md) 为准。
+
+| # | 缺口 | 影响 | 方向 |
+| --- | --- | --- | --- |
+| 3 | admin / crawler / web 只有骨架，process 未开始 | 无法端到端跑通「抓取 → 处理 → 展示」 | 按 [roadmap.md](roadmap.md) 的 M2–M5 推进 |
+| 5 | 认证、调度、对账只有设计，没有实现 | 无法用测试证明契约成立 | 实现时逐条对应「测试与守门」章节补测试 |
 
 ## 已处理
 
