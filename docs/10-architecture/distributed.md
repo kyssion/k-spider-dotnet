@@ -1,7 +1,7 @@
 # k-spider 分布式架构方案
 
 > 状态：已确认
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 本文定义 `sys_node` / `sys_task` 语义、状态机、调度、对账、取消与故障边界；物理结构以
 [002_sys_tables.sql](../../db/002_sys_tables.sql) 为唯一权威。业务表、平台架构与认证见本文「相关文档」。
@@ -109,7 +109,10 @@ admin 定期 DELETE 终态且 `update_time` 超过 N 天（默认 7 天，配置
 ### gRPC 双向流
 
 - HTTP/2 长连接：节点启动后主动 `Connect` 到 admin，连接存活即节点存活；**节点零入站端口**，admin 不需要直连节点；
-- 契约项目：proto 与生成代码计划放 `src/k-spider-grpc/`（待创建），admin / crawler 共同引用；`task_detail` 以 JSON 字符串原样传递，各服务不共享实体项目；
+- 契约项目：proto 与生成代码在 `src/k-spider-grpc/`，admin / crawler 共同引用；proto 草案见该项目的
+  `Protos/scheduler.proto`，字段仍待确认；项目入口见 [k-spider-grpc/README.md](../../src/k-spider-grpc/README.md)；
+  决策见 [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)；
+  `task_detail` 以 JSON 字符串原样传递，各服务不共享实体项目；
 - 上行：`register` / `heartbeat`（10s，负载快照）/ `task_result`（终态唤醒）/ `probe_reply`；
 - 下行：`register_ack` / `task_dispatch` / `task_cancel` / `probe_request`；
 - 每连接写操作加锁序列化下行；节点断线后指数退避重连（1/2/5/10/30s），重连成功即重新绑定 `node_id`。
@@ -132,7 +135,8 @@ REST 管理 API 与 gRPC 使用**分离的监听端点**：REST 走 HTTP/1.1，g
 ## 测试与守门
 
 - 状态机、派发 token、条件更新、对账重派、取消检查点必须有测试；
-- gRPC 契约测试与 `task_detail` / `extra` JSON 契约测试在协议定稿后补齐；
+- gRPC 契约消息 round-trip 已在 `tests/k-spider-grpc-tests/`；字段定稿后补字段 / 错误码 / 流控契约测试；
+- `task_detail` / `extra` JSON 契约测试在键名与 casing 定稿后补齐；
 - 节点认证与端口拆分属于部署验收项；
 - 文档与 DDL 的引用检查见 [testing.md](../30-guides/testing.md)「测试分层」。
 
@@ -140,7 +144,7 @@ REST 管理 API 与 gRPC 使用**分离的监听端点**：REST 走 HTTP/1.1，g
 
 | 事项 | 说明 |
 |---|---|
-| proto 契约 | 消息字段、错误码与流控细节（实现时定） |
+| proto 契约 | 草案见 `src/k-spider-grpc/Protos/scheduler.proto`；消息字段、错误码与流控仍待确认 |
 | `task_detail` / `extra` JSON 契约 | 键名、类型、枚举与 casing；`dispatch_token` 键名先随 proto 定稿 |
 | 端口号与 TLS 配置 | 具体监听端口号、证书/密钥来源；协议分离已由 ADR 0002 确认 |
 | 节点认证 | mTLS / 共享 token / 网络隔离的选型（实现前确认） |
@@ -153,4 +157,5 @@ REST 管理 API 与 gRPC 使用**分离的监听端点**：REST 走 HTTP/1.1，g
 - [system-overview.md](system-overview.md)、[data-model.md](data-model.md)、[auth.md](auth.md)：相邻契约；
 - [admin.md](admin.md)：调度与对账的实现落点；
 - [002_sys_tables.sql](../../db/002_sys_tables.sql)：系统设施表物理结构；
-- [0002-grpc-transport.md](../20-adr/0002-grpc-transport.md)：传输与端口拆分决策。
+- [0002-grpc-transport.md](../20-adr/0002-grpc-transport.md)：传输与端口拆分决策；
+- [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)：共享契约项目与生成代码。

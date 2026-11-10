@@ -100,7 +100,7 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
   对账扫描走裸 SQL；异常包 `KDbException`；
 - 数据访问异常（`KDbException`）与数据本身失败分开：前者不消耗重试次数；
 - 源适配器线程安全：游标与页状态走参数/返回值，不用可变实例字段；
-- 分布式契约（proto + 生成代码）放 `src/k-spider-grpc/`（待创建），admin / crawler 共同引用；各服务不共享实体项目；
+- 分布式契约（proto + 生成代码）在 `src/k-spider-grpc/`，admin / crawler 共同引用；proto 字段仍待确认，草案见该项目的 `Protos/scheduler.proto`；各服务不共享实体项目；
 - 新增 NuGet 包：`Directory.Packages.props` 加 `PackageVersion` + csproj 加无版本 `PackageReference`；
 - 测试夹具用接口真实响应，新增夹具登记来源与抓取时间；Live 用例门禁排除；
 - 凭据红线：仓库不提交真实凭据；环境值由部署方注入。

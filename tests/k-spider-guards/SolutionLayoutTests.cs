@@ -13,7 +13,9 @@ public class SolutionLayoutTests
         "src/k-spider-admin/k-spider-admin.csproj",
         "src/k-spider-crawler/k-spider-crawler.csproj",
         "src/k-spider-process/k-spider-process.csproj",
+        "src/k-spider-grpc/k-spider-grpc.csproj",
         "tests/k-spider-guards/k-spider-guards.csproj",
+        "tests/k-spider-grpc-tests/k-spider-grpc-tests.csproj",
     ];
 
     private static readonly string[] V2Projects =
@@ -21,6 +23,12 @@ public class SolutionLayoutTests
         "src/k-spider-admin/k-spider-admin.csproj",
         "src/k-spider-crawler/k-spider-crawler.csproj",
         "src/k-spider-process/k-spider-process.csproj",
+    ];
+
+    private static readonly string[] GrpcConsumers =
+    [
+        "src/k-spider-admin/k-spider-admin.csproj",
+        "src/k-spider-crawler/k-spider-crawler.csproj",
     ];
 
     [TestMethod]
@@ -69,6 +77,23 @@ public class SolutionLayoutTests
                     references.Any(reference => reference.Contains(otherName, StringComparison.OrdinalIgnoreCase)),
                     $"{project} 不应直接引用服务项目 {otherName}；跨服务契约走 src/k-spider-grpc/");
             }
+        }
+    }
+
+    [TestMethod]
+    public void V2ServicesReferenceGrpcContract()
+    {
+        foreach (var project in GrpcConsumers)
+        {
+            var document = XDocument.Load(Path.Combine(Root, project));
+            var references = document.Descendants()
+                .Where(element => element.Name.LocalName == "ProjectReference")
+                .Select(element => element.Attribute("Include")?.Value ?? string.Empty)
+                .ToArray();
+
+            Assert.IsTrue(
+                references.Any(reference => reference.Contains("k-spider-grpc", StringComparison.OrdinalIgnoreCase)),
+                $"{project} 应引用 k-spider-grpc 契约项目");
         }
     }
 

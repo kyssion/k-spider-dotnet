@@ -1,7 +1,7 @@
 # k-spider-crawler 技术文档
 
 > 状态：已确认
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 本文定义抓取服务的分层、适配器边界、抓取流程、反爬与数据访问；模块状态见根
 [README.md](../../README.md) 状态表。数据模型、调度与平台架构见本文「相关文档」。
@@ -18,7 +18,7 @@
 
 | # | 层 | 职责 |
 |---|---|---|
-| 1 | hosting | 服务启动与运行控制：初始化、系统信号监听、配置读取 |
+| 1 | hosting | 服务启动与运行控制：初始化、`Connect` 到 admin、心跳与重连、系统信号监听、配置读取 |
 | 2 | channel | 渠道任务绑定：按任务包中的 `channel_id` 加载渠道与适配器配置、管理本轮运行状态——不发现渠道、不自行定时、不亲自抓取 |
 | 3 | engine | 抓取引擎：轮次推进（列表轮 / 详情回填轮）、游标与翻页控制、`exec_status` 流转、重试——通用机制，不含单源知识 |
 | 4 | adapter | 源适配器：source / detail 的抓取实现（URL 拼装、签名、请求构造）——源差异知识的唯一落点 |
@@ -87,7 +87,7 @@ admin 派发列表轮任务后，engine 按任务包中的 `channel_id` 加载�
 
 - 通用测试约定（夹具 / Live / 门禁）见 [testing.md](../30-guides/testing.md)；
 - 本服务分层：契约测试（离线）/ 夹具回归（真实响应）/ Live 连通性（门禁排除）；
-- 当前门禁由 v1 过渡测试承担，替换条件见 [testing.md](../30-guides/testing.md)「测试分层」；
+- crawler 服务测试仍由 v1 过渡测试承担；v2 架构/契约守卫与 gRPC 契约测试已在 solution 内，替换条件见 [testing.md](../30-guides/testing.md)「测试分层」；
 - 适配器注册表、write_mode、水位刷新、`KDbException` 与重试边界必须有测试。
 
 ## 待确认事项
@@ -103,6 +103,7 @@ admin 派发列表轮任务后，engine 按任务包中的 `channel_id` 加载�
 ## 相关文档
 
 - [system-overview.md](system-overview.md)、[data-model.md](data-model.md)、[distributed.md](distributed.md)：平台、数据与调度契约；
+- [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)：admin / crawler 共用的 proto 与生成代码；
 - [features.md](../00-overview/features.md)：数据源清单；
 - [process.md](process.md)：下游消费方；
 - [testing.md](../30-guides/testing.md)：夹具与 Live 分层。

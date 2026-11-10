@@ -11,7 +11,8 @@
 
 顶层展示与操作界面：通过同源 admin REST API 获取数据与执行操作；不直连数据库，不承载业务规则。认证与权限由 admin 承载，前端负责登录态展示、路由守卫与 CSRF token 携带。
 
-当前 `web/` 只有 `App.tsx` 的骨架页、入口 `main.tsx`、基础样式与 Playwright 冒烟用例；业务页面与 API 客户端尚未接入。
+当前 `web/` 有 `App.tsx` 骨架页、入口 `main.tsx`、基础样式、`web/src/lib/cn.ts` 工具函数与 Playwright 冒烟；
+ESLint / Prettier / Vitest / 体积预算已接入，业务页面与 API 客户端尚未接入。
 
 ## 结构与约定
 

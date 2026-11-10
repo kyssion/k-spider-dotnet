@@ -9,4 +9,8 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\k-spider-grpc\k-spider-grpc.csproj" />
+    </ItemGroup>
+
 </Project>

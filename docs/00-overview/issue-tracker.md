@@ -8,18 +8,19 @@
 存在的意义：让「我知道这里有问题」不再只存在于某次对话里。条目被修复后**不删除**，
 改为在「结论」列写明结果 —— 记录「曾经错在哪、怎么定的」比只留一份待办更有价值。
 
+> 开放中既列可复现问题，也列尚未落地的能力缺口；后者只保留一句影响与方向，
+> 模块状态与里程碑进度以根 [README.md](../../README.md) 状态表和 [roadmap.md](roadmap.md) 为准。
+
 ## 开放中
 
 | # | 问题 | 影响 | 复现/证据 | 处理方向 |
 | --- | --- | --- | --- | --- |
-| 1 | v1 测试仍是唯一后端服务门禁 | v2 已有架构/契约守卫，但服务逻辑仍无测试；v1 与 v2 代码脱节 | `src/k-spider-test/` 引用归档项目；`tests/k-spider-guards/` 只覆盖布局与契约；见 [testing.md](../30-guides/testing.md)「测试分层」 | v2 服务测试随 M2/M3 落地后替换，v1 测试不长期双轨 |
-| 2 | `src/k-spider-grpc/` 尚未创建 | admin / crawler 无法共享 proto 与生成代码 | 见 [distributed.md](../10-architecture/distributed.md)「gRPC 双向流」 | 作为 M2 第一步创建，先定 proto 再写调度 |
+| 1 | v1 测试仍是唯一后端服务门禁 | v2 已有架构/契约守卫与 gRPC 契约测试，但服务逻辑仍无测试；v1 与 v2 代码脱节 | `src/k-spider-test/` 引用归档项目；`tests/k-spider-guards/` 只覆盖布局与契约，`tests/k-spider-grpc-tests/` 只覆盖消息 round-trip；见 [testing.md](../30-guides/testing.md)「测试分层」 | v2 服务测试随 M2/M3 落地后替换，v1 测试不长期双轨 |
 | 3 | admin / crawler / web 只有骨架，process 未开始 | 无法端到端跑通「抓取 → 处理 → 展示」 | 根 [README.md](../../README.md) 状态表 | 按 [roadmap.md](roadmap.md) 的 M2–M5 推进 |
 | 4 | 前端构建产物尚未接入 admin 托管 | web 只能独立开发服务器运行，生产同源链路未验证 | 见 [admin.md](../10-architecture/admin.md)「前端托管」与 [web.md](../10-architecture/web.md)「配置」 | M5 接入同源部署并补 E2E |
 | 5 | 认证、调度、对账只有设计，没有实现 | 无法用测试证明契约成立 | 见 [auth.md](../10-architecture/auth.md)、[distributed.md](../10-architecture/distributed.md) | 实现时逐条对应「测试与守门」章节补测试 |
 | 6 | 待确认事项较多且分散在架构文档 | 实现前需要逐项确认，容易漏 | 集中索引见 [20-adr/README.md](../20-adr/README.md)「待确认」 | 实现对应模块前先关闭该模块的待确认项 |
 | 7 | `src/k-spider-dotnet-old/` 归档仍在仓库 | 全仓检索、依赖扫描与新手阅读会命中历史代码 | 根 [README.md](../../README.md) 项目结构 | 新测试替换 v1 后评估移出仓库或保持只读归档 |
-| 9 | HTTPS 推送在修改 `.github/workflows/` 时被拒绝 | PAT 缺 `workflow` 权限时，CI 相关提交无法通过 HTTPS 推送 | `remote rejected ... without 'workflow' scope` | 改用 SSH 远端（`git@github.com:kyssion/k-spider-dotnet.git`，本次已通过 SSH 推送），或给 PAT 补 `workflow` 权限 |
 | 11 | CPM 中声明了未引用的 `Npgsql` 版本 | 依赖清单与实际引用不一致，容易被误读为数据访问选型已定 | `Directory.Packages.props` 有 `Npgsql` 9.0.3；当前 v2 项目没有对应 `PackageReference`；[AGENTS.md](../../AGENTS.md) 注明数据访问目标 linq2db 待确认 | 数据访问选型确认后清理或补引用；在此之前不把 `Npgsql` 当作既定选型 |
 
 ## 已处理
@@ -40,6 +41,8 @@
 | L | v1 测试依赖树存在已知漏洞（`MySqlConnector` 2.2.5 / `System.Security.Cryptography.Pkcs` 8.0.1） | 已用 CPM 传递依赖钉版升级到 2.6.1 / 8.0.2；v1 测试 227 通过。来源 GHSA-473q-m89c-ghf8 / GHSA-846f-f764-76mx / GHSA-2fmv-rv2c-59x7 |
 | M | v2 前端 / CI 门禁弱于文档治理 | 已补 ESLint / Prettier / Vitest / 体积预算、CI `pnpm audit`、测试报告上传与按域并行；决策见 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md) 与 [0007-ci-parallel-jobs.md](../20-adr/0007-ci-parallel-jobs.md) |
 | N | 前端依赖审计发现已知漏洞（Vite 7.3.6 / source-map-js 1.2.1 / minimatch <11.0.1） | 已升级 Vite 7.3.7，并在 `web/pnpm-workspace.yaml` 钉 `source-map-js` / `minimatch`；`pnpm audit` 0 漏洞 |
+| O | HTTPS 推送在修改 `.github/workflows/` 时被拒绝 | 已将 `origin` 改为 SSH 并成功推送；PAT 不再保存在 `.git/config`，建议仍轮换该 PAT |
+| P | `src/k-spider-grpc/` 尚未创建 | 已创建 `src/k-spider-grpc/`（proto 草案 + 生成代码）与 `tests/k-spider-grpc-tests/`；admin / crawler 已引用；字段确认仍待 M2 |
 
 ## 如何新增条目
 

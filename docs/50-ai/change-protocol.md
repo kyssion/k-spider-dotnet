@@ -24,7 +24,7 @@
 | 类型 | k-spider 中的典型改动 |
 |---|---|
 | A. 功能变更 | 登录页、账号管理、原始数据只读浏览、分析看板 |
-| B. 结构变更 | 创建 `src/k-spider-grpc/`、增加 v2 测试项目、调整服务分层 |
+| B. 结构变更 | 调整 `src/k-spider-grpc/` 契约、增加 v2 测试项目、调整服务分层 |
 | C. 契约变更 | `record_key` 格式、`channel.schedule` JSON、`task_detail` 字段、REST DTO、DDL |
 | D. 修复 | write_mode 重复写入、双键水位漏行、取消未生效 |
 | E. 重构 | 提取 repository、重命名内部类型、目录调整（外部行为不变） |
@@ -75,6 +75,7 @@
 | 新增/修改系统设施表 | [distributed.md](../10-architecture/distributed.md) 与 `db/002_sys_tables.sql` |
 | 新增/修改认证行为或表 | [auth.md](../10-architecture/auth.md) 与 `db/003_auth_tables.sql` |
 | 新增/修改调度、任务、节点 | [distributed.md](../10-architecture/distributed.md) |
+| 新增/修改 gRPC 契约或 proto | [distributed.md](../10-architecture/distributed.md)、[0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md) 与 `tests/k-spider-grpc-tests/` |
 | 新增/修改 crawler 分层、适配器、反爬 | [crawler.md](../10-architecture/crawler.md) |
 | 新增/修改 admin 实现或 REST API | [admin.md](../10-architecture/admin.md)；契约细节按主题指向 distributed/auth |
 | 新增/修改 web 页面或前端约定 | [web.md](../10-architecture/web.md) |

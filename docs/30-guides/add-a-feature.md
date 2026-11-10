@@ -28,6 +28,7 @@
 | --- | --- | --- | --- |
 | 业务表 / DDL | [data-model.md](../10-architecture/data-model.md) 与 [001_business_tables.sql](../../db/001_business_tables.sql) | repository、服务、写入路径 | DDL 幂等、write_mode、双键水位、update_time 刷新 |
 | 系统设施表 / 调度 | [distributed.md](../10-architecture/distributed.md) 与 [002_sys_tables.sql](../../db/002_sys_tables.sql) | admin 的 Scheduler / Reconciliation / Grpc | 状态机、派发 token、重派、取消检查点 |
+| gRPC 契约 / proto | [distributed.md](../10-architecture/distributed.md) 与 [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md) | `src/k-spider-grpc/Protos` + 生成代码 | 字段/错误码/流控确认、round-trip、admin/crawler 引用 |
 | 认证 / 账号 | [auth.md](../10-architecture/auth.md) 与 [003_auth_tables.sql](../../db/003_auth_tables.sql) | admin 的 Auth、web 登录与路由守卫 | 会话、Cookie 属性、CSRF、禁用账号生效 |
 | crawler 源接入 | [crawler.md](../10-architecture/crawler.md) 与 `channel.extra` 键表 | adapter / parser / repository | 夹具回归、翻页停止、失败重试边界 |
 | admin REST / 托管 | [admin.md](../10-architecture/admin.md) | Api / WebHosting | 端点契约、错误码、SPA fallback |
@@ -35,6 +36,13 @@
 | 用户可见功能范围 | [40-specs/README.md](../40-specs/README.md) 与对应规格 | 按上述落点拆小步 | 验收标准逐条有测试或标注未覆盖 |
 
 ### 按落点的最小检查清单
+
+**gRPC 契约 / proto**
+
+- 先读 [distributed.md](../10-architecture/distributed.md)「gRPC 双向流」与 [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)；
+- proto 字段仍是草案，确认前不要当作稳定契约；
+- 改 `src/k-spider-grpc/Protos/scheduler.proto` 后重新构建，生成代码不手改；
+- 补 `tests/k-spider-grpc-tests` 的 round-trip；字段/错误码/流控确认后同步 distributed.md 与 roadmap。
 
 **crawler 新源 / 适配器**
 
@@ -79,14 +87,6 @@
 8. **验证**：跑 `./scripts/verify.sh`，记录实际输出；
 9. **交付**：按 [collaboration-model.md](../50-ai/collaboration-model.md) 的四段式汇报，
    列出未覆盖项与后续。
-
-## 按主题查契约
-
-- 涉及数据模型或 DDL：先改 [data-model.md](../10-architecture/data-model.md) 与
-  [001_business_tables.sql](../../db/001_business_tables.sql) 的契约，再改代码；
-- 涉及调度/任务：以 [distributed.md](../10-architecture/distributed.md) 为准；
-- 涉及认证/账号：以 [auth.md](../10-architecture/auth.md) 为准；
-- 涉及 REST/gRPC 契约：先改对应架构文档，再改实现与前端类型。
 
 ## 配置与凭据
 

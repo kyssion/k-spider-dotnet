@@ -31,6 +31,7 @@ ADR 就是为了把「权衡过程」固化下来。
 - 每份决策必须有状态、日期、决策人与关联权威文档；文件命名与文档状态见 [docs/README.md](../README.md)；
 - 决策与权威文档冲突时，以最新已确认决策为准，并在同一次改动中修正权威文档；
 - ADR 只增不改；需要改变决策时新增一篇，并在新旧两篇中互相引用；仅允许更新状态行与索引；
+- 新 ADR 正文不承载进度或待办：进度归 [roadmap.md](../00-overview/roadmap.md)，问题归 [issue-tracker.md](../00-overview/issue-tracker.md)，门禁判据归 [testing.md](../30-guides/testing.md)；模板不含待办；0005–0008 的旧待办作为历史快照，不再更新；
 - 每篇必须包含「备选项」与「后果（含重新评估触发条件）」。没有备选项对比的 ADR 只是公告；
   没有重新评估条件的 ADR 会被永远遵守，哪怕当初的前提早已不成立；
 - 新增 ADR 后必须更新本文底部的索引表；
@@ -39,8 +40,8 @@ ADR 就是为了把「权衡过程」固化下来。
   冲突时改正文。
 
 **历史说明**：0001–0003 写于 ADR 0004 之前，保留原文（包括其中的旧脚本名与旧路径），
-不追溯补「决策人 / 备选项 / 后果」；新 ADR 一律按本文「模板」执行，现行文档守卫见
-[docs/README.md](../README.md)。
+不追溯补「决策人 / 备选项 / 后果」；0005–0008 的「待办」是旧模板的历史快照，不再更新；
+新 ADR 一律按本文「模板」执行，现行文档守卫见 [docs/README.md](../README.md)。
 
 ## 模板
 
@@ -74,17 +75,12 @@ ADR 就是为了把「权衡过程」固化下来。
 - 负面（需要接受的代价）：
 - 需要同步修改的位置：
 - 触发重新评估的条件：
-
-## 待办
-
-- [ ] 同步权威文档
-- [ ] 更新代码 / DDL / 配置
-- [ ] 更新测试与门禁
 ```
 
 ## 待确认
 
 详细描述只在对应权威文档的待确认章节/条目中维护，本表只做入口索引。
+本表只索引契约 / 架构类待确认项；指南中的流程 / 工具待确认项留在原文档与 roadmap / issue-tracker。
 
 | 事项 | 入口 |
 | --- | --- |
@@ -95,7 +91,7 @@ ADR 就是为了把「权衡过程」固化下来。
 | crawler 抓取配置键 | [crawler.md](../10-architecture/crawler.md) |
 | 反爬策略细节 | [crawler.md](../10-architecture/crawler.md) |
 | `sys_task.task_detail` / `extra` | [distributed.md](../10-architecture/distributed.md) |
-| proto 契约与字段 | [distributed.md](../10-architecture/distributed.md) |
+| proto 契约与字段 | [0008-grpc-contract-project.md](0008-grpc-contract-project.md) / [distributed.md](../10-architecture/distributed.md) |
 | 端口号与 TLS 配置 | [distributed.md](../10-architecture/distributed.md) |
 | 同渠道互斥持久化 | [distributed.md](../10-architecture/distributed.md) |
 | 对账参数默认值 | [distributed.md](../10-architecture/distributed.md) |
@@ -136,10 +132,12 @@ ADR 就是为了把「权衡过程」固化下来。
 | [0001-admin-central-scheduling.md](0001-admin-central-scheduling.md) | admin 中央调度 | 已确认 |
 | [0002-grpc-transport.md](0002-grpc-transport.md) | gRPC 传输与端口拆分 | 已确认 |
 | [0003-docs-and-skill-governance.md](0003-docs-and-skill-governance.md) | 文档与技能治理 | 已确认 |
-| [0004-docs-and-skill-governance-v2.md](0004-docs-and-skill-governance-v2.md) | 文档治理 v2：词表、索引与守卫拆分 | 已确认 |
+| [0004-docs-and-skill-governance-v2.md](0004-docs-and-skill-governance-v2.md) | 文档治理 v2：词表、索引与守卫拆分（顺序条款由 0007 细化） | 已确认 |
 | [0005-engineering-gates-first.md](0005-engineering-gates-first.md) | 工程基座加固先于分布式实现 | 已确认 |
 | [0006-frontend-static-gates.md](0006-frontend-static-gates.md) | 前端静态门禁采用 ESLint + Prettier + Vitest + 体积预算 | 已确认 |
 | [0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md) | CI 按域并行，质量口径与 verify 同源 | 已确认 |
+| [0008-grpc-contract-project.md](0008-grpc-contract-project.md) | gRPC 契约项目采用共享生成库 | 已确认 |
+| [0009-adr-does-not-track-progress.md](0009-adr-does-not-track-progress.md) | ADR 不承载进度：移除模板待办 | 已确认 |
 
 ### 历史（已取代 / 已废弃）
 

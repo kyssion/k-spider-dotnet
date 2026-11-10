@@ -15,6 +15,7 @@
 | 技能清单检查 | `scripts/check-skills-manifest.mjs` | 是 | 受管技能与磁盘一致 |
 | 后端服务测试 | 各服务测试项目（待落地） | 是（落地后） | 领域规则、状态机、REST/gRPC 契约 |
 | v2 架构 / 契约守卫 | `tests/k-spider-guards/` | 是 | 解决方案布局、DDL 幂等与表清单、CPM/编译门禁配置 |
+| gRPC 契约 | `tests/k-spider-grpc-tests/` | 是 | proto 消息 round-trip；字段定稿后补字段 / 错误码 / 流控 |
 | v1 过渡测试 | `src/k-spider-test/` | 是 | 排除 `TestCategory=Live`；服务测试落地后替换 |
 | 前端纯逻辑 | `web/src/**/*.test.ts` | 是 | Vitest；工具函数、格式化等可脱离 DOM 的逻辑 |
 | 前端 E2E | `web/tests/` | 是 | Playwright；当前为骨架冒烟，API 在用例内 mock |
@@ -22,9 +23,9 @@
 
 ### 当前门禁与目标门禁
 
+下表是门禁判据与当前快照；**进度勾选以 [roadmap.md](../00-overview/roadmap.md) 为准**。
 当前后端服务测试由 v1 过渡测试承担；v2 已有架构/契约守卫项目，服务测试仍待 M2/M3。
-下表把“现在有什么”与“还要补什么”分开，避免把 v1 通过误读为 v2 已验证；里程碑顺序见
-[roadmap.md](../00-overview/roadmap.md)「M1.5」。
+避免把 v1 通过误读为 v2 已验证。
 
 | 门禁 | 当前 | 目标 / 后续 |
 | --- | --- | --- |
@@ -42,7 +43,7 @@
 
 ### v2 测试项目接入要求
 
-当前已建立 `tests/k-spider-guards/`，作为 v2 守卫的第一片；v2 服务测试项目按同一要求落地。
+当前已建立 `tests/k-spider-guards/` 与 `tests/k-spider-grpc-tests/`；v2 服务测试项目按同一要求落地。
 测试项目落地时必须同时满足以下条件，否则视为“只在本机跑过”：
 
 - 加入 `k-spider-dotnet.sln`，`dotnet build`、`dotnet format` 与 `dotnet test` 都能覆盖；
@@ -55,7 +56,8 @@
 ### 架构与契约守卫
 
 当前 `tests/k-spider-guards/` 已覆盖解决方案布局、DDL 幂等与表清单、CPM / 编译门禁配置；
-服务分层与错误码守卫随 M2/M3 补。v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
+`tests/k-spider-grpc-tests/` 已覆盖 proto 消息 round-trip；服务分层与错误码守卫随 M2/M3 补。
+v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 
 - **模块依赖方向**：admin / crawler / process 不引用彼此的内部实现，只依赖契约；
 - **DDL 与文档**：DDL 幂等、COMMENT / CHECK 完整，且语义与 [data-model.md](../10-architecture/data-model.md) 的规则一致；
@@ -83,7 +85,8 @@
 
 ## 夹具
 
-- 夹具使用接口真实响应，新增夹具必须登记来源与抓取时间；
+- 夹具使用接口真实响应，新增夹具必须登记来源与抓取时间；v1 夹具登记见
+  [TestData/README.md](../../src/k-spider-test/TestData/README.md)，v2 夹具位置与登记方式待确认；
 - 夹具不得包含真实凭据、Cookie 或个人数据；
 - Live 用例用 `TestCategory=Live` 标记，门禁命令显式排除。
 

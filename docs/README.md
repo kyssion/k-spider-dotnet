@@ -29,6 +29,8 @@
 | [check-doc-references.mjs](../scripts/check-doc-references.mjs)、[check-doc-duplication.mjs](../scripts/check-doc-duplication.mjs)、[check-doc-structure.mjs](../scripts/check-doc-structure.mjs)、[check-doc-status.mjs](../scripts/check-doc-status.mjs) | 文档引用、重复、结构、状态守卫 | `./scripts/verify.sh` 自动执行 |
 | [check-skills-manifest.mjs](../scripts/check-skills-manifest.mjs) | 受管技能清单与磁盘一致性检查 | `./scripts/verify.sh` 自动执行 |
 
+> 文档之间的链接是导航关系，不表示权威顺序；同一事实的权威归属只看本文「内容归属」。
+
 ## 文件命名
 
 - 目录前缀 `00-` `10-` … 用于固定阅读顺序，新增目录请沿用编号（留 10 的间隔便于插入）。
@@ -93,7 +95,8 @@
 5. **失效即删除**：文档描述的行为被代码推翻时，同一次提交内修正文档，不留矛盾。
 6. **现状与规划分开**：写「已有」必须能在代码里指出处；还没落地的写进 [roadmap.md](00-overview/roadmap.md)
    或 `40-specs/`，不得在架构文档里写成现状 —— 读者会把「设计成这样」读成「已经这样」。
-7. **未确认不落地**：按 [20-adr/README.md](20-adr/README.md)「规则」登记待确认事项，不把猜测写成事实。
+7. **未确认不落地**：按 [20-adr/README.md](20-adr/README.md)「规则」登记契约 / 架构类待确认事项，不把猜测写成事实；
+   指南中的流程 / 工具待确认项保留在原文档与 roadmap / issue-tracker，不进入 ADR 待确认表。
 8. **目录 README 是文件索引**：新增/删除文件时，同一次改动更新所属目录 README 和必要的目录索引。
 
 唯一例外是**短命令与 URL 示例原样重复**：[getting-started.md](30-guides/getting-started.md)、
@@ -117,7 +120,7 @@
 | 模块边界、依赖方向、机制索引 | [system-overview.md](10-architecture/system-overview.md) |
 | 业务表语义与写入规则 | [data-model.md](10-architecture/data-model.md) |
 | 业务表物理结构 | [001_business_tables.sql](../db/001_business_tables.sql) |
-| 分布式机制、节点/任务模型、调度与对账 | [distributed.md](10-architecture/distributed.md) |
+| 分布式机制、节点/任务模型、调度与对账、gRPC 契约项目与 proto 草案 | [distributed.md](10-architecture/distributed.md) |
 | 系统设施表物理结构 | [002_sys_tables.sql](../db/002_sys_tables.sql) |
 | 认证行为、接口与配置 | [auth.md](10-architecture/auth.md) |
 | 认证表物理结构 | [003_auth_tables.sql](../db/003_auth_tables.sql) |
@@ -135,7 +138,7 @@
 | 完成清单（DoD） | [definition-of-done.md](50-ai/definition-of-done.md) |
 | 提示词模板（可直接复制的任务模板） | [prompt-library.md](50-ai/prompt-library.md) |
 | 技能目录、跨 agent 发现、上游同步 | [skills.md](50-ai/skills.md) |
-| ADR 的写法与待确认索引 | [20-adr/README.md](20-adr/README.md) |
+| ADR 的写法与架构 / 契约待确认索引 | [20-adr/README.md](20-adr/README.md) |
 | 规格的写法与索引 | [40-specs/README.md](40-specs/README.md) |
 | 状态词表与语义 | 本文「文档状态」 |
 | 文档索引、写作规则与文件命名 | 本文 |

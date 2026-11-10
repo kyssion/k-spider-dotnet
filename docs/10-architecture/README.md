@@ -1,7 +1,7 @@
 # 架构索引
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 本目录是系统结构、数据模型、分布式、认证与各服务设计的唯一权威所在；跨目录的事实归属见
 [docs/README.md](../README.md)「内容归属」。
@@ -10,7 +10,7 @@
 | --- | --- |
 | [system-overview.md](system-overview.md) | 模块边界、依赖方向、核心机制索引 |
 | [data-model.md](data-model.md) | 业务表语义、写入规则、水位与治理 |
-| [distributed.md](distributed.md) | 节点/任务模型、调度、对账、取消 |
+| [distributed.md](distributed.md) | 节点/任务模型、调度、对账、取消、gRPC 契约项目 |
 | [auth.md](auth.md) | 认证、会话、账号管理与安全配置 |
 | [crawler.md](crawler.md) | 抓取分层、适配器、反爬、仓储 |
 | [process.md](process.md) | 数据处理服务 |

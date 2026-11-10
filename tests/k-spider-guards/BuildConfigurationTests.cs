@@ -13,6 +13,7 @@ public class BuildConfigurationTests
         "src/k-spider-admin/k-spider-admin.csproj",
         "src/k-spider-crawler/k-spider-crawler.csproj",
         "src/k-spider-process/k-spider-process.csproj",
+        "src/k-spider-grpc/k-spider-grpc.csproj",
     ];
 
     [TestMethod]

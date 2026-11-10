@@ -1,7 +1,7 @@
 # 功能与数据源清单
 
 > 状态：持续更新
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 / 现状 / 缺口"，不定义规则与机制；规则分别以 [data-model.md](../10-architecture/data-model.md)、[crawler.md](../10-architecture/crawler.md)、[distributed.md](../10-architecture/distributed.md)、[auth.md](../10-architecture/auth.md) 为准。
 
@@ -36,7 +36,8 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 - **编码与解析**：JSON / HTML / GBK 等响应编码；
 - **条目级过滤**：广告/站外跳转/付费专享/非内容形态。
 
-机制、参数与边界见 [crawler.md](../10-architecture/crawler.md)。
+机制、参数与边界见 [crawler.md](../10-architecture/crawler.md)；迁移顺序与首个适配器见 [roadmap.md](roadmap.md)「M3」；
+v1 源知识与夹具登记见 [TestData/README.md](../../src/k-spider-test/TestData/README.md)。
 
 ### 反爬验证
 
@@ -51,7 +52,9 @@ k-spider 的能力与数据源清单，按域组织。本文只描述"有什么 
 
 ## 分析功能
 
-v1 已实现基础分析（入库量趋势 / 分布 / 词频）；以下为完整目标能力：
+v1 已实现基础分析（入库量趋势 / 分布 / 词频）；以下为完整目标能力，设计与边界见
+[process.md](../10-architecture/process.md)，展示见 [web.md](../10-architecture/web.md)；
+当前不预建分析引擎，见 [roadmap.md](roadmap.md)「暂不考虑」。
 
 - 语义层：维度/指标/视图声明式注册；
 - 查询引擎：语义查询 → SQL，查询预算制（无硬性时间窗），大查询异步化；
@@ -61,7 +64,9 @@ v1 已实现基础分析（入库量趋势 / 分布 / 词频）；以下为完�
 
 ## 控制台功能
 
-v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代码已清理，仅作历史参考；v2 按以下目标重写，认证相关页面见 [auth.md](../10-architecture/auth.md)。
+v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代码已清理，仅作历史参考；v2 按以下目标重写。
+页面与 API 落点见 [web.md](../10-architecture/web.md) 与 [admin.md](../10-architecture/admin.md)，认证相关页面见
+[auth.md](../10-architecture/auth.md)。
 
 - 总览：任务状态、管线积压、快讯实时性、反爬告警、节点状态；
 - 源与渠道管理：源站分类、渠道与适配器清单、健康状态；
@@ -73,7 +78,8 @@ v1 曾有总览 / 新闻 / 快讯 / 分析 / 任务 / 重放页面；前端代�
 
 ## 运维功能
 
-v1 有配置 / 部署 / 监控基础；以下为目标能力：
+v1 有配置 / 部署 / 监控基础；以下为目标能力，部署与运维目标见 [roadmap.md](roadmap.md)「M6」，
+节点与调度见 [distributed.md](../10-architecture/distributed.md)。
 
 - 配置：遵循 [AGENTS.md](../../AGENTS.md) 的配置约定；各服务专属键见对应技术文档；
 - 健康探测：注册即覆盖（接口可用性/新鲜度/积压/反爬冷却），阈值按数据节奏配置；

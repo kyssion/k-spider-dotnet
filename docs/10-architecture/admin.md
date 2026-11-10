@@ -1,7 +1,7 @@
 # k-spider-admin 技术文档
 
 > 状态：草案
-> 最后更新：2026-11-08
+> 最后更新：2026-11-09
 
 本文定义 admin 服务的实现落点与模块结构；调度、认证与业务数据语义分别以对应权威文档为准
 （见本文「相关文档」）。当前只有最小可运行入口，业务实现待补；模块状态见根
@@ -44,7 +44,8 @@
 
 ### gRPC 节点服务
 
-处理 `Connect` 双向流的生命周期、注册/复活、心跳、任务下发、取消、探测与终态回报；每连接写操作串行化。proto 与生成代码计划放 `src/k-spider-grpc/`（待创建）。
+处理 `Connect` 双向流的生命周期、注册/复活、心跳、任务下发、取消、探测与终态回报；每连接写操作串行化。
+proto 与生成代码在 `src/k-spider-grpc/`；字段仍待确认，草案见该项目的 `Protos/scheduler.proto`。
 
 ### REST 管理 API
 
@@ -91,4 +92,5 @@
 
 - [system-overview.md](system-overview.md)、[distributed.md](distributed.md)、[auth.md](auth.md)、[web.md](web.md)：admin 的上游规则与下游调用方；
 - [dev-workflow.md](../30-guides/dev-workflow.md)：启动命令、端口与前端构建；
+- [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)：gRPC 契约项目与生成代码；
 - [roadmap.md](../00-overview/roadmap.md)：M2 / M5 里程碑。

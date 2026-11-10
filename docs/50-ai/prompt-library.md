@@ -58,7 +58,7 @@
 要求：
 - 先确认状态机、派发 token、条件更新与重试上限，再写实现；
 - task_detail / extra 的 JSON 键名、类型与 casing 必须登记，不把临时字段写进生产；
-- proto 与生成代码放 src/k-spider-grpc/（待创建），admin / crawler 共同引用；
+- proto 与生成代码在 src/k-spider-grpc/；字段仍待确认，改动前先看该项目的 Protos/scheduler.proto；
 - 补状态机、token 防覆盖、对账重派、取消检查点测试；
 - 运行 ./scripts/verify.sh 并列出未覆盖项。
 ```

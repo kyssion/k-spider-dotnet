@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package kspider.scheduler.v1;
+
+option csharp_namespace = "KSpider.Grpc.Scheduler";
+
+// 草案：消息字段、错误码与流控仍待确认，确认前不视为稳定契约。
+// 状态机与消息职责见 docs/10-architecture/distributed.md。
+service Scheduler {
+  rpc Connect(stream NodeMessage) returns (stream AdminMessage);
+}
+
+message NodeMessage {
+  oneof payload {
+    Register register = 1;
+    Heartbeat heartbeat = 2;
+    TaskResult task_result = 3;
+    ProbeReply probe_reply = 4;
+  }
+}
+
+message AdminMessage {
+  oneof payload {
+    RegisterAck register_ack = 1;
+    TaskDispatch task_dispatch = 2;
+    TaskCancel task_cancel = 3;
+    ProbeRequest probe_request = 4;
+  }
+}
+
+message Register {
+  string node_id = 1;
+  string node_type = 2;
+  string device_json = 3;
+}
+
+message RegisterAck {
+  string node_id = 1;
+}
+
+message Heartbeat {
+  int32 running_tasks = 1;
+}
+
+message TaskDispatch {
+  string task_id = 1;
+  // 任务类型：取值由代码注册表校验，语义见 docs/10-architecture/distributed.md。
+  string task_type = 2;
+  string task_detail_json = 3;
+  string dispatch_token = 4;
+}
+
+message TaskResult {
+  string task_id = 1;
+  // 任务状态：取值见 docs/10-architecture/distributed.md 的状态机。
+  string status = 2;
+  string dispatch_token = 3;
+  string detail_json = 4;
+}
+
+message TaskCancel {
+  string task_id = 1;
+  string dispatch_token = 2;
+}
+
+message ProbeRequest {
+  string request_id = 1;
+  string task_id = 2;
+}
+
+message ProbeReply {
+  string request_id = 1;
+  bool alive = 2;
+}

@@ -4,4 +4,8 @@
         <RootNamespace>KSpider.Admin</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\k-spider-grpc\k-spider-grpc.csproj" />
+    </ItemGroup>
+
 </Project>

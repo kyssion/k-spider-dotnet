@@ -38,10 +38,14 @@ k-spider 是“抓取 → 处理 → 展示”的数据平台。crawler 把外�
 
 ### 边界与不变量
 
-- 模块之间只依赖契约，不依赖实现细节；跨服务数据交换走 PostgreSQL 或明确的协议；
-- 业务行只存数据语义，执行进度走 `exec_status`，重试细节进 `extra`；
-- 数据模型、DDL、调度、认证、公共接口的变更必须先登记 ADR/待确认项；
-- 各服务不共享实体项目；分布式契约（proto + 生成代码）计划放在 `src/k-spider-grpc/`（待创建）。
+本节只做索引，条款的唯一来源是各自文档：
+
+- 模块依赖方向与服务边界：见本文「模块」与各服务技术文档；
+- 数据与执行状态、写入规则、水位与时间：见 [data-model.md](data-model.md)「数据与执行状态分离」「写入规则」「水位与时间」；
+- 调度状态机、派发 token、对账与取消：见 [distributed.md](distributed.md)「状态机」「防竞态写入」「对账」「重派与取消」；
+- 认证、会话与 CSRF：见 [auth.md](auth.md)「结构与约定」「安全」；
+- gRPC 契约项目与 proto 草案：见 [distributed.md](distributed.md)「gRPC 双向流」与 [0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)；
+- 各服务不共享实体项目：见本文「模块」与根 [README.md](../../README.md) 项目结构。
 
 ## 核心流程
 

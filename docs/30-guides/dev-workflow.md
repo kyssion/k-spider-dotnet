@@ -129,7 +129,7 @@ lsof -nP -iTCP:5094 -sTCP:LISTEN
 | 现象 | 处理 |
 | --- | --- |
 | `dotnet test` 输出 NU1900（NuGet 缓存目录权限） | 本机缓存权限问题，不影响测试；必要时清理 `~/.local/share/NuGet/http-cache` 后重试 |
-| HTTPS 推送 `.github/workflows/` 被拒绝 | PAT 缺 `workflow` scope；改用 SSH 远端或补权限，见 [issue-tracker.md](../00-overview/issue-tracker.md) #9 |
+| HTTPS 推送 `.github/workflows/` 被拒绝 | 当前 `origin` 已改为 SSH；若改回 HTTPS，PAT 需 `workflow` scope，见 [issue-tracker.md](../00-overview/issue-tracker.md) O |
 | 端口被占用 | 先跑 `./scripts/stop.sh`；仍占用时按本文「后台进程收尾」检查旧实例 |
 | Playwright 浏览器缺失 | 按本文「常用命令」安装 Playwright 浏览器 |
 | 前端构建失败 | 按本文「脚本行为」重跑 `build-web.sh`，仍失败按报错定位依赖或类型 |

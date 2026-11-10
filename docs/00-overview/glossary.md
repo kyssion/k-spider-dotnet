@@ -47,4 +47,5 @@
 | 流程 | 红线 | 全仓库禁令集合，唯一权威清单 | [AGENTS.md](../../AGENTS.md)「红线」 |
 | 流程 | 完成定义（DoD） | 判定任务完成的清单 | [definition-of-done.md](../50-ai/definition-of-done.md) |
 | 流程 | 工程门禁 | 构建、格式、测试、文档与依赖检查等必须通过的质量约束 | [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」 |
+| 流程 | 契约测试 | 只验证消息 / 接口形状与 round-trip，不验证服务逻辑 | [testing.md](../30-guides/testing.md)「测试分层」 |
 | 流程 | verify | 交付前必须全绿的全量校验入口 | [dev-workflow.md](../30-guides/dev-workflow.md)「脚本行为」 |
