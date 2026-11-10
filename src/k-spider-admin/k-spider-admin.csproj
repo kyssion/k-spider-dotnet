@@ -5,6 +5,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore.Server" />
+        <PackageReference Include="linq2db" />
+        <PackageReference Include="Npgsql" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\k-spider-grpc\k-spider-grpc.csproj" />
     </ItemGroup>
 

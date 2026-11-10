@@ -1,12 +1,12 @@
 # 路线图
 
 > 状态：持续更新
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 
 路线图只保留**近期**与**已识别**的事项；远期规划除非已经写进规格文件，否则不列入。
 模块落地状态以根 [README.md](../../README.md) 状态表为准；**里程碑勾选状态是进度的唯一来源**。
 
-当前阶段：M1.5 基础设施已完成，M2 进行中；v2 服务测试与 v1 过渡测试替换归 M2/M3。
+当前阶段：M1.5 基础设施已完成，M2 进行中；admin 核心测试已落地，crawler/process 服务测试与 v1 过渡测试替换归 M3/M4。
 
 ## M0 · 契约与骨架（已完成）
 
@@ -27,7 +27,7 @@
 ## M1.5 · 工程基座加固（基础设施已完成）
 
 v2 的契约与文档已经先行，代码侧仍以骨架为主（状态见根 [README.md](../../README.md) 状态表）：
-基础设施已完成；v2 服务测试与 v1 过渡测试替换归 M2/M3，见 [issue-tracker.md](issue-tracker.md) #1。
+基础设施已完成；admin 核心测试已落地，crawler/process 服务测试与 v1 过渡测试替换归 M3/M4，见 [issue-tracker.md](issue-tracker.md) #1。
 v2 架构/契约守卫、编译与依赖门禁、`dev.sh` / `stop.sh`、前端静态门禁、CI 依赖审计/测试报告与按域并行均已落地。决策见
 [0005-engineering-gates-first.md](../20-adr/0005-engineering-gates-first.md) 与
 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md)。
@@ -42,19 +42,20 @@ v2 架构/契约守卫、编译与依赖门禁、`dev.sh` / `stop.sh`、前端�
 - [x] 统一 `verify.sh` 的 SDK 提示与 `global.json` 口径（[issue-tracker.md](issue-tracker.md) K）。
 
 判据与目标门禁见 [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」；本里程碑只定顺序，不改变任何业务契约。
-v2 服务测试与 v1 替换不在本里程碑，见 M2 最后一项与 [issue-tracker.md](issue-tracker.md) #1。
+admin 核心测试已随 M2 落地；crawler/process 服务测试与 v1 替换见 M2 最后一项与 [issue-tracker.md](issue-tracker.md) #1。
 M1.5 引入的新依赖已按红线 10 登记（前端工具见 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md)）；
 后续新增依赖仍先登记 ADR / 待确认。
 
 ## M2 · 分布式与调度（进行中）
 
 - [x] 创建 `src/k-spider-grpc/`：proto 草案与生成代码，admin / crawler 共同引用（[0008-grpc-contract-project.md](../20-adr/0008-grpc-contract-project.md)）；
+- [x] admin 模块化单体、任务状态机、PostgreSQL 仓储、认证与 REST 基座（[0010-admin-modular-monolith.md](../20-adr/0010-admin-modular-monolith.md)、[0011-admin-data-access-linq2db.md](../20-adr/0011-admin-data-access-linq2db.md)）；
 - [ ] 确认 proto 字段、错误码与流控（草案见 `src/k-spider-grpc/Protos/scheduler.proto`）；
-- [ ] admin 调度循环：读 `channel.schedule` 生成任务包，按节点负载派发；
-- [ ] 节点注册、心跳、任务下发、取消、探测与终态回报；
-- [ ] 对账与重派：无活动超时、探测 K/T、重派上限与 `abandoned` 收敛；
-- [ ] 状态机、派发 token、条件更新、取消检查点测试；
-- [ ] v1 过渡测试替换（v2 服务测试稳定后；[issue-tracker.md](issue-tracker.md) #1）。
+- [x] admin 调度循环：读 `channel.schedule` 生成任务包，按节点负载派发（admin 侧已实现，待真实 DB / 节点联调）；
+- [x] 节点注册、心跳、任务下发、取消、探测与终态回报（admin gRPC 服务端已实现，待联调）；
+- [x] 对账与重派：无活动超时、探测 K/T、重派上限与 `abandoned` 收敛（admin 侧已实现，待联调）；
+- [x] 状态机、派发 token、条件更新、取消检查点测试（admin 侧；crawler 侧随 M3）；
+- [ ] v1 过渡测试替换（crawler/process 服务测试稳定后；[issue-tracker.md](issue-tracker.md) #1）。
 
 ## M3 · crawler 首个适配器
 

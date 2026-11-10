@@ -1,9 +1,20 @@
+using KSpider.Admin.Hosting;
+using KSpider.Admin.WebHosting;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// 配置优先级：appsettings → appsettings.{环境} → K_SPIDER__ 前缀环境变量 → 代码默认值。
+builder.Configuration.AddEnvironmentVariables("K_SPIDER__");
+
+// REST 与 gRPC 使用分离监听端点：REST HTTP/1.1，gRPC HTTP/2（ADR 0002）。
+builder.WebHost.ConfigureKestrel(KestrelEndpointConfiguration.Configure);
+
+builder.Services.AddAdminServices(builder.Configuration);
+
 var app = builder.Build();
 
-// 管理控制服务 : 调度 k-spider-crawler 与 k-spider-process，并托管 web 前端。
-// 待实现（机制唯一权威见 docs/10-architecture/distributed.md 与 docs/10-architecture/auth.md）：
-//   调度与对账 / gRPC 节点服务 / REST 管理 API / 认证与账号 / 前端静态托管。
-app.MapGet("/", () => "k-spider-admin");
+app.UseAdminPipeline();
+app.MapAdminEndpoints();
+app.MapSpaFallback();
 
 app.Run();

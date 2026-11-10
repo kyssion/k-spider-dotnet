@@ -8,7 +8,7 @@
 k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、目标与非目标见 [vision.md](docs/00-overview/vision.md)；
 模块清单、落地状态与仓库结构以根 [README.md](README.md) 为唯一来源；当前处于 v2 重建期，服务代码从骨架逐步落地。
 
-`./scripts/verify.sh` 同时运行 v2 架构/契约守卫与 v1 过渡测试；v2 服务测试仍待 M2/M3，绿色不代表 v2 服务已实现。
+`./scripts/verify.sh` 同时运行 v2 架构/契约守卫、admin 核心测试与 v1 过渡测试；crawler/process 服务测试仍待 M3/M4，绿色不代表完整数据链路已实现。
 模块状态见根 [README.md](README.md) 状态表，下一步顺序与门禁边界见 [roadmap.md](docs/00-overview/roadmap.md)「M1.5」与
 [testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」；该节同时给出 M1.5 的目标门禁。
 
@@ -97,9 +97,9 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
 - 注释、日志、commit message 用中文；注释解释**为什么**，不复述代码在做什么；
 - Job / Stage / 引擎一律 async，网络调用 `await`，不要 `.Result` / `.Wait()`；
 - 事务：`BeginTran → 业务 → CommitTran`，catch 中 `RollbackTran`，不在 finally 回滚；
-- 批量写入集中在数据访问层，按 write_mode 三模式实现；目标选型 linq2db（尚未引入依赖，【待确认】实现前确认；
+- 批量写入集中在数据访问层，按 write_mode 三模式实现；数据访问选型 linq2db（已引入，见 ADR 0011；
   overwrite=`OnConflictKeyDoUpdate` / skip=`OnConflictDoNothing` / append=普通 Insert），DDL runner、双键水位、
-  对账扫描走裸 SQL；异常包 `KDbException`；
+  对账扫描与条件更新走裸 SQL；异常包 `KDbException`；
 - 数据访问异常（`KDbException`）与数据本身失败分开：前者不消耗重试次数；
 - 源适配器线程安全：游标与页状态走参数/返回值，不用可变实例字段；
 - 分布式契约（proto + 生成代码）在 `src/k-spider-grpc/`，admin / crawler 共同引用；proto 字段仍待确认，草案见该项目的 `Protos/scheduler.proto`；各服务不共享实体项目；

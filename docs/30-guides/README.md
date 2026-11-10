@@ -24,7 +24,7 @@
 
 | 事项 | 入口 |
 | --- | --- |
-| v2 服务测试项目命名、目录与夹具库 | [testing.md](testing.md)「待确认事项」 |
+| crawler/process 服务测试项目命名、目录与夹具库 | [testing.md](testing.md)「待确认事项」 |
 | 组件测试范围（jsdom / Testing Library） | [testing.md](testing.md)「待确认事项」/ [web.md](../10-architecture/web.md)「待确认事项」 |
 | Live 用例触发方式与凭据 | [testing.md](testing.md)「待确认事项」 |
 | v1 测试替换时间与迁移范围 | [testing.md](testing.md)「待确认事项」/ [issue-tracker.md](../00-overview/issue-tracker.md) #1 |

@@ -1,14 +1,14 @@
 # k-spider 认证与账号方案
 
-> 状态：已确认
-> 最后更新：2026-11-08
+> 状态：持续更新
+> 最后更新：2026-11-10
 
 本文定义认证与账号的行为、接口与配置要求；表结构以
 [003_auth_tables.sql](../../db/003_auth_tables.sql) 为唯一权威。相关模块与表结构见本文「相关文档」。
 
 ## 定位与职责
 
-认证与账号由 `k-spider-admin` 承载，前端页面在 `web/`，账号表为 `sys_user`；模块职责见 [system-overview.md](system-overview.md)。目标同源部署（admin 托管 `web/dist`），当前 web 托管尚未接入。
+认证与账号由 `k-spider-admin` 承载，前端页面在 `web/`，账号表为 `sys_user`；模块职责见 [system-overview.md](system-overview.md)。admin 服务端认证、账号管理与同源静态托管已落地；web 登录/账号页面尚未接入，真实数据库与浏览器链路尚未联调。
 
 ## 结构与约定
 
@@ -103,20 +103,26 @@ Cookie 票据声明：
 - 认证接口：`/api/auth/login`、`/api/auth/logout`、`/api/auth/change-password`、`/api/auth/me`；
 - 账号管理接口：`/api/users` 与 `/api/users/{id}` 系列。
 
-### 服务端落点（计划）
+### 服务端落点
 
 ```text
 Auth/
-  SysUser.cs
-  UserRepository.cs
+  AuthOptions.cs
+  AuthRegistration.cs
   PasswordService.cs
+  AuthService.cs
+  UserService.cs
   AuthEndpoints.cs
   UserEndpoints.cs
-  AuthPolicies.cs
-  CsrfFilter.cs
+  CsrfMiddleware.cs
+  SecurityHeadersMiddleware.cs
+  CurrentUser.cs
+
+Repository/Postgres/
+  PostgresUserRepository.cs
 ```
 
-### 前端落点（计划）
+### 前端落点（待实现）
 
 | 文件 | 对应章节 |
 |---|---|
@@ -129,30 +135,31 @@ Auth/
 
 具体页面与路由以 [web.md](web.md) 为准。
 
-### 实施顺序
+### 实施状态
 
-1. 执行 [003_auth_tables.sql](../../db/003_auth_tables.sql)；
-2. admin 实现认证与账号管理；
-3. web 实现页面与路由守卫；
-4. 接入 CSRF、HTTPS 与安全头；
-5. 补单元、集成与 E2E 测试。
+1. [003_auth_tables.sql](../../db/003_auth_tables.sql) 由部署时初始化数据库执行；
+2. admin 服务端认证、账号管理与 CSRF/安全头已实现；
+3. web 登录、账号页面与路由守卫待实现；
+4. HTTPS/HSTS 与反向代理按部署配置；
+5. 服务端单元/集成测试与前端 E2E 仍待补齐。
 
 ## 配置
 
 | 配置键 | 默认值 | 说明 |
 |---|---|---|
 | `Auth:CookieName` | `kspider.auth` | 会话 Cookie 名 |
+| `Auth:RememberMeDays` | `7` | “7 天免登录”持久 Cookie 天数 |
+| `Auth:AllowedOrigins` | 空 | 登录 Origin/Referer 白名单；开发期包含 Vite 源 |
 | `DataProtection:KeysPath` | 空 | 生产必填，密钥环目录 |
 
 全部支持 `K_SPIDER__` 前缀环境变量覆盖，例如 `K_SPIDER__AUTH__COOKIENAME=<自定义名>`。密钥路径由部署方通过环境变量注入，仓库只保留配置键。
 
 ## 测试与守门
 
-- 登录成功/失败、Cookie 属性、持久/会话 Cookie 分支、禁用账号立即失效；
-- 修改密码、登出、未登录页面与 API 行为；
-- 账号管理的权限与边界（禁用自己、最后一个 active 账号）；
-- CSRF、Origin/Referer、安全头、HTTPS 强制；
-- 前端登录跳转与路由守卫的 E2E；
+- admin 服务端已实现登录/登出/改密/当前用户与账号管理端点，核心依赖通过 `tests/k-spider-admin-tests/` 的 DI 图测试；
+- 账号管理的用户名/密码校验、禁用自己、最后一个 active 账号与重置自己密码的边界已有测试；
+- 登录成功/失败、Cookie 属性、持久/会话 Cookie 分支、禁用账号立即失效、CSRF、Origin/Referer 与安全头的测试仍待补；
+- 前端登录跳转与路由守卫的 E2E 随 web 页面落地；
 - 验收以本文“结构与约定”“核心流程”中的规则为准；安全、配置与账号管理边界逐条对照。
 
 ## 待确认事项

@@ -17,8 +17,8 @@
 它跑哪些环节见 [dev-workflow.md](docs/30-guides/dev-workflow.md)「脚本行为」。
 **红灯不提交、更不推送**（红线 12 见 [AGENTS.md](AGENTS.md)）。
 
-`verify.sh` 同时运行 v2 架构/契约守卫与 v1 过渡测试；v2 服务测试仍待 M2/M3，通过不代表 v2 服务功能完成。
-服务状态见根 [README.md](README.md) 状态表。v2 服务测试落地前，交付说明必须列出未覆盖项；
+`verify.sh` 同时运行 v2 架构/契约守卫、admin 核心测试与 v1 过渡测试；crawler/process 服务测试仍待 M3/M4，通过不代表完整数据链路已完成。
+服务状态见根 [README.md](README.md) 状态表。crawler/process 服务测试落地前，交付说明必须列出未覆盖项；
 [testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」一节给出判据与 M1.5 目标。
 
 ## 动手前：确认需要哪些前置产物

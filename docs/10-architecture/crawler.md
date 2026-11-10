@@ -1,7 +1,7 @@
 # k-spider-crawler 技术文档
 
 > 状态：已确认
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 
 本文定义抓取服务的分层、适配器边界、抓取流程、反爬与数据访问；模块状态见根
 [README.md](../../README.md) 状态表。数据模型、调度与平台架构见本文「相关文档」。
@@ -87,7 +87,7 @@ admin 派发列表轮任务后，engine 按任务包中的 `channel_id` 加载�
 
 - 通用测试约定（夹具 / Live / 门禁）见 [testing.md](../30-guides/testing.md)；
 - 本服务分层：契约测试（离线）/ 夹具回归（真实响应）/ Live 连通性（门禁排除）；
-- crawler 服务测试仍由 v1 过渡测试承担；v2 架构/契约守卫与 gRPC 契约测试已在 solution 内，替换条件见 [testing.md](../30-guides/testing.md)「测试分层」；
+- crawler 服务测试仍由 v1 过渡测试承担；v2 架构/契约守卫、gRPC 契约测试与 admin 核心测试已在 solution 内，替换条件见 [testing.md](../30-guides/testing.md)「测试分层」；
 - 适配器注册表、write_mode、水位刷新、`KDbException` 与重试边界必须有测试。
 
 ## 待确认事项

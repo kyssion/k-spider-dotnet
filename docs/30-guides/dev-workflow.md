@@ -1,7 +1,7 @@
 # 日常开发流程
 
 > 状态：持续更新
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 本文范围：常用命令、端口、脚本行为、脚本选型、进程收尾、提交与推送、环境排错。首次环境准备见
 [getting-started.md](getting-started.md)。
 
@@ -25,13 +25,14 @@
 | 前端校验闭环 | `cd web && pnpm verify` |
 | 前端格式修复 | `cd web && pnpm format` |
 | 前端开发服务器 | `cd web && pnpm dev` |
-| v2 架构 / 契约守卫 | `dotnet test k-spider-dotnet.sln --configuration Release` |
+| v2 守卫 + admin 测试 | `dotnet test k-spider-dotnet.sln --configuration Release` |
 | 后端 v1 过渡测试（排除 Live） | `dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"` |
 | 安装 Playwright 浏览器 | `pnpm --dir web exec playwright install chromium` |
 | 前端 E2E | `cd web && pnpm test:e2e` |
 | 启动 admin + web | `./scripts/dev.sh` |
 | 停止开发期进程 | `./scripts/stop.sh` |
 | 启动 admin | `dotnet run --project src/k-spider-admin` |
+| admin 核心测试（单独跑） | `dotnet test tests/k-spider-admin-tests/k-spider-admin-tests.csproj --configuration Release` |
 | 启动 crawler | `dotnet run --project src/k-spider-crawler` |
 | 初始化业务表 | `psql -d k_spider -f db/001_business_tables.sql` |
 | 初始化系统设施表 | `psql -d k_spider -f db/002_sys_tables.sql` |
@@ -41,7 +42,8 @@
 
 | 用途 | 端口 | 定义位置 | 变更时还必须同步 |
 | --- | --- | --- | --- |
-| admin 开发监听 | `5094` | [launchSettings.json](../../src/k-spider-admin/Properties/launchSettings.json) 的 `http` 配置 | [vite.config.ts](../../web/vite.config.ts) 的 `/api` 代理 |
+| admin REST（开发） | `5094` | [appsettings.json](../../src/k-spider-admin/appsettings.json) 的 `Admin:Endpoints:RestPort` | [vite.config.ts](../../web/vite.config.ts) 的 `/api` 代理 |
+| admin gRPC（开发） | `5095` | [appsettings.json](../../src/k-spider-admin/appsettings.json) 的 `Admin:Endpoints:GrpcPort` | 节点连接配置与部署端口 |
 | web 开发服务器 | `5173` | [vite.config.ts](../../web/vite.config.ts) | 文档中的端口说明 |
 | 前端 E2E preview | `5899` | [playwright.config.ts](../../web/playwright.config.ts) | `webServer` 与 `use.baseURL` |
 | crawler | 无 HTTP 端口 | 当前为 worker 骨架 | 不适用 |
@@ -55,13 +57,13 @@ Playwright 用 preview 伺服构建产物。
 ## 脚本行为
 
 - `scripts/verify.sh`：依次跑文档引用 / 重复 / 结构 / 状态四检查、技能清单、前端校验
-  （lint / format / 单元 / build / 体积）、E2E、后端构建、格式校验、v2 守卫与 v1 过渡测试
+  （lint / format / 单元 / build / 体积）、E2E、后端构建、格式校验、v2 守卫、admin 测试与 v1 过渡测试
   （排除 `TestCategory=Live`）。默认要求 dotnet / Node / pnpm / Playwright 浏览器齐全；
   仅本地冒烟可用 `--skip-tests` 跳过前端单元 / E2E 与后端测试，输出会显式标注。
 - `scripts/build-web.sh`：`pnpm install --frozen-lockfile`（失败时回退普通 install）→ `pnpm build` →
   清空 `src/k-spider-admin/wwwroot` 并复制 `web/dist`。
-- `scripts/dev.sh`：前台同时启动 admin（5094）与 web（5173），Ctrl+C 停止全部子进程。
-- `scripts/stop.sh`：按端口停止 5094 / 5173 / 5899，停后复查；未释放时非零退出。
+- `scripts/dev.sh`：前台同时启动 admin（REST 5094 / gRPC 5095）与 web（5173），Ctrl+C 停止全部子进程。
+- `scripts/stop.sh`：按端口停止 5094 / 5095 / 5173 / 5899，停后复查；未释放时非零退出。
 - `scripts/check-doc-references.mjs`：检查链接、行内路径、链接文字、章节引用、目录链接、裸文件名与措辞。
 - `scripts/check-doc-duplication.mjs`：检查跨文件/同文件的精确重复正文行。
 - `scripts/check-doc-structure.mjs`：检查状态块与日期、目录索引、ADR 必备章节、架构骨架、标题编号、
@@ -77,7 +79,7 @@ Playwright 用 preview 伺服构建产物。
 | --- | --- | --- |
 | 流程编排：调用命令、串步骤、前置检查 | bash | [verify.sh](../../scripts/verify.sh)、[build-web.sh](../../scripts/build-web.sh)、[dev.sh](../../scripts/dev.sh)、[stop.sh](../../scripts/stop.sh) |
 | 数据处理：文本 / JSON / 文件树 | Node `.mjs`，仅标准库、零依赖 | [check-doc-references.mjs](../../scripts/check-doc-references.mjs)、[sync-dotnet-skills.mjs](../../scripts/sync-dotnet-skills.mjs) |
-| 机器守卫：代码 / 契约 / 分层的断言 | C# 测试，与 `dotnet test` 同跑 | `tests/k-spider-guards/`（v2 守卫）、`src/k-spider-test/`（v1 过渡） |
+| 机器守卫：代码 / 契约 / 分层的断言 | C# 测试，与 `dotnet test` 同跑 | `tests/k-spider-guards/`（v2 守卫）、`tests/k-spider-admin-tests/`（admin 核心）、`src/k-spider-test/`（v1 过渡） |
 
 说明：Node 不是「前端专属」，它是构建期的既有依赖；`.mjs` 是 Node 的 ES Module 标准扩展名。
 bash 只做编排，递归目录、正则提取、路径解析这类逻辑交给 `.mjs`，避免 BSD / GNU 差异与中文引号问题。
@@ -112,8 +114,9 @@ lsof -nP -iTCP:5094 -sTCP:LISTEN
 
 ## 数据访问与代理
 
-- 数据库连接串、认证配置与调度参数由各服务配置提供；当前 admin 的 `appsettings.json` 只有日志与
-  `AllowedHosts`，业务配置随实现补齐；
+- 数据库连接串、认证配置与调度参数由各服务配置提供；admin 的 `appsettings.json` 已包含数据库、
+  端点、调度/对账与认证配置键，业务配置随实现补齐；
+- admin 本地启动至少需要 `K_SPIDER__DATABASE__CONNECTIONSTRING`（或等价 appsettings 值）；
 - 前端开发期通过 Vite 代理访问 `/api`，生产同源部署不需要代理。
 
 ## 测试与门禁

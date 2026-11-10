@@ -1,7 +1,7 @@
 # 问题追踪
 
 > 状态：持续更新
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 
 已发现但尚未处理的问题，以及**可复现步骤、当前影响、处理方向**。
 
@@ -15,11 +15,9 @@
 
 | # | 问题 | 影响 | 复现/证据 | 处理方向 |
 | --- | --- | --- | --- | --- |
-| 1 | v1 测试仍是唯一后端服务门禁 | v2 已有架构/契约守卫与 gRPC 契约测试，但服务逻辑仍无测试；v1 与 v2 代码脱节 | `src/k-spider-test/` 引用归档项目；`tests/k-spider-guards/` 只覆盖布局与契约，`tests/k-spider-grpc-tests/` 只覆盖消息 round-trip；见 [testing.md](../30-guides/testing.md)「测试分层」 | v2 服务测试随 M2/M3 落地后替换，v1 测试不长期双轨 |
-| 4 | 前端构建产物尚未接入 admin 托管 | web 只能独立开发服务器运行，生产同源链路未验证 | 见 [admin.md](../10-architecture/admin.md)「前端托管」与 [web.md](../10-architecture/web.md)「配置」 | M5 接入同源部署并补 E2E |
+| 1 | v1 测试仍是 crawler/process 的主要服务门禁 | v2 已有架构/契约守卫、gRPC 契约测试与 admin 核心测试，但 crawler/process 服务逻辑仍无测试；v1 与 v2 代码脱节 | `src/k-spider-test/` 引用归档项目；`tests/k-spider-guards/` 覆盖布局与契约，`tests/k-spider-grpc-tests/` 覆盖消息 round-trip，`tests/k-spider-admin-tests/` 覆盖 admin 状态机/调度/对账/认证图；见 [testing.md](../30-guides/testing.md)「测试分层」 | crawler/process 服务测试随 M3/M4 落地后替换，v1 测试不长期双轨 |
 | 6 | 待确认事项分散在架构文档与指南 | 实现前需要逐项确认，指南类没有统一入口 | 契约 / 架构类见 [20-adr/README.md](../20-adr/README.md)「待确认」；指南类见 [30-guides/README.md](../30-guides/README.md)「指南待确认索引」 | 实现前先关闭对应模块的契约 / 架构项；指南项按索引逐项跟进 |
 | 7 | `src/k-spider-dotnet-old/` 归档仍在仓库 | 全仓检索、依赖扫描与新手阅读会命中历史代码 | 根 [README.md](../../README.md) 项目结构 | 新测试替换 v1 后评估移出仓库或保持只读归档 |
-| 11 | CPM 中声明了未引用的 `Npgsql` 版本 | 依赖清单与实际引用不一致，容易被误读为数据访问选型已定 | `Directory.Packages.props` 有 `Npgsql` 9.0.3；当前 v2 项目没有对应 `PackageReference`；[AGENTS.md](../../AGENTS.md) 注明数据访问目标 linq2db 待确认 | 数据访问选型确认后清理或补引用；在此之前不把 `Npgsql` 当作既定选型 |
 
 ## 能力缺口（按 roadmap 推进）
 
@@ -27,8 +25,8 @@
 
 | # | 缺口 | 影响 | 方向 |
 | --- | --- | --- | --- |
-| 3 | admin / crawler / web 只有骨架，process 未开始 | 无法端到端跑通「抓取 → 处理 → 展示」 | 按 [roadmap.md](roadmap.md) 的 M2–M5 推进 |
-| 5 | 认证、调度、对账只有设计，没有实现 | 无法用测试证明契约成立 | 实现时逐条对应「测试与守门」章节补测试 |
+| 3 | crawler / web 只有骨架，process 未开始；admin 已落地核心 | 无法端到端跑通「抓取 → 处理 → 展示」 | 按 [roadmap.md](roadmap.md) 的 M2–M5 推进 |
+| 5 | crawler 侧节点执行、process 与 web 首期页面未实现 | admin 侧认证/调度/对账已有实现与核心测试，但端到端契约仍未闭环 | 按 [roadmap.md](roadmap.md) 的 M3–M5 推进，补真实 DB / 节点联调测试 |
 
 ## 已处理
 
@@ -50,6 +48,8 @@
 | N | 前端依赖审计发现已知漏洞（Vite 7.3.6 / source-map-js 1.2.1 / minimatch <11.0.1） | 已升级 Vite 7.3.7，并在 `web/pnpm-workspace.yaml` 钉 `source-map-js` / `minimatch`；`pnpm audit` 0 漏洞 |
 | O | HTTPS 推送在修改 `.github/workflows/` 时被拒绝 | 已将 `origin` 改为 SSH 并成功推送；PAT 不再保存在 `.git/config`，建议仍轮换该 PAT |
 | P | `src/k-spider-grpc/` 尚未创建 | 已创建 `src/k-spider-grpc/`（proto 草案 + 生成代码）与 `tests/k-spider-grpc-tests/`；admin / crawler 已引用；字段确认仍待 M2 |
+| Q | CPM 中声明了未引用的 `Npgsql` 版本 | 已确认 admin 数据访问选型：linq2db 6.5.1 + Npgsql 9.0.3（[0011-admin-data-access-linq2db.md](../20-adr/0011-admin-data-access-linq2db.md)）；admin 已补引用，`Npgsql` 不再悬空 |
+| R | 前端构建产物尚未接入 admin 托管 | admin 已实现 `wwwroot` 静态托管、静态资源缓存与 SPA fallback；`build-web.sh` 继续复制产物。同源页面 E2E 仍随 M5 页面落地补齐 |
 
 ## 如何新增条目
 

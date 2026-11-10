@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "k-spider-grpc", "src\k-spid
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "k-spider-grpc-tests", "tests\k-spider-grpc-tests\k-spider-grpc-tests.csproj", "{CAE99E2B-EA4C-45A7-8851-580A59D7E61D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "k-spider-admin-tests", "tests\k-spider-admin-tests\k-spider-admin-tests.csproj", "{E58A496D-D984-4ABA-83AD-82BC5C66405D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,6 +100,18 @@ Global
 		{CAE99E2B-EA4C-45A7-8851-580A59D7E61D}.Release|x64.Build.0 = Release|Any CPU
 		{CAE99E2B-EA4C-45A7-8851-580A59D7E61D}.Release|x86.ActiveCfg = Release|Any CPU
 		{CAE99E2B-EA4C-45A7-8851-580A59D7E61D}.Release|x86.Build.0 = Release|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Debug|x64.Build.0 = Debug|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Debug|x86.Build.0 = Debug|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Release|x64.ActiveCfg = Release|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Release|x64.Build.0 = Release|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Release|x86.ActiveCfg = Release|Any CPU
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,5 +123,6 @@ Global
 		{B858A785-3BC1-4ED4-A81E-165D43EB00C4} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{D6C4B8F2-7F78-4FF7-A6CA-60295532BE5E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{CAE99E2B-EA4C-45A7-8851-580A59D7E61D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{E58A496D-D984-4ABA-83AD-82BC5C66405D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

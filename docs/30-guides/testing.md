@@ -1,7 +1,7 @@
 # 测试与门禁
 
 > 状态：持续更新
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 本文范围：测试分层、当前与目标门禁、Live 用例、夹具、验证闭环。命令清单见 [dev-workflow.md](dev-workflow.md)。
 
 说明「什么测试放在哪里、哪些进出门禁、哪些只能手动跑」。红线「不得删除、跳过或弱化测试」见
@@ -13,10 +13,11 @@
 | --- | --- | --- | --- |
 | 文档四检查 | `scripts/check-doc-*.mjs` | 是 | 引用、重复、结构、状态；判据见 [docs/README.md](../README.md) |
 | 技能清单检查 | `scripts/check-skills-manifest.mjs` | 是 | 受管技能与磁盘一致 |
-| 后端服务测试 | 各服务测试项目（待落地） | 是（落地后） | 领域规则、状态机、REST/gRPC 契约 |
+| 后端服务测试 | 各服务测试项目（admin 已落地；crawler/process 待落地） | 是 | 领域规则、状态机、REST/gRPC 契约 |
 | v2 架构 / 契约守卫 | `tests/k-spider-guards/` | 是 | 解决方案布局、DDL 幂等与表清单、CPM/编译门禁配置 |
 | gRPC 契约 | `tests/k-spider-grpc-tests/` | 是 | proto 消息 round-trip；字段定稿后补字段 / 错误码 / 流控 |
-| v1 过渡测试 | `src/k-spider-test/` | 是 | 排除 `TestCategory=Live`；服务测试落地后替换 |
+| admin 核心测试 | `tests/k-spider-admin-tests/` | 是 | 任务状态机、schedule、同渠道互斥、任务生命周期、对账重派/放弃、DI 图 |
+| v1 过渡测试 | `src/k-spider-test/` | 是 | 排除 `TestCategory=Live`；crawler/process 服务测试落地后替换 |
 | 前端纯逻辑 | `web/src/**/*.test.ts` | 是 | Vitest；工具函数、格式化等可脱离 DOM 的逻辑 |
 | 前端 E2E | `web/tests/` | 是 | Playwright；当前为骨架冒烟，API 在用例内 mock |
 | Live 连通性 | 按测试项目约定 | 否 | 依赖真实接口或线上可达，手动执行 |
@@ -24,12 +25,12 @@
 ### 当前门禁与目标门禁
 
 下表是门禁判据与当前快照；**进度勾选以 [roadmap.md](../00-overview/roadmap.md) 为准**。
-当前后端服务测试由 v1 过渡测试承担；v2 已有架构/契约守卫项目，服务测试仍待 M2/M3。
+当前后端服务测试由 admin 核心测试与 v1 过渡测试共同承担；crawler/process 的 v2 服务测试仍待 M3/M4。
 避免把 v1 通过误读为 v2 已验证。
 
 | 门禁 | 当前 | 目标 / 后续 |
 | --- | --- | --- |
-| 后端服务测试 | v1 过渡测试（离线，排除 Live） | 随 M2/M3 建立 v2 服务测试 |
+| 后端服务测试 | admin 核心测试 + v1 过渡测试（离线，排除 Live） | crawler/process 随 M3/M4 建立 v2 服务测试 |
 | 架构 / 契约守卫 | `tests/k-spider-guards/`（解决方案、DDL、依赖基线） | 增加服务分层与错误码守卫 |
 | 编译质量 | `TreatWarningsAsErrors` + 分析器 + `EnforceCodeStyleInBuild`（v2 项目） | 保持 |
 | 依赖可复现 | CPM + `nuget.config` + 传递依赖钉版 | 保持 |
@@ -43,7 +44,7 @@
 
 ### v2 测试项目接入要求
 
-当前已建立 `tests/k-spider-guards/` 与 `tests/k-spider-grpc-tests/`；v2 服务测试项目按同一要求落地。
+当前已建立 `tests/k-spider-guards/`、`tests/k-spider-grpc-tests/` 与 `tests/k-spider-admin-tests/`；crawler/process 服务测试项目按同一要求落地。
 测试项目落地时必须同时满足以下条件，否则视为“只在本机跑过”：
 
 - 加入 `k-spider-dotnet.sln`，`dotnet build`、`dotnet format` 与 `dotnet test` 都能覆盖；
@@ -56,7 +57,8 @@
 ### 架构与契约守卫
 
 当前 `tests/k-spider-guards/` 已覆盖解决方案布局、DDL 幂等与表清单、CPM / 编译门禁配置；
-`tests/k-spider-grpc-tests/` 已覆盖 proto 消息 round-trip；服务分层与错误码守卫随 M2/M3 补。
+`tests/k-spider-grpc-tests/` 已覆盖 proto 消息 round-trip；`tests/k-spider-admin-tests/` 已覆盖 admin 状态机、
+同渠道互斥、任务生命周期、对账重派/放弃与 DI 图；真实 DB 条件更新与 crawler/process 服务测试随 M2–M4 补。
 v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 
 - **模块依赖方向**：admin / crawler / process 不引用彼此的内部实现，只依赖契约；
@@ -100,7 +102,7 @@ v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 
 - 本地与 CI 的门禁边界、跳过开关见 [dev-workflow.md](dev-workflow.md)「脚本行为」；
 - 新服务测试项目落地后，必须加入解决方案与门禁，不能只留在本机；
-- v2 守卫项目已在 `.sln` 与 verify / CI 中；v1 测试项目是过渡门禁，v2 服务测试落地后替换，不长期保留双轨。
+- v2 守卫项目已在 `.sln` 与 verify / CI 中；v1 测试项目是过渡门禁，crawler/process 服务测试落地后替换，不长期保留双轨。
 
 ## 验证闭环
 
@@ -130,7 +132,7 @@ v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 
 ## 待确认事项
 
-- v2 服务测试项目的命名、目录与是否引入统一的测试夹具库（守卫项目已用 `tests/k-spider-guards/`）；
+- crawler/process 服务测试项目的命名、目录与是否引入统一测试夹具库（admin 已用 `tests/k-spider-admin-tests/`）；
 - 组件测试范围（jsdom / Testing Library）在首个真实页面落地时评估；
 - Live 用例的触发方式（本地脚本 / 手动 CI job）与凭据来源；
 - v1 测试替换的时间点与旧用例迁移范围；

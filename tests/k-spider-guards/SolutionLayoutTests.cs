@@ -16,6 +16,7 @@ public class SolutionLayoutTests
         "src/k-spider-grpc/k-spider-grpc.csproj",
         "tests/k-spider-guards/k-spider-guards.csproj",
         "tests/k-spider-grpc-tests/k-spider-grpc-tests.csproj",
+        "tests/k-spider-admin-tests/k-spider-admin-tests.csproj",
     ];
 
     private static readonly string[] V2Projects =

@@ -1,7 +1,7 @@
 # k-spider web 技术文档
 
 > 状态：草案
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 
 本文定义前端技术选型、目录结构、页面路由、API 对接与前端测试边界；当前只有最小可运行页面，
 业务页面待实现，模块状态见根 [README.md](../../README.md) 状态表。认证接口、admin API、数据语义与
@@ -35,8 +35,8 @@ ESLint / Prettier / Vitest / 体积预算已接入，业务页面与 API 客户�
 - `tsconfig.json` 当前开启 `strict`、`noUnusedLocals`、`noUnusedParameters` 与 `noFallthroughCasesInSwitch`；
 - `pnpm build` 先执行 `tsc --noEmit`，类型错误直接阻断构建；
 - 新增编译选项或放宽严格性前，先评估对现有代码与契约类型的影响；
-- ESLint / Prettier / 组件测试尚未接入，门禁现状与目标见
-  [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」。
+- ESLint / Prettier / Vitest / 体积预算已接入；组件测试（jsdom / Testing Library）随首个真实页面评估，
+  门禁现状与目标见 [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」。
 
 ### 目录规划
 

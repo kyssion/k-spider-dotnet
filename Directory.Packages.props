@@ -10,12 +10,16 @@
         <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.10" />
         <PackageVersion Include="Npgsql" Version="9.0.3" />
+        <!-- admin 数据访问：linq2db 提供映射与连接管理，条件更新/对账走裸 SQL（ADR 0011） -->
+        <PackageVersion Include="linq2db" Version="6.5.1" />
     </ItemGroup>
     <ItemGroup>
         <!-- gRPC 契约 : proto 生成代码与运行时 ; 具体字段仍待确认（docs/10-architecture/distributed.md） -->
         <PackageVersion Include="Google.Protobuf" Version="3.36.2" />
         <PackageVersion Include="Grpc.Core.Api" Version="2.85.0" />
         <PackageVersion Include="Grpc.Tools" Version="2.85.0" />
+        <!-- admin gRPC 服务端（ADR 0010） ; 客户端工厂不需要，避免多引依赖 -->
+        <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.85.0" />
     </ItemGroup>
     <ItemGroup>
         <!-- 测试项目 : v1 过渡测试与 v2 守卫共用 -->

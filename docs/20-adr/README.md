@@ -1,7 +1,7 @@
 # 架构决策记录（ADR）
 
 > 状态：已确认
-> 最后更新：2026-11-09
+> 最后更新：2026-11-10
 
 本目录登记契约与架构决策；已确认决策的正文仍以对应权威文档为准，决策记录只写「决定了什么、为什么、
 影响哪里」。本文同时是 `20-adr/` 的文件索引。
@@ -97,17 +97,14 @@ ADR 就是为了把「权衡过程」固化下来。
 | 同渠道互斥持久化 | [distributed.md](../10-architecture/distributed.md) |
 | 对账参数默认值 | [distributed.md](../10-architecture/distributed.md) |
 | 节点认证 | [distributed.md](../10-architecture/distributed.md) |
-| admin 重建 | [distributed.md](../10-architecture/distributed.md) |
 | 认证账号 PATCH 端点拆分 | [auth.md](../10-architecture/auth.md) |
 | 权限模型 | [auth.md](../10-architecture/auth.md) |
 | 账号恢复方式 | [auth.md](../10-architecture/auth.md) |
 | detail 写入快照来源 | [data-model.md](../10-architecture/data-model.md) |
 | `data_status` 是否跳过详情回填 | [data-model.md](../10-architecture/data-model.md) |
 | 双键水位消费侧 | [crawler.md](../10-architecture/crawler.md) / [process.md](../10-architecture/process.md) |
-| 数据访问选型 | [AGENTS.md](../../AGENTS.md) |
 | admin REST 首期端点/DTO | [admin.md](../10-architecture/admin.md) / [web.md](../10-architecture/web.md) |
 | admin 后台页面范围 | [admin.md](../10-architecture/admin.md) |
-| admin 目录结构与模块拆分 | [admin.md](../10-architecture/admin.md) |
 | 部署形态与运维 | [system-overview.md](../10-architecture/system-overview.md) / [admin.md](../10-architecture/admin.md) |
 | web 首期页面范围与交互 | [web.md](../10-architecture/web.md) |
 | 组件库与样式 | [web.md](../10-architecture/web.md) |
@@ -137,6 +134,8 @@ ADR 就是为了把「权衡过程」固化下来。
 | [0007-ci-parallel-jobs.md](0007-ci-parallel-jobs.md) | CI 按域并行，质量口径与 verify 同源 | 已确认 |
 | [0008-grpc-contract-project.md](0008-grpc-contract-project.md) | gRPC 契约项目采用共享生成库 | 已确认 |
 | [0009-adr-does-not-track-progress.md](0009-adr-does-not-track-progress.md) | ADR 不承载进度：移除模板待办 | 已确认 |
+| [0010-admin-modular-monolith.md](0010-admin-modular-monolith.md) | admin 采用模块化单体与后台循环 | 已确认 |
+| [0011-admin-data-access-linq2db.md](0011-admin-data-access-linq2db.md) | admin 数据访问采用 linq2db 与裸 SQL 组合 | 已确认 |
 
 > 0004–0008 的「待办」是旧模板历史快照，不再更新；状态行已标注，进度见 [roadmap.md](../00-overview/roadmap.md)。
 >

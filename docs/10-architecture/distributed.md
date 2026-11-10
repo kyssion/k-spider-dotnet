@@ -1,7 +1,7 @@
 # k-spider 分布式架构方案
 
-> 状态：已确认
-> 最后更新：2026-11-09
+> 状态：持续更新
+> 最后更新：2026-11-10
 
 本文定义 `sys_node` / `sys_task` 语义、状态机、调度、对账、取消与故障边界；物理结构以
 [002_sys_tables.sql](../../db/002_sys_tables.sql) 为唯一权威。业务表、平台架构与认证见本文「相关文档」。
@@ -30,7 +30,7 @@ admin 是中央调度器与集群维护工具，crawler 是执行节点。admin 
 ### 任务模型（sys_task）
 
 - **粒度 = 任务包**：一个渠道一轮一行任务；`task_detail`（jsonb）装任务全部内容（channel_id、轮次类型、批量上限、时间窗、运行上限快照等）。**不逐条建任务**——详情回填一轮数千条，逐条建行差三个数量级；包内推进靠业务表 `exec_status`，节点自治；
-- **派发**：admin 先 `INSERT sys_task`（`pushing`），再通过该节点的 gRPC 流下发 `task_dispatch`；写流成功置 `pushed`，失败置 `push_failed`；
+- **派发**：`sys_task.node_id` 为 NOT NULL，因此 admin 先选节点，再 `INSERT sys_task`（`pushing` + 新 token），随后通过该节点的 gRPC 流下发 `task_dispatch`；写流成功置 `pushed`，失败置 `push_failed`；
 - **派发 token（必需）**：每次派发生成唯一 token 写入 `extra`；节点所有状态、进度与终态更新都必须带 `dispatch_token=@token` 条件；admin 重派时生成新 token。没有 token，旧节点的迟到终态会在新节点已进入 `running` 后覆盖新进度；
 - **节点直写状态**：crawler 直接 UPDATE `sys_task` 维护运行状态与进度（与直写业务表同模式），不经 admin 接口；终态通过流上 `task_result` 唤醒 admin（携带 token）；
 - **node_id 不建外键**：节点行会被清删而任务行还在，只存引用；
@@ -73,7 +73,7 @@ WHERE id=@task
 
 ### 派发
 
-admin 读 `channel.schedule` 生成渠道轮任务包 → 先落 `sys_task`（`pushing`）→ 选节点（按心跳负载快照做简单均衡）→ 流上 `task_dispatch` → 成功置 `pushed`，失败置 `push_failed`。同一渠道同一时刻只派发一个任务（admin 内存互斥 + 重启后从非终态恢复互斥映射）；同源站跨渠道的 QPS 叠加由 crawler 的 host 级限流兜底。
+admin 读 `channel.schedule` 生成渠道轮任务包 → 按心跳负载快照选节点（简单均衡）→ 落 `sys_task`（`pushing` + 新 token）→ 流上 `task_dispatch` → 成功置 `pushed`，失败置 `push_failed`。同一渠道同一时刻只派发一个任务（admin 内存互斥 + 重启后从非终态恢复互斥映射）；同源站跨渠道的 QPS 叠加由 crawler 的 host 级限流兜底。
 
 ### 对账
 
@@ -134,9 +134,10 @@ REST 管理 API 与 gRPC 使用**分离的监听端点**：REST 走 HTTP/1.1，g
 
 ## 测试与守门
 
-- 状态机、派发 token、条件更新、对账重派、取消检查点必须有测试；
+- 状态机、派发 token、条件更新、对账重派、取消检查点必须有测试；admin 侧已在 `tests/k-spider-admin-tests/` 覆盖状态机、同渠道互斥、任务生命周期与对账重派/放弃；
 - gRPC 契约消息 round-trip 已在 `tests/k-spider-grpc-tests/`；字段定稿后补字段 / 错误码 / 流控契约测试；
-- `task_detail` / `extra` JSON 契约测试在键名与 casing 定稿后补齐；
+- admin 的 gRPC 服务端消息处理、真实 DB 条件更新与节点联调仍待补测试；
+- `task_detail` / `extra` JSON 契约测试在键名与 casing 定稿后补齐；admin 当前使用的键见 [admin.md](admin.md)「数据与接口」；
 - 节点认证与端口拆分属于部署验收项；
 - 文档与 DDL 的引用检查见 [testing.md](../30-guides/testing.md)「测试分层」。
 
@@ -150,7 +151,6 @@ REST 管理 API 与 gRPC 使用**分离的监听端点**：REST 走 HTTP/1.1，g
 | 节点认证 | mTLS / 共享 token / 网络隔离的选型（实现前确认） |
 | 同渠道互斥持久化 | `channel_id` 在 `task_detail` JSONB 中；恢复映射需解析 JSONB，是否提升为独立列并加索引（实现时定） |
 | 对账参数默认值 | K/T、无活动超时、对账周期、重派上限（admin 配置落地时定） |
-| admin 重建 | 项目结构恢复 admin 服务（调度循环 + gRPC 服务端 + REST 管理 API + web 后台） |
 
 ## 相关文档
 

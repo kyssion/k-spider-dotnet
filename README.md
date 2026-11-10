@@ -6,7 +6,7 @@
 |---|---|---|
 | 抓取（底层） | `k-spider-crawler` | 骨架 |
 | 处理（中间层） | `k-spider-process` | 未开始 |
-| 管理（旁路） | `k-spider-admin` | 骨架 |
+| 管理（旁路） | `k-spider-admin` | 实现中 |
 | 展示（顶层） | `web/`（前端项目） | 骨架 |
 
 状态口径：**未开始 / 骨架 / 实现中 / 可用**。模块职责与依赖见 [system-overview.md](docs/10-architecture/system-overview.md)；数据模型见 [data-model.md](docs/10-architecture/data-model.md)；功能清单见 [features.md](docs/00-overview/features.md)；里程碑与下一步见 [roadmap.md](docs/00-overview/roadmap.md)；已知问题见 [issue-tracker.md](docs/00-overview/issue-tracker.md)。
@@ -56,7 +56,8 @@ k-spider-dotnet/                     仓库根 = 解决方案根
 ```
 
 v1 测试暂留 `src/k-spider-test/`，会临时引用归档项目；v2 架构/契约守卫在 `tests/k-spider-guards/`，
-gRPC 契约测试在 `tests/k-spider-grpc-tests/`，服务测试随 M2/M3 落地后替换 v1 过渡测试。
+gRPC 契约测试在 `tests/k-spider-grpc-tests/`，admin 核心测试在 `tests/k-spider-admin-tests/`；
+crawler/process 服务测试随 M3/M4 落地后替换 v1 过渡测试。
 
 ## 快速开始
 
@@ -70,8 +71,9 @@ gRPC 契约测试在 `tests/k-spider-grpc-tests/`，服务测试随 M2/M3 落地
 
 跑哪些环节、门禁边界与 `--skip-tests` 的差别见 [dev-workflow.md](docs/30-guides/dev-workflow.md)「脚本行为」。交付前必须全绿。
 
-当前 verify 同时运行 v2 架构/契约守卫与 v1 过渡测试；v2 服务测试仍待 M2/M3 落地，
-不要用绿色推断 v2 服务已实现；覆盖边界见 [testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」。
+当前 verify 同时运行 v2 架构/契约守卫、admin 核心测试与 v1 过渡测试；crawler/process 的 v2 服务测试
+仍待 M3/M4 落地，不要用绿色推断完整数据链路已实现；覆盖边界见
+[testing.md](docs/30-guides/testing.md)「当前门禁与目标门禁」。
 
 ## 技能
 

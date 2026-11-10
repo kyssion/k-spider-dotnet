@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 按端口停止本项目的开发期进程（默认：admin :5094、web :5173、E2E preview :5899）。
+# 按端口停止本项目的开发期进程（默认：admin REST :5094、admin gRPC :5095、web :5173、E2E preview :5899）。
 # 幂等：没有进程时返回 0；停完复查端口，未释放则非零退出。
 #
 # 用法：
@@ -10,7 +10,7 @@
 
 set -uo pipefail
 
-DEFAULT_PORTS=(5094 5173 5899)
+DEFAULT_PORTS=(5094 5095 5173 5899)
 
 if [ "$#" -gt 0 ]; then
     PORTS=("$@")

@@ -86,12 +86,12 @@ step "9/10 后端格式校验"
 dotnet format "$SOLUTION" --no-restore --verify-no-changes || fail "后端格式与 .editorconfig 不一致，请执行 dotnet format"
 
 if [ "$SKIP_TESTS" = "true" ]; then
-  step "10/10 v2 守卫 + v1 过渡测试（已跳过）"
+  step "10/10 v2 守卫 + admin 测试 + v1 过渡测试（已跳过）"
 else
-  # v2 守卫在解决方案内，复用第 8 步的 Release 构建；v1 测试暂留过渡门禁，待服务测试落地后替换。
-  # v1 测试项目不在 sln 中，不能用 --no-build，保证测试项目按 Release 重建。
-  step "10/10 v2 守卫 + v1 过渡测试（Release，排除 Live）"
-  dotnet test "$SOLUTION" --configuration Release --no-build --nologo -v quiet || fail "v2 守卫测试失败"
+  # v2 守卫与 admin 测试在解决方案内，复用第 8 步的 Release 构建；v1 测试暂留过渡门禁，
+  # 待 crawler/process 服务测试落地后替换。v1 测试项目不在 sln 中，不能用 --no-build，保证按 Release 重建。
+  step "10/10 v2 守卫 + admin 测试 + v1 过渡测试（Release，排除 Live）"
+  dotnet test "$SOLUTION" --configuration Release --no-build --nologo -v quiet || fail "v2 守卫 / admin 测试失败"
   dotnet test "$ROOT_DIR/src/k-spider-test/k-spider-test.csproj" --configuration Release --filter "TestCategory!=Live" --nologo -v quiet || fail "v1 过渡测试失败"
 fi
 
