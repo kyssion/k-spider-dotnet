@@ -15,9 +15,17 @@ import { truncate } from '../lib/format'
 import { usePreferences } from '../stores/preferences'
 import type { TaskView } from '../api/types'
 
+/** 服务端分页固定页大小。 */
 const PAGE_SIZE = 20
+/** 终态不再提供取消入口；与后端状态机保持一致。 */
 const TERMINAL = new Set(['success', 'abandoned', 'cancelled'])
 
+/**
+ * 任务列表页。
+ *
+ * 支持按状态筛选、分页与取消；详情/取消共用一个对话框，
+ * `?task=` 用于从总览最近失败直接定位当前页任务。
+ */
 export function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const timeZone = usePreferences((state) => state.timeZone)
@@ -26,13 +34,16 @@ export function TasksPage() {
   const taskParam = searchParams.get('task')
   const tasks = useTasks({ page, pageSize: PAGE_SIZE, status })
   const cancel = useCancelTask()
+  // 用户手动点开的任务；URL 指定的任务只作为派生值，二者合并为 activeTask。
   const [selected, setSelected] = useState<TaskView | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  // URL 指定的任务只在当前页数据中查找；找不到不强行打开空详情。
   const requestedTask = taskParam
     ? (tasks.data?.items.find((item) => item.id === Number(taskParam)) ?? null)
     : null
   const activeTask = selected ?? requestedTask
 
+  /** 关闭对话框并清掉 URL 中的 task，避免刷新后重复弹出。 */
   function closeDialog() {
     setSelected(null)
     if (searchParams.has('task')) {
@@ -42,6 +53,7 @@ export function TasksPage() {
     }
   }
 
+  /** 更新 URL 筛选/页码；筛选变化时回到第一页，避免空页。 */
   function updateParam(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams)
     if (!value) {
@@ -55,6 +67,7 @@ export function TasksPage() {
     setSearchParams(next)
   }
 
+  /** 二次确认后取消任务；成功后关闭并让列表重新拉取。 */
   async function confirmCancel() {
     if (!activeTask) {
       return
@@ -68,6 +81,7 @@ export function TasksPage() {
     }
   }
 
+  /** 任务列；详情/额外字段保持截断，完整内容在对话框中查看。 */
   const columns: Array<DataTableColumn<TaskView>> = [
     {
       key: 'id',
@@ -248,6 +262,7 @@ export function TasksPage() {
   )
 }
 
+/** 对话框字段行。 */
 function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
@@ -257,6 +272,7 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
+/** JSON 只读块；不允许注入 HTML。 */
 function JsonBlock({ title, value }: { title: string; value: string }) {
   return (
     <div>
@@ -268,6 +284,7 @@ function JsonBlock({ title, value }: { title: string; value: string }) {
   )
 }
 
+/** 美化 JSON；失败时原样展示。 */
 function prettyJson(value: string): string {
   try {
     return JSON.stringify(JSON.parse(value) as unknown, null, 2)
@@ -276,6 +293,7 @@ function prettyJson(value: string): string {
   }
 }
 
+/** 从 extra 解析 fail_count；脏数据回退 0。 */
 function failCount(extraJson: string): number {
   try {
     const parsed = JSON.parse(extraJson) as { fail_count?: unknown }
@@ -285,6 +303,7 @@ function failCount(extraJson: string): number {
   }
 }
 
+/** 解析正整数 URL 参数；非法值回退默认页。 */
 function positiveInt(value: string | null, fallback: number): number {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback

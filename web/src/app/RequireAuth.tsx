@@ -4,6 +4,12 @@ import { isApiError } from '../api/errors'
 import { ErrorState } from '../components/feedback/ErrorState'
 import { LoadingState } from '../components/feedback/LoadingState'
 
+/**
+ * 受保护路由守卫。
+ *
+ * 服务端仍是最终权限边界；这里只负责登录态体验：
+ * 401 跳登录并携带 returnUrl，其他错误展示可重试错误态。
+ */
 export function RequireAuth() {
   const location = useLocation()
   const me = useMe()

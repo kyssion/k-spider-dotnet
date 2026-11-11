@@ -7,6 +7,12 @@ import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { useLogin, useMe } from '../features/auth/queries'
 
+/**
+ * 登录页。
+ *
+ * 匿名可访问；已登录用户访问时按 returnUrl 回到原页面。
+ * 失败只展示统一文案，避免通过错误信息枚举账号。
+ */
 export function LoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -17,6 +23,7 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // 只接受站内相对路径，防止 returnUrl 被用来做开放重定向。
   const returnUrl = safeReturnUrl(searchParams.get('returnUrl'))
 
   useEffect(() => {
@@ -25,6 +32,7 @@ export function LoginPage() {
     }
   }, [me.data, navigate, returnUrl])
 
+  /** 提交登录；成功后等待 me 查询刷新再导航，避免守卫看到旧会话。 */
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -134,6 +142,11 @@ export function LoginPage() {
   )
 }
 
+/**
+ * 校验 returnUrl。
+ *
+ * 仅允许以单个 `/` 开头的站内路径；`//evil` 与绝对 URL 一律回退首页。
+ */
 function safeReturnUrl(value: string | null): string {
   if (!value || !value.startsWith('/') || value.startsWith('//')) {
     return '/'

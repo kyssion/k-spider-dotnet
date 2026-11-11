@@ -16,5 +16,12 @@
         <AnalysisLevel>latest-recommended</AnalysisLevel>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!-- 生成 XML 文档以校验 <param>/<returns> 与签名一致；业务项目未写文档会由 CS1591 阻断。 -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <!-- 生成代码与测试项目不要求逐成员 XML 文档；业务项目仍保留 CS1591。 -->
+    <PropertyGroup Condition="'$(MSBuildProjectName)' == 'k-spider-grpc' or '$(MSBuildProjectName)' == 'k-spider-guards' or $(MSBuildProjectName.EndsWith('-tests'))">
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
 </Project>

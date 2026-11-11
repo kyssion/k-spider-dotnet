@@ -9,6 +9,7 @@ import {
 } from '../../api/endpoints/channels'
 import { queryKeys } from '../../lib/query-keys'
 
+/** 渠道列表；placeholderData 保留上一页，翻页时不闪空表。 */
 export function useChannels(filters: ChannelListFilters) {
   return useQuery({
     queryKey: queryKeys.channels.list(filters),
@@ -17,6 +18,7 @@ export function useChannels(filters: ChannelListFilters) {
   })
 }
 
+/** 渠道详情；id 非法时不发请求。 */
 export function useChannel(id: number) {
   return useQuery({
     queryKey: queryKeys.channels.detail(id),
@@ -25,6 +27,7 @@ export function useChannel(id: number) {
   })
 }
 
+/** 分类树；变化频率低，缓存 60s。 */
 export function useChannelCategories() {
   return useQuery({
     queryKey: queryKeys.channels.categories,
@@ -33,6 +36,7 @@ export function useChannelCategories() {
   })
 }
 
+/** 暂停渠道；成功后失效渠道全部查询（列表+详情）。 */
 export function usePauseChannel() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -41,6 +45,7 @@ export function usePauseChannel() {
   })
 }
 
+/** 恢复渠道；成功后失效渠道全部查询。 */
 export function useResumeChannel() {
   const queryClient = useQueryClient()
   return useMutation({

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 
+/** 固定登录态；E2E 不依赖真实 admin 数据库。 */
 const ME = {
   id: 1,
   username: 'admin',
@@ -7,6 +8,7 @@ const ME = {
   csrfToken: 'csrf-token',
 }
 
+/** 总览 mock：覆盖 KPI、状态计数与最近失败。 */
 const OVERVIEW = {
   generatedAt: '2026-11-10T12:00:00Z',
   channels: { total: 2, active: 1, paused: 1, retired: 0 },
@@ -37,6 +39,7 @@ const OVERVIEW = {
   ],
 }
 
+/** 渠道列表 mock：包含一个 active 渠道供暂停操作。 */
 const CHANNELS = {
   items: [
     {
@@ -59,6 +62,7 @@ const CHANNELS = {
   total: 1,
 }
 
+/** 任务 mock：一个 running 任务用于取消确认。 */
 const TASKS = {
   items: [
     {
@@ -77,6 +81,7 @@ const TASKS = {
   total: 1,
 }
 
+/** 为需要登录的用例注入 /api/auth/me。 */
 async function mockMe(page: Page) {
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({

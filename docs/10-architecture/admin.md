@@ -1,7 +1,7 @@
 # k-spider-admin 技术文档
 
 > 状态：持续更新
-> 最后更新：2026-11-10
+> 最后更新：2026-11-11
 
 本文定义 admin 服务的实现结构、调度/对账落点、REST/gRPC/认证与前端托管；调度语义、认证行为与业务数据语义分别以
 [distributed.md](distributed.md)、[auth.md](auth.md)、[data-model.md](data-model.md) 为准。模块状态以根
@@ -123,7 +123,8 @@ REST 端点覆盖认证/账号、渠道、任务、节点与健康检查；总�
 - admin 核心测试在 `tests/k-spider-admin-tests/`：状态机、schedule 解析、同渠道互斥、任务生命周期、对账重派/
   放弃、节点选择、账号管理边界、总览/原始数据查询映射与 DI 图解析；
 - v2 架构/契约守卫在 `tests/k-spider-guards/`；gRPC 消息 round-trip 在 `tests/k-spider-grpc-tests/`；
-- 真实 PostgreSQL 的 repository 集成测试尚未接入门禁，需在数据访问联调时补；
+- 真实 PostgreSQL 的 repository 读写用例在 `tests/k-spider-admin-tests/Live/`，带 `TestCategory=Live`，
+  需注入 `K_SPIDER_LIVE_DB` 手动执行，不进入默认门禁；
 - 测试分层与门禁边界见 [testing.md](../30-guides/testing.md)。
 
 ## 待确认事项

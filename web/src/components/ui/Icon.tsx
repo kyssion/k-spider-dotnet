@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 
+/** 本地图标名；不引入图标库，避免额外运行时依赖。 */
 export type IconName =
   | 'activity'
   | 'alert'
@@ -23,6 +24,7 @@ export type IconName =
   | 'users'
   | 'x'
 
+/** 图标路径集中定义；新增图标时同时更新 IconName 与使用点。 */
 const PATHS: Record<IconName, ReactNode> = {
   activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2" />,
   alert: (
@@ -140,11 +142,13 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
 }
 
+/** 图标属性；className 可覆盖尺寸/颜色。 */
 export interface IconProps {
   name: IconName
   className?: string
 }
 
+/** 装饰性 SVG 图标；统一 aria-hidden，语义由外层文本/按钮提供。 */
 export function Icon({ name, className }: IconProps) {
   return (
     <svg

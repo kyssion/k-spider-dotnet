@@ -10,10 +10,16 @@ import { formatDateTime } from '../lib/dates'
 import { usePreferences } from '../stores/preferences'
 import type { NodeView } from '../api/types'
 
+/**
+ * 节点状态页。
+ *
+ * 展示 sys_node 镜像；实时在线判定由 admin 内存心跳负责，页面不推断。
+ */
 export function NodesPage() {
   const nodes = useNodes()
   const timeZone = usePreferences((state) => state.timeZone)
 
+  /** 节点列；device 只做截断展示，完整 JSON 通过 title 查看。 */
   const columns: Array<DataTableColumn<NodeView>> = [
     {
       key: 'id',

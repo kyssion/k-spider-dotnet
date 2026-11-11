@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 
+/** 门禁冒烟：未登录访问受保护页面必须落到登录页。 */
 test('未登录访问控制台会跳到登录页', async ({ page }) => {
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({

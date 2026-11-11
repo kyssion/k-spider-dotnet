@@ -134,6 +134,7 @@ ADR 就是为了把「权衡过程」固化下来。
 | [0010-admin-modular-monolith.md](0010-admin-modular-monolith.md) | admin 采用模块化单体与后台循环 | 已确认 |
 | [0011-admin-data-access-linq2db.md](0011-admin-data-access-linq2db.md) | admin 数据访问采用 linq2db 与裸 SQL 组合 | 已确认 |
 | [0012-web-minimal-stack-and-component-tests.md](0012-web-minimal-stack-and-component-tests.md) | web 保持 React 最小栈并采用组件级测试 | 已确认 |
+| [0013-comment-consistency-check.md](0013-comment-consistency-check.md) | 注释一致性检查进入 verify 门禁 | 已确认 |
 
 > 0004–0008 的「待办」是旧模板历史快照，不再更新；状态行已标注，进度见 [roadmap.md](../00-overview/roadmap.md)。
 >

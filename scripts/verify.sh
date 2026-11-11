@@ -66,7 +66,7 @@ step "5/10 技能清单检查"
 node "$ROOT_DIR/scripts/check-skills-manifest.mjs" || fail "技能清单与磁盘不一致（见上方清单）"
 
 # ── 前端 ────────────────────────────────────────────────────────────────
-step "6/10 前端校验（install + lint / format / build / 体积）"
+step "6/10 前端校验（install + lint / format / build / 体积 / 注释一致性）"
 bash "$ROOT_DIR/scripts/build-web.sh" || fail "前端构建失败"
 (cd "$WEB_DIR" && pnpm run lint && pnpm run format:check && pnpm run check:bundle) || fail "前端静态校验失败"
 
@@ -79,7 +79,7 @@ fi
 
 # ── 后端 ────────────────────────────────────────────────────────────────
 # 用 Release 与 CI 对齐：Debug 下不成立的裁剪、条件编译与优化差异，本地不该漏过。
-step "8/10 后端构建（Release）"
+step "8/10 后端构建（Release / XML 注释一致性）"
 dotnet build "$SOLUTION" --configuration Release --nologo -v quiet || fail "后端构建失败"
 
 step "9/10 后端格式校验"
@@ -91,7 +91,7 @@ else
   # v2 守卫与 admin 测试在解决方案内，复用第 8 步的 Release 构建；v1 测试暂留过渡门禁，
   # 待 crawler/process 服务测试落地后替换。v1 测试项目不在 sln 中，不能用 --no-build，保证按 Release 重建。
   step "10/10 v2 守卫 + admin 测试 + v1 过渡测试（Release，排除 Live）"
-  dotnet test "$SOLUTION" --configuration Release --no-build --nologo -v quiet || fail "v2 守卫 / admin 测试失败"
+  dotnet test "$SOLUTION" --configuration Release --no-build --filter "TestCategory!=Live" --nologo -v quiet || fail "v2 守卫 / admin 测试失败"
   dotnet test "$ROOT_DIR/src/k-spider-test/k-spider-test.csproj" --configuration Release --filter "TestCategory!=Live" --nologo -v quiet || fail "v1 过渡测试失败"
 fi
 

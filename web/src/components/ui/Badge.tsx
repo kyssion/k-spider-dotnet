@@ -2,12 +2,14 @@ import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import type { StatusTone } from '../../lib/status'
 
+/** 状态徽标；tone 只表达语义，具体颜色由 TONES 统一维护。 */
 export interface BadgeProps {
   tone?: StatusTone
   children: ReactNode
   className?: string
 }
 
+/** 语义色映射；状态文字与色点同时存在，不依赖颜色单独传达信息。 */
 const TONES: Record<StatusTone, string> = {
   neutral: 'bg-muted text-muted-foreground ring-border',
   info: 'bg-info/10 text-info ring-info/20',
@@ -17,6 +19,7 @@ const TONES: Record<StatusTone, string> = {
   running: 'bg-primary/10 text-primary ring-primary/20',
 }
 
+/** 轻量状态徽标。 */
 export function Badge({ tone = 'neutral', children, className }: BadgeProps) {
   return (
     <span

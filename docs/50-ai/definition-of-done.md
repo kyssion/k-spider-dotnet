@@ -31,6 +31,7 @@
       [issue-tracker.md](../00-overview/issue-tracker.md)；
 - [ ] 没有引入未确认的依赖、框架或公共接口变更；
 - [ ] 没有提交真实凭据、Cookie、个人数据或临时调试输出；
+- [ ] 导出的方法/函数、组件 props、关键变量与关键分支已有中文注释，说明意图、约束、失败边界与不变量；verify 的 ESLint jsdoc / C# XML doc 检查通过，注释描述与实现行为一致；
 - [ ] `./scripts/verify.sh` 全绿，且保留实际命令与输出；
 - [ ] 自己启动的后台进程已停止，端口已确认释放；
 - [ ] 交付说明按 [collaboration-model.md](collaboration-model.md) 的四段式给出。

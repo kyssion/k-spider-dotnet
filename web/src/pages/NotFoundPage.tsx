@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Icon } from '../components/ui/Icon'
 import { Card } from '../components/ui/Card'
 
+/** 404 页；路由未命中时使用，不依赖登录态。 */
 export function NotFoundPage() {
   return (
     <main className="grid min-h-screen place-items-center p-6">

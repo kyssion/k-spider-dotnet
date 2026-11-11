@@ -1,7 +1,7 @@
 # k-spider web 技术文档
 
 > 状态：持续更新
-> 最后更新：2026-11-10
+> 最后更新：2026-11-11
 
 本文定义 web 前端的技术选型、目录结构、页面路由、API 对接、UI 设计系统与测试边界；当前已落地核心控制台页面与
 组件测试，原始数据页面待补。模块状态以根 [README.md](../../README.md) 状态表为准；认证接口、admin API 与
@@ -192,12 +192,14 @@ app → pages → features → components
   Zustand store 行为。
 - **组件**：当前 18 个测试文件 / 40 个用例，覆盖 `web/src/components/ui`、`web/src/components/data`、布局与反馈组件的渲染、
   交互、加载、空、错误与禁用态；每个新增组件必须补同目录测试。
-- **页面 E2E**：Playwright 8 条用例覆盖登录与 `returnUrl`、未登录守卫、总览、渠道暂停与任务取消确认；业务 API 在用例内 mock，
-  保持门禁离线。
+- **页面 E2E**：默认 Playwright 8 条用例覆盖登录与 `returnUrl`、未登录守卫、总览、渠道暂停与任务取消确认；业务 API 在用例内
+  mock，保持门禁离线。另有 `web/tests/live/` 真实后端用例：真实 Chromium 访问 admin 托管产物，API 直连 admin 与 PostgreSQL，
+  覆盖登录/核心页面、渠道启停和任务取消，通过 `pnpm test:e2e:live` 手动执行。
 - **门禁**：继续使用 `pnpm verify` 与 `./scripts/verify.sh`；首屏体积预算为 450 kB / 140 kB gzip，较骨架期上调 50/20 kB，
   原因是 Router、Query、基础组件与核心页面进入首屏；数字以 [bundle-budget.json](../../web/bundle-budget.json) 为准，脚本见
   [check-bundle-budget.mjs](../../web/scripts/check-bundle-budget.mjs)。
 - 新增页面必须有路由级 E2E 或组件测试，至少覆盖主路径与错误态；不得用截图快照代替行为断言。
+- ESLint 同时启用 jsdoc 规则：导出成员必须有 JSDoc，且 `@param`/`@returns`/类型/标签与实际签名一致；C# 后端由 XML 文档编译检查参数名。
 - 测试分层与当前门禁见 [testing.md](../30-guides/testing.md)「当前门禁与目标门禁」。
 
 ## 待确认事项

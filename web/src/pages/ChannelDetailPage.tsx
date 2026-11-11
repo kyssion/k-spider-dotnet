@@ -11,8 +11,14 @@ import { useChannel, usePauseChannel, useResumeChannel } from '../features/chann
 import { formatDateTime } from '../lib/dates'
 import { usePreferences } from '../stores/preferences'
 
+/**
+ * 渠道详情页。
+ *
+ * 展示配置快照与调度 JSON；暂停/恢复仍走同一 command 服务。
+ */
 export function ChannelDetailPage() {
   const params = useParams()
+  // 路由 id 不可信：非数字时 useChannel 会禁用查询，页面落到“渠道不存在”。
   const id = Number(params.id)
   const channel = useChannel(id)
   const pause = usePauseChannel()
@@ -33,6 +39,7 @@ export function ChannelDetailPage() {
   const data = channel.data
   const busy = pause.isPending || resume.isPending
 
+  /** 暂停/恢复当前渠道；失败时保留页面并显示错误。 */
   async function toggle() {
     setActionError(null)
     try {
@@ -101,6 +108,7 @@ export function ChannelDetailPage() {
   )
 }
 
+/** 详情字段行；label 与 value 分列，宽屏下保持右侧对齐。 */
 function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
@@ -110,10 +118,12 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
+/** 等宽配置值。 */
 function Mono({ children }: { children: string }) {
   return <span className="font-mono text-xs">{children}</span>
 }
 
+/** JSON 卡片；只做纯文本展示，不渲染 HTML。 */
 function JsonCard({ title, value }: { title: string; value: string }) {
   return (
     <Card className="overflow-hidden">
@@ -125,6 +135,7 @@ function JsonCard({ title, value }: { title: string; value: string }) {
   )
 }
 
+/** 尽量美化 JSON；解析失败时原样展示，避免页面崩溃。 */
 function prettyJson(value: string): string {
   try {
     return JSON.stringify(JSON.parse(value) as unknown, null, 2)

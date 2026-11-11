@@ -14,6 +14,7 @@ import { getTaskStatus } from '../lib/status'
 import { usePreferences } from '../stores/preferences'
 import type { RecentFailureView } from '../api/types'
 
+/** 最近失败表列定义；raw JSON 不直接渲染，只展示截断后的错误。 */
 const FAILURE_COLUMNS: Array<DataTableColumn<RecentFailureView>> = [
   {
     key: 'task',
@@ -57,6 +58,11 @@ const FAILURE_COLUMNS: Array<DataTableColumn<RecentFailureView>> = [
   { key: 'updated', header: '更新时间', render: (row) => <RelativeTime value={row.updatedAt} /> },
 ]
 
+/**
+ * 总览页。
+ *
+ * 数据来自 /api/overview；页面只负责展示与跳转，不自行聚合多个业务接口。
+ */
 export function OverviewPage() {
   const overview = useOverview()
   const timeZone = usePreferences((state) => state.timeZone)
@@ -74,6 +80,7 @@ export function OverviewPage() {
   }
 
   const { channels, tasks, nodes, recentFailures, generatedAt } = overview.data
+  // 非终态是排障时最关心的积压量；终态 success/cancelled/abandoned 不计入。
   const nonTerminal =
     (tasks.byStatus.pushing ?? 0) +
     (tasks.byStatus.push_failed ?? 0) +
@@ -177,6 +184,7 @@ export function OverviewPage() {
   )
 }
 
+/** 总览 KPI 卡片；tone 只影响图标底色，不改变数值语义。 */
 function MetricCard({
   icon,
   label,
@@ -212,6 +220,7 @@ function MetricCard({
   )
 }
 
+/** 列表相对时间；hover 仍能看到原始值。 */
 function RelativeTime({ value }: { value: string }) {
   return (
     <span title={value} className="text-xs text-muted-foreground">

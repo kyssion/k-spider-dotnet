@@ -11,6 +11,7 @@ import { UsersPage } from '../pages/UsersPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 
+/** 应用路由表；登录页匿名，其余页面统一经过 RequireAuth。 */
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   {

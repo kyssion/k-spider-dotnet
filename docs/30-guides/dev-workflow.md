@@ -1,7 +1,7 @@
 # 日常开发流程
 
 > 状态：持续更新
-> 最后更新：2026-11-10
+> 最后更新：2026-11-11
 本文范围：常用命令、端口、脚本行为、脚本选型、进程收尾、提交与推送、环境排错。首次环境准备见
 [getting-started.md](getting-started.md)。
 
@@ -29,10 +29,12 @@
 | 后端 v1 过渡测试（排除 Live） | `dotnet test src/k-spider-test/k-spider-test.csproj --filter "TestCategory!=Live"` |
 | 安装 Playwright 浏览器 | `pnpm --dir web exec playwright install chromium` |
 | 前端 E2E | `cd web && pnpm test:e2e` |
+| 前端 Live E2E（真实 admin + PG） | `cd web && pnpm test:e2e:live` |
 | 启动 admin + web | `./scripts/dev.sh` |
 | 停止开发期进程 | `./scripts/stop.sh` |
 | 启动 admin | `dotnet run --project src/k-spider-admin` |
 | admin 核心测试（单独跑） | `dotnet test tests/k-spider-admin-tests/k-spider-admin-tests.csproj --configuration Release` |
+| admin PostgreSQL Live 测试 | `K_SPIDER_LIVE_DB='<连接串>' dotnet test tests/k-spider-admin-tests/k-spider-admin-tests.csproj --filter "TestCategory=Live"` |
 | 启动 crawler | `dotnet run --project src/k-spider-crawler` |
 | 初始化业务表 | `psql -d k_spider -f db/001_business_tables.sql` |
 | 初始化系统设施表 | `psql -d k_spider -f db/002_sys_tables.sql` |
@@ -52,12 +54,13 @@
 “服务起来了但前端连不上”或 E2E 超时。
 
 前端 E2E 需要先构建 `web/dist`（`cd web && pnpm build`，或 `bash scripts/build-web.sh`）；
-Playwright 用 preview 伺服构建产物。
+Playwright 用 preview 伺服构建产物。Live E2E 不启动 preview，要求 admin 已在 5094 运行并连接目标 PostgreSQL；
+`LIVE_BASE_URL`、`LIVE_USERNAME`、`LIVE_PASSWORD` 由环境注入，未设置时用例跳过。
 
 ## 脚本行为
 
 - `scripts/verify.sh`：依次跑文档引用 / 重复 / 结构 / 状态四检查、技能清单、前端校验
-  （lint / format / 单元 / build / 体积）、E2E、后端构建、格式校验、v2 守卫、admin 测试与 v1 过渡测试
+  （lint / format / 单元 / build / 体积 / 注释一致性）、E2E、后端构建（XML 注释一致性）、格式校验、v2 守卫、admin 测试与 v1 过渡测试
   （排除 `TestCategory=Live`）。默认要求 dotnet / Node / pnpm / Playwright 浏览器齐全；
   仅本地冒烟可用 `--skip-tests` 跳过前端单元 / E2E 与后端测试，输出会显式标注。
 - `scripts/build-web.sh`：`pnpm install --frozen-lockfile`（失败时回退普通 install）→ `pnpm build` →

@@ -3,6 +3,7 @@ import { createUser, listUsers, patchUser, resetPassword } from '../../api/endpo
 import type { UserCreateInput, UserPatchInput } from '../../api/types'
 import { queryKeys } from '../../lib/query-keys'
 
+/** 账号列表；10s 内复用。 */
 export function useUsers() {
   return useQuery({
     queryKey: queryKeys.users,
@@ -11,6 +12,7 @@ export function useUsers() {
   })
 }
 
+/** 创建账号；成功后刷新列表。 */
 export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -19,6 +21,7 @@ export function useCreateUser() {
   })
 }
 
+/** 修改账号展示名/状态；成功后刷新列表。 */
 export function usePatchUser() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -27,6 +30,7 @@ export function usePatchUser() {
   })
 }
 
+/** 重置他人密码；不失效列表，密码不在列表中展示。 */
 export function useResetPassword() {
   return useMutation({
     mutationFn: (input: { id: number; newPassword: string }) =>

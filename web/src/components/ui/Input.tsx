@@ -1,12 +1,19 @@
 import { useId, type InputHTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
+/** 输入框属性；label/error/hint 会自动关联 aria-describedby。 */
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   hint?: string
 }
 
+/**
+ * 表单输入框。
+ *
+ * 错误优先于 hint，保证同一时刻只读到一个描述；id 缺省时用 useId 生成，
+ * 避免多个表单实例的 label 关联冲突。
+ */
 export function Input({ id, label, error, hint, className, ...props }: InputProps) {
   const generatedId = useId()
   const inputId = id ?? generatedId

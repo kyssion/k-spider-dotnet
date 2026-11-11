@@ -1,6 +1,7 @@
 import { Icon } from '../ui/Icon'
 import { Button } from '../ui/Button'
 
+/** 分页属性；page 从 1 开始，total 是服务端总数。 */
 export interface PaginationProps {
   page: number
   pageSize: number
@@ -8,6 +9,7 @@ export interface PaginationProps {
   onPageChange: (page: number) => void
 }
 
+/** 统一分页条；边界页禁用按钮，防止发出越界请求。 */
 export function Pagination({ page, pageSize, total, onPageChange }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const currentPage = Math.min(Math.max(1, page), totalPages)

@@ -2,9 +2,12 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Icon } from './Icon'
 import { cn } from '../../lib/cn'
 
+/** 按钮视觉变体；danger 只用于不可逆操作。 */
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
+/** 按钮尺寸；icon 用于只含图标的工具按钮。 */
 export type ButtonSize = 'sm' | 'md' | 'icon'
 
+/** 原生 button 属性 + loading 态；loading 时自动禁用并设置 aria-busy。 */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
@@ -12,6 +15,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children?: ReactNode
 }
 
+/** 变体到 Tailwind 类的映射，集中维护避免各页面自行拼样式。 */
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/40',
   secondary:
@@ -23,12 +27,18 @@ const VARIANTS: Record<ButtonVariant, string> = {
     'border bg-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/40',
 }
 
+/** 尺寸到高度/内边距的映射。 */
 const SIZES: Record<ButtonSize, string> = {
   sm: 'h-8 px-3 text-xs',
   md: 'h-9 px-4 text-sm',
   icon: 'h-9 w-9',
 }
 
+/**
+ * 基础按钮。
+ *
+ * 默认 type=button，避免在表单里误触提交；调用方需要提交时显式传 type="submit"。
+ */
 export function Button({
   variant = 'primary',
   size = 'md',

@@ -13,8 +13,14 @@ import { formatDateTime } from '../lib/dates'
 import { usePreferences } from '../stores/preferences'
 import type { ChannelView } from '../api/types'
 
+/** 服务端分页固定页大小；admin 对 pageSize 有上限保护。 */
 const PAGE_SIZE = 20
 
+/**
+ * 渠道列表页。
+ *
+ * 筛选与页码放在 URL，刷新/回退可恢复；暂停/恢复后失效渠道查询。
+ */
 export function ChannelsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const timeZone = usePreferences((state) => state.timeZone)
@@ -25,6 +31,7 @@ export function ChannelsPage() {
   const resume = useResumeChannel()
   const [actionError, setActionError] = useState<string | null>(null)
 
+  /** 更新 URL 参数；非页码筛选变化时回到第一页，避免越界空页。 */
   function updateParam(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams)
     if (!value) {
@@ -38,6 +45,7 @@ export function ChannelsPage() {
     setSearchParams(next)
   }
 
+  /** 根据当前状态执行暂停或恢复；错误保留在页面内，不弹全局异常。 */
   async function toggle(channel: ChannelView) {
     setActionError(null)
     try {
@@ -51,6 +59,7 @@ export function ChannelsPage() {
     }
   }
 
+  /** 渠道列；适配器与写入模式用等宽字体，便于运营核对配置。 */
   const columns: Array<DataTableColumn<ChannelView>> = [
     {
       key: 'name',
@@ -183,10 +192,12 @@ export function ChannelsPage() {
   )
 }
 
+/** 等宽文本；用于 adapter/write_mode 等配置值。 */
 function Mono({ children }: { children: string }) {
   return <span className="font-mono text-xs text-muted-foreground">{children}</span>
 }
 
+/** 轻量配置徽标；不引入额外 Badge 变体。 */
 function BadgeText({ children }: { children: string }) {
   return (
     <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
@@ -195,6 +206,7 @@ function BadgeText({ children }: { children: string }) {
   )
 }
 
+/** 解析正整数 URL 参数；非法值回退默认页，避免 NaN 请求。 */
 function positiveInt(value: string | null, fallback: number): number {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback

@@ -31,6 +31,10 @@ public abstract class PeriodicBackgroundService : BackgroundService
     /// <param name="cancellationToken">宿主停止令牌。</param>
     protected abstract Task RunOnceAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     宿主启动后按周期执行；单轮异常在基类内记录，不终止 host。
+    /// </summary>
+    /// <param name="stoppingToken">宿主停止令牌。</param>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(_period);

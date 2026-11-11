@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { Icon } from './Icon'
 import { Button } from './Button'
 
+/** 受控对话框；open=false 时不渲染，避免隐藏节点参与可访问性树。 */
 export interface DialogProps {
   open: boolean
   title: string
@@ -10,6 +11,12 @@ export interface DialogProps {
   footer?: ReactNode
 }
 
+/**
+ * 轻量对话框。
+ *
+ * 支持 Escape 与遮罩点击关闭；真正的危险操作仍需调用方二次确认文案。
+ * 首期不引入 focus-trap 库，Tab 焦点由浏览器默认行为约束。
+ */
 export function Dialog({ open, title, onClose, children, footer }: DialogProps) {
   useEffect(() => {
     if (!open) {

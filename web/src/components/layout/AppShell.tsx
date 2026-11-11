@@ -7,6 +7,7 @@ import { usePreferences } from '../../stores/preferences'
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/Button'
 
+/** 主导航；新增页面时同步 router 与权限边界。 */
 const NAV_ITEMS: Array<{ to: string; label: string; icon: IconName; end: boolean }> = [
   { to: '/', label: '总览', icon: 'gauge', end: true },
   { to: '/channels', label: '渠道', icon: 'radio', end: false },
@@ -15,12 +16,19 @@ const NAV_ITEMS: Array<{ to: string; label: string; icon: IconName; end: boolean
   { to: '/settings/users', label: '账号', icon: 'users', end: false },
 ]
 
+/** 布局属性；user 只用于展示，登出由外层 auth hook 处理。 */
 export interface AppShellProps {
   user: Pick<Me, 'username' | 'displayName'>
   onLogout: () => void
   children: ReactNode
 }
 
+/**
+ * 控制台外壳：侧栏、顶栏与内容区。
+ *
+ * 侧栏折叠、主题与时区都是本地 UI 偏好；服务端数据不进入该组件。
+ * 移动端用横向导航兜底，桌面端保留可折叠侧栏。
+ */
 export function AppShell({ user, onLogout, children }: AppShellProps) {
   const collapsed = usePreferences((state) => state.sidebarCollapsed)
   const toggleSidebar = usePreferences((state) => state.toggleSidebar)
@@ -29,6 +37,7 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
   const timeZone = usePreferences((state) => state.timeZone)
   const setTimeZone = usePreferences((state) => state.setTimeZone)
 
+  // 主题按钮图标与文案都来自同一个偏好值，避免按钮显示与实际主题不一致。
   const themeIcon: IconName = theme === 'dark' ? 'moon' : theme === 'light' ? 'sun' : 'monitor'
 
   return (
@@ -98,6 +107,7 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
             <span className="text-sm font-medium text-muted-foreground">控制台</span>
           </div>
           <div className="flex items-center gap-1.5">
+            {/* 时区只影响展示；切换后页面用它重新格式化时间，不重新请求数据。 */}
             <select
               aria-label="展示时区"
               value={timeZone}
@@ -123,6 +133,7 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
             >
               {user.displayName ?? user.username}
             </Link>
+            {/* 登出由外层 hook 清理 Query 缓存并导航，shell 不直接操作认证状态。 */}
             <Button variant="ghost" size="icon" onClick={onLogout} aria-label="退出登录">
               <Icon name="logout" />
             </Button>

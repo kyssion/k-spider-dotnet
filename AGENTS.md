@@ -94,7 +94,9 @@ k-spider 是「抓取 → 处理 → 展示」的数据平台。项目定位、�
 
 ## 代码约定
 
-- 注释、日志、commit message 用中文；注释解释**为什么**，不复述代码在做什么；
+- 注释、日志、commit message 用中文；**实现代码逻辑时必须补注释**：导出的方法/函数、组件 props、关键变量与关键分支
+  都要有中文注释，说明意图、约束、失败边界与不变量；前端用 TSDoc/JSDoc，后端用 XML doc，注释解释**为什么**，不复述代码在做什么；
+  每次改动由 verify 的前端 ESLint jsdoc 规则与后端 XML 文档编译检查 `@param`/`@returns`/类型/标签与签名一致；语义描述是否与行为一致仍需按 DoD 评审；
 - Job / Stage / 引擎一律 async，网络调用 `await`，不要 `.Result` / `.Wait()`；
 - 事务：`BeginTran → 业务 → CommitTran`，catch 中 `RollbackTran`，不在 finally 回滚；
 - 批量写入集中在数据访问层，按 write_mode 三模式实现；数据访问选型 linq2db（已引入，见 ADR 0011；

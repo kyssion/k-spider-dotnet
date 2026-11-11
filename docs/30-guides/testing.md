@@ -1,7 +1,7 @@
 # 测试与门禁
 
 > 状态：持续更新
-> 最后更新：2026-11-10
+> 最后更新：2026-11-11
 本文范围：测试分层、当前与目标门禁、Live 用例、夹具、验证闭环。命令清单见 [dev-workflow.md](dev-workflow.md)。
 
 说明「什么测试放在哪里、哪些进出门禁、哪些只能手动跑」。红线「不得删除、跳过或弱化测试」见
@@ -17,11 +17,14 @@
 | v2 架构 / 契约守卫 | `tests/k-spider-guards/` | 是 | 解决方案布局、DDL 幂等与表清单、CPM/编译门禁配置 |
 | gRPC 契约 | `tests/k-spider-grpc-tests/` | 是 | proto 消息 round-trip；字段定稿后补字段 / 错误码 / 流控 |
 | admin 核心测试 | `tests/k-spider-admin-tests/` | 是 | 任务状态机、schedule、同渠道互斥、任务生命周期、对账重派/放弃、DI 图 |
+| admin PostgreSQL Live | `tests/k-spider-admin-tests/Live/` | 否 | 真实仓储读写；需 `K_SPIDER_LIVE_DB`，按 `TestCategory=Live` 排除 |
+| 注释一致性 | `web` ESLint jsdoc + C# XML doc | 是 | `@param`/`@returns`/类型/标签与签名一致；业务项目缺失 XML 文档也会阻断；语义描述由评审确认 |
 | v1 过渡测试 | `src/k-spider-test/` | 是 | 排除 `TestCategory=Live`；crawler/process 服务测试落地后替换 |
 | 前端纯逻辑 | `web/src/**/*.test.ts` | 是 | Vitest；工具函数、格式化等可脱离 DOM 的逻辑 |
 | 前端组件 | `web/src/**/*.test.tsx` | 是 | Vitest + Testing Library + jsdom；每个组件覆盖渲染、交互与加载/空/错误/禁用态 |
-| 前端 E2E | `web/tests/` | 是 | Playwright；当前为骨架冒烟，API 在用例内 mock |
-| Live 连通性 | 按测试项目约定 | 否 | 依赖真实接口或线上可达，手动执行 |
+| 前端 E2E | `web/tests/` | 是 | Playwright；默认门禁为离线冒烟，API 在用例内 mock |
+| 前端 Live E2E | `web/tests/live/` | 否 | 真实浏览器 + 真实 admin/PostgreSQL；手动执行，需注入账号 |
+| 后端 Live 连通性 | 按测试项目约定 | 否 | 依赖真实接口或线上可达，手动执行 |
 
 ### 当前门禁与目标门禁
 
@@ -31,17 +34,42 @@
 
 | 门禁 | 当前 | 目标 / 后续 |
 | --- | --- | --- |
-| 后端服务测试 | admin 核心测试 + v1 过渡测试（离线，排除 Live） | crawler/process 随 M3/M4 建立 v2 服务测试 |
+| 后端服务测试 | admin 核心测试 + v1 过渡测试（离线，排除 Live）；admin PostgreSQL Live 手动执行 | crawler/process 随 M3/M4 建立 v2 服务测试 |
 | 架构 / 契约守卫 | `tests/k-spider-guards/`（解决方案、DDL、依赖基线） | 增加服务分层与错误码守卫 |
 | 编译质量 | `TreatWarningsAsErrors` + 分析器 + `EnforceCodeStyleInBuild`（v2 项目） | 保持 |
 | 依赖可复现 | CPM + `nuget.config` + 传递依赖钉版 | 保持 |
 | 前端静态门禁 | `tsc --noEmit` + ESLint + Prettier + Vitest（纯逻辑 + 组件）+ 体积预算 | 保持；新增组件继续补测试 |
-| 前端 E2E | Playwright 8 条核心路径 | 保留；新增页面补主路径与错误态 |
+| 前端 E2E | Playwright 8 条离线路径 + 3 条真实后端 Live 路径（手动） | 保留离线门禁；Live 用例不进入默认门禁 |
 | 依赖审计 | 后端 NuGet 审计随 restore / build；CI 跑 `pnpm audit` | 保持 |
+| 注释一致性 | 后端 XML 文档生成 + 前端 ESLint jsdoc | 保持；语义描述按 DoD 评审 |
 | 文档 / 技能 | 4 个文档检查 + 技能清单 | 保持 |
 
 新增前端测试依赖已按 [0006-frontend-static-gates.md](../20-adr/0006-frontend-static-gates.md) 登记；
 新增工具仍按 [AGENTS.md](../../AGENTS.md) 红线 10 先确认。
+
+### 前端 Live E2E
+
+`web/tests/live/` 用真实 Chromium 访问 admin 托管的构建产物，API 直连真实 admin 与 PostgreSQL；
+默认 `pnpm test:e2e` 通过 `testIgnore` 排除该目录，避免离线门禁依赖真实环境。
+
+- 启动 admin 并连接目标 PostgreSQL，确认 `LIVE_BASE_URL` 可达（默认 `http://127.0.0.1:5094`）；
+- 注入 `LIVE_USERNAME` / `LIVE_PASSWORD`，执行 `cd web && pnpm test:e2e:live`；
+- 写操作用例需要 `测试渠道` 与可取消任务夹具；任务夹具可用
+  `web/tests/live/fixtures/cancel-task.sql` 在测试库插入；
+- 凭据只从环境变量读取，不写进仓库、夹具或测试输出；
+- 该层验证登录、Cookie/CSRF、核心页面真实渲染、渠道启停与任务取消写路径，不替代默认 mock E2E 的离线性与确定性。
+
+### admin PostgreSQL Live
+
+`tests/k-spider-admin-tests/Live/` 直接调用真实仓储，覆盖总览、原始数据、渠道状态与任务条件更新；
+用例带 `TestCategory=Live`，默认 `verify.sh` 与 CI 均排除。
+
+- 注入 `K_SPIDER_LIVE_DB`（Npgsql 连接串）并执行
+  `dotnet test tests/k-spider-admin-tests/k-spider-admin-tests.csproj --filter "TestCategory=Live"`；
+- 测试库需先应用 `db/001_business_tables.sql`、`db/002_sys_tables.sql`、`db/003_auth_tables.sql`，
+  并准备 `test-site` 联调用例数据；
+- 用例自行恢复渠道状态、删除插入的 `sys_task`，不依赖执行顺序；
+- 未设置连接串时标记 Inconclusive，不会误连默认库。
 
 ### v2 测试项目接入要求
 
@@ -116,7 +144,8 @@ v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 ## 契约与数据
 
 - 后端契约测试以 DDL、REST/gRPC 契约和 [data-model.md](../10-architecture/data-model.md) 的规则为准；
-- 前端 E2E 的真实后端用例后续补 Live spec，与后端 `TestCategory=Live` 的分层对齐；
+- 前端真实后端用例由 `web/tests/live/` 承担，默认门禁排除；后端真实仓储用例位于 `tests/k-spider-admin-tests/Live/`，
+  同样按 `TestCategory=Live` 排除；
 - 文档与技能检查不依赖网络，可在离线环境运行。
 
 ## 配置与凭据
@@ -135,7 +164,7 @@ v2 的架构守卫与业务测试同仓同门禁，至少覆盖：
 
 - crawler/process 服务测试项目的命名、目录与是否引入统一测试夹具库（admin 已用 `tests/k-spider-admin-tests/`）；
 - 组件测试的覆盖率目标与页面 E2E 的边界；
-- Live 用例的触发方式（本地脚本 / 手动 CI job）与凭据来源；
+- Live 用例的 CI 触发方式与凭据来源（本地命令已确定为 `pnpm test:e2e:live`）；
 - v1 测试替换的时间点与旧用例迁移范围；
 - CI 缓存与耗时调优（ADR 0007 的后续观察项）。
 

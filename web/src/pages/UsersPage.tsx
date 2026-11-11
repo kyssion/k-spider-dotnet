@@ -14,6 +14,12 @@ import { formatDateTime } from '../lib/dates'
 import { usePreferences } from '../stores/preferences'
 import type { UserView } from '../api/types'
 
+/**
+ * 账号管理页。
+ *
+ * 所有登录用户同权；禁用自己由后端最终拒绝，前端同时禁用按钮减少误操作。
+ * 新建与重置密码各自使用对话框，错误保留在对话框内。
+ */
 export function UsersPage() {
   const users = useUsers()
   const me = useMe()
@@ -22,6 +28,8 @@ export function UsersPage() {
   const reset = useResetPassword()
   const timeZone = usePreferences((state) => state.timeZone)
 
+  // 对话框开关与表单字段分开管理，关闭时不需要清空所有服务端查询状态。
+  // 两个对话框互不影响：createOpen 管新建，resetTarget 管重置目标。
   const [createOpen, setCreateOpen] = useState(false)
   const [resetTarget, setResetTarget] = useState<UserView | null>(null)
   const [username, setUsername] = useState('')
@@ -30,6 +38,7 @@ export function UsersPage() {
   const [newPassword, setNewPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  /** 创建账号；成功后关闭对话框并让列表失效。 */
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -48,6 +57,7 @@ export function UsersPage() {
     }
   }
 
+  /** 重置他人密码；自己改密必须走账号设置页。 */
   async function onReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!resetTarget) {
@@ -63,6 +73,7 @@ export function UsersPage() {
     }
   }
 
+  /** 启用/禁用账号；禁用自己或最后一个 active 账号由后端拒绝。 */
   async function toggleStatus(user: UserView) {
     setError(null)
     try {
@@ -75,6 +86,7 @@ export function UsersPage() {
     }
   }
 
+  /** 账号列；对当前账号禁用危险操作，避免把唯一管理员锁死。 */
   const columns: Array<DataTableColumn<UserView>> = [
     {
       key: 'username',

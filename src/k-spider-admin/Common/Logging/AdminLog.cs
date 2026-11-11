@@ -5,7 +5,7 @@ namespace KSpider.Admin.Common.Logging;
 /// <summary>
 ///     admin 集中日志事件；使用源生成器，避免热路径上不必要的参数装箱与字符串分配。
 /// </summary>
-public static partial class AdminLog
+internal static partial class AdminLog
 {
     [LoggerMessage(EventId = 1001, Level = LogLevel.Information,
         Message = "创建任务包 task_id={TaskId} channel_id={ChannelId} node_id={NodeId} task_type={TaskType} token={Token}")]

@@ -6,6 +6,11 @@ import { Button } from '../components/ui/Button'
 import { isApiError } from '../api/errors'
 import { useChangePassword } from '../features/auth/queries'
 
+/**
+ * 当前账号设置页。
+ *
+ * 只允许修改自己的密码；成功后不强制登出，沿用当前会话。
+ */
 export function ProfilePage() {
   const changePassword = useChangePassword()
   const [currentPassword, setCurrentPassword] = useState('')
@@ -13,6 +18,7 @@ export function ProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  /** 修改密码；错误码映射成用户可读文案。 */
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
@@ -60,6 +66,7 @@ export function ProfilePage() {
   )
 }
 
+/** 把后端错误码收敛成账号设置页可读文案。 */
 function friendlyError(error: unknown): string {
   if (isApiError(error)) {
     if (error.code === 'invalid_current_password') {

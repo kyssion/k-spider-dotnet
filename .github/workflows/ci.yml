@@ -63,9 +63,9 @@ jobs:
       - name: 格式校验
         run: dotnet format k-spider-dotnet.sln --no-restore --verify-no-changes
 
-      # v2 守卫在解决方案内，复用上面的 Release 构建
+      # v2 守卫在解决方案内，复用上面的 Release 构建；Live 仓储用例依赖真实 PostgreSQL，默认排除。
       - name: v2 守卫测试（Release）
-        run: dotnet test k-spider-dotnet.sln --configuration Release --no-build --logger "trx;LogFileName=v2-guards.trx"
+        run: dotnet test k-spider-dotnet.sln --configuration Release --no-build --filter "TestCategory!=Live" --logger "trx;LogFileName=v2-guards.trx"
 
       # 排除 Live 分类：真实接口连通性用例依赖线上可达，不放进门禁（本地手动跑 dotnet test 即可）
       # v1 测试项目暂未加入 sln，不能用 --no-build；v2 服务测试落地后替换

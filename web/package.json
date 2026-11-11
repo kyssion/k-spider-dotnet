@@ -14,7 +14,8 @@
         "test": "vitest run",
         "check:bundle": "node ./scripts/check-bundle-budget.mjs",
         "verify": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test && pnpm run build && pnpm run check:bundle",
-        "test:e2e": "playwright test"
+        "test:e2e": "playwright test",
+        "test:e2e:live": "playwright test -c playwright.live.config.ts"
     },
     "dependencies": {
         "@tanstack/react-query": "^5.62.0",
@@ -38,6 +39,7 @@
         "@types/react-dom": "^19.1.0",
         "@vitejs/plugin-react": "^5.0.0",
         "eslint": "^10.14.0",
+        "eslint-plugin-jsdoc": "^65.4.5",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.7",
         "globals": "^17.14.0",

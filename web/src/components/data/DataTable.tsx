@@ -3,6 +3,7 @@ import { cn } from '../../lib/cn'
 import { EmptyState } from '../feedback/EmptyState'
 import { LoadingState } from '../feedback/LoadingState'
 
+/** 列定义；render 负责单元格展示，className 控制列宽/对齐。 */
 export interface DataTableColumn<T> {
   key: string
   header: ReactNode
@@ -10,6 +11,7 @@ export interface DataTableColumn<T> {
   className?: string
 }
 
+/** 表格属性；loading/empty 由组件统一呈现，页面只提供数据。 */
 export interface DataTableProps<T> {
   columns: Array<DataTableColumn<T>>
   rows: T[]
@@ -21,6 +23,12 @@ export interface DataTableProps<T> {
   ariaLabel?: string
 }
 
+/**
+ * 轻量数据表格。
+ *
+ * 只做展示与行点击，不做排序/虚拟滚动；服务端分页保证单页数据量可控。
+ * 行可点击时补 tabIndex 与 Enter/Space 键盘处理，避免只能用鼠标。
+ */
 export function DataTable<T>({
   columns,
   rows,
