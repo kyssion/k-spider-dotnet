@@ -23,15 +23,18 @@ public static class WebHostingExtensions
                 var path = context.Context.Request.Path;
                 if (path.StartsWithSegments("/assets"))
                 {
+                    // Vite 产物文件名带内容哈希，可放心一年长缓存。
                     context.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
                 }
                 else if (path.Value?.EndsWith("index.html", StringComparison.OrdinalIgnoreCase) == true)
                 {
+                    // 入口 HTML 必须每次回源，否则发布后仍引用旧哈希资源。
                     context.Context.Response.Headers.CacheControl = "no-cache,no-store,must-revalidate";
                 }
             },
         };
 
+        // 根路径映射 index.html，其余静态资源交给 StaticFiles。
         app.UseDefaultFiles();
         app.UseStaticFiles(options);
         return app;
@@ -45,6 +48,7 @@ public static class WebHostingExtensions
     {
         endpoints.MapFallback(async context =>
         {
+            // /api 与 /grpc 未命中必须返回 404，不能把 index.html 当作接口响应。
             if (context.Request.Path.StartsWithSegments("/api") ||
                 context.Request.Path.StartsWithSegments("/grpc"))
             {
@@ -53,6 +57,7 @@ public static class WebHostingExtensions
                 return;
             }
 
+            // 其余路径视为前端客户端路由，返回 SPA 入口由 React Router 继续解析。
             var indexPath = Path.Combine(
                 context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath ??
                 "wwwroot",
