@@ -1,7 +1,7 @@
 # 日常开发流程
 
 > 状态：持续更新
-> 最后更新：2026-11-11
+> 最后更新：2026-11-12
 本文范围：常用命令、端口、脚本行为、脚本选型、进程收尾、提交与推送、环境排错。首次环境准备见
 [getting-started.md](getting-started.md)。
 
@@ -120,6 +120,8 @@ lsof -nP -iTCP:5094 -sTCP:LISTEN
 - 数据库连接串、认证配置与调度参数由各服务配置提供；admin 的 `appsettings.json` 已包含数据库、
   端点、调度/对账与认证配置键，业务配置随实现补齐；
 - admin 本地启动至少需要 `K_SPIDER__DATABASE__CONNECTIONSTRING`（或等价 appsettings 值）；
+  Development 环境也可用 `dotnet user-secrets set "Database:ConnectionString" "<连接串>" --project src/k-spider-admin`
+  保存本机默认测试库连接；user secrets 不进入仓库，其他环境仍由部署方注入；
 - 前端开发期通过 Vite 代理访问 `/api`，生产同源部署不需要代理。
 
 ## 测试与门禁

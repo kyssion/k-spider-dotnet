@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <RootNamespace>KSpider.Admin</RootNamespace>
+        <UserSecretsId>e62df058-aca4-447c-9389-3e30e6700f16</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
